@@ -48,10 +48,10 @@ Godot_v4.7.2-stable_win64.exe --path .
 ### 테스트
 
 ```
-# 수학 계산 검증 (실제 항등식 약 2,460개)
+# 수학 계산 검증 (실제 항등식 약 2,880개)
 godot --headless --path . --script res://tests/test_expr.gd
 
-# 전 스테이지 봇 밸런스 측정 (병렬, 약 7분)
+# 전 스테이지 봇 밸런스 측정 (병렬, 약 10분)
 bash tests/balance.sh            # 각 경우 2회
 bash tests/balance.sh 1 12       # 각 경우 1회, 12개 병렬
 STAGES="7-1 7-2" bash tests/balance.sh

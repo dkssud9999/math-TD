@@ -185,6 +185,11 @@ func _on_won() -> void:
 	if Game.stage_id == "1-6" and not Progress.flag("fake_ending"):
 		_start_credits()
 		return
+	# a finale cleared without the counterexample ever reaching the core (F9, x = 0, …) must still open the next chapter
+	var ctr: String = Data.STAGES[Game.stage_id].get("counter", "")
+	if ctr != "" and not Progress.flag(Data.COUNTERS[ctr]["flag"]):
+		on_counterexample(ctr)
+		return
 	if Data.STAGES[Game.stage_id].get("final", false):
 		Progress.set_flag("true_end")
 		state = "credits"
@@ -264,8 +269,8 @@ func _credits_tick(delta: float) -> void:
 
 
 ## A counterexample reached the core. Returns true once it has reached `need` times and the reveal fires.
-func counter_reach(tpl: String) -> bool:
-	counter_hits[tpl] = int(counter_hits.get(tpl, 0)) + 1
+func counter_reach(tpl: String, count: int = 1) -> bool:
+	counter_hits[tpl] = int(counter_hits.get(tpl, 0)) + count
 	if int(counter_hits[tpl]) >= int(Data.COUNTERS[tpl].get("need", 1)):
 		on_counterexample(tpl)
 		return true
@@ -321,8 +326,13 @@ func preview_text() -> String:
 		return ""
 	var groups: Array = waves[Game.wave]
 	var parts := PackedStringArray()
+	var lv: int = int(wave_levels[Game.wave]) if Game.wave < wave_levels.size() else Game.wave + 1
 	for g in groups:
-		parts.append("%s ×%d" % [_tpl_name(g[0]), int(g[1])])
+		var armor := Data.armor_power(g[0], lv)
+		var tag := ""
+		if armor > 0:   # multiplicity armour: bosses carry exactly xᵐ, others anywhere from 1 to xᵐ
+			tag = (" · x%s" if Data.TEMPLATES[g[0]].get("boss", false) else " · ≤x%s") % (Expr.sup(armor) if armor > 1 else "")
+		parts.append("%s%s ×%d" % [_tpl_name(g[0]), tag, int(g[1])])
 	return "다음 웨이브 %d:   %s" % [Game.wave + 1, "   ·   ".join(parts)]
 
 
@@ -347,6 +357,9 @@ func use_ultimate() -> void:
 		return
 	var hit := 0
 	for e in get_tree().get_nodes_in_group("enemies"):
+		if Data.COUNTERS.has(e.template) and not Progress.flag(Data.COUNTERS[e.template]["flag"]):
+			spawn_text(e.global_position + Vector2(0, -40), "반례에는 대입이 통하지 않습니다", Color("ef5350"), 14)
+			continue
 		if e.alive and e.special == "" and not e.f.is_constant():
 			e.f.subst_x0()
 			e.flash = 0.4
@@ -404,7 +417,7 @@ func predict(e) -> Dictionary:
 				steps.append([tw.glyph(), g.to_text()])
 		if g.is_zero():
 			break
-	var dmg: int = 0 if g.is_zero() else EnemyScript.harm(g.value_at(Game.x_end, e.tt))
+	var dmg: int = 0 if g.is_zero() else EnemyScript.harm(g.value_at(Game.x_end, e.tt)) + int(e.members) - 1
 	return {"steps": steps, "dead": g.is_zero(), "f": g, "dmg": dmg}
 
 
@@ -940,7 +953,7 @@ func _autotest_best_tower() -> String:
 	var best_score := -1.0
 	for type in counts:
 		# value per ρ, with diminishing returns for duplicates
-		var sc: float = float(counts[type]) / float(Data.TOWERS[type]["cost"]) / (1.0 + 0.35 * int(owned.get(type, 0)))
+		var sc: float = float(counts[type]) / float(Data.TOWERS[type]["cost"]) / (1.0 + (0.8 if Data.chapter_of(Game.stage_id) >= 3 else 0.35) * int(owned.get(type, 0)))
 		if sc > best_score:
 			best_score = sc
 			best = type

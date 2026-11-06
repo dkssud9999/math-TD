@@ -35,7 +35,7 @@ var CHAPTERS: Dictionary = {
 		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "dm1", "harm"]},
 	5: {"name": "5장 · 선형대수", "sub": "L(f + g) = Lf + Lg", "rho": 260, "integrity": 70,
 		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "dm1", "harm", "merge"]},
-	6: {"name": "6장 · 연산자 대수", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 280, "integrity": 40,
+	6: {"name": "6장 · 연산자 대수", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 280, "integrity": 55,
 		"towers": ["sub", "div", "divx", "diff", "int", "dm1", "harm", "merge", "damp"]},
 	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 380, "integrity": 100,
 		"towers": ["sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
@@ -158,7 +158,7 @@ var STAGES: Dictionary = {
 	"4-3": {"chapter": 4, "name": "공명", "map": 2, "x_end": 4.0, "base": 7, "growth": 0.9, "interval": [1.1, 0.6],
 		"desc": "x sin x의 소멸자는 (D² + 1)². 같은 고윳값이 두 번 — 공명입니다. 조화 소멸을 거듭제곱으로 연구하세요.",
 		"mix": [["xsin", 2, 1], ["acs", 1, 1], ["xcos", 1, 4], ["cubic", 1, 6]], "boss": [["boss_res", 2]]},
-	"4-4": {"chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "base": 7, "growth": 0.9, "interval": [1.1, 0.6],
+	"4-4": {"chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "base": 6, "growth": 0.8, "interval": [1.1, 0.6],
 		"desc": "sin 2x의 소멸자는 D² + 4. D² + 1을 쏘면 (−4 + 1)배, 즉 −3배가 됩니다. 진동수를 연구해 ω를 맞추세요.",
 		"mix": [["sin2", 2, 1], ["sin", 1, 1], ["cos2", 1, 4], ["acs", 1, 6]], "boss": [["boss_w2", 2]]},
 	"4-5": {"chapter": 4, "name": "혼성", "map": 4, "x_end": 4.0, "base": 6, "growth": 0.85, "interval": [1.1, 0.6],
@@ -402,7 +402,7 @@ var RESEARCH: Array = [
 	{"id": "merge", "chapter": 5, "name": "선형성 Σ", "cost": 20, "req": [], "flag": "met_swarm",
 		"desc": "Σ 타워 해금. 범위 안의 함수들을 하나로 더합니다. 모든 타워는 선형이므로 합친 뒤 한 번에 처리할 수 있습니다."},
 	{"id": "merge2", "chapter": 5, "name": "기저 정리", "cost": 45, "req": ["merge"], "stage": "5-2",
-		"desc": "Σ는 이제 같은 소멸자를 가진 함수끼리만 합칩니다. 소멸자를 키우는 합병을 피합니다."},
+		"desc": "Σ가 계수를 고릅니다. 범위 안의 함수들이 선형 종속이면 (예: 3eˣ와 5eˣ, 또는 sin x, cos x, 2sin x + cos x 셋) 합이 0이 되는 결합을 찾아 모두 소거합니다."},
 	{"id": "damp", "chapter": 6, "name": "켤레 공식", "cost": 25, "req": [], "flag": "met_exp2",
 		"desc": "감쇠장 타워 해금. eˣ · D · e⁻ˣ = D − 1: e⁻ˣ를 곱하면 고윳값이 1씩 내려갑니다."},
 	{"id": "damp2", "chapter": 6, "name": "이중 감쇠", "cost": 45, "req": ["damp"], "stage": "6-2",
@@ -601,8 +601,40 @@ func _unique(a: Array) -> Array:
 	return out
 
 
-## The actual function an enemy is made of.
+const ARMOR_KINDS := ["poly", "exp", "trig", "exp2"]
+
+
+## Multiplicity armour: from chapter 2 on, later waves and later chapters multiply enemies by xᵐ.
+## xᵐ·eˣ needs (D − 1)ᵐ⁺¹ — the annihilator's degree is the enemy's real health. ÷x strips one layer per
+## hit and works on every mode at once, but each D first costs a layer: D(xᵐg) = mxᵐ⁻¹g + xᵐg′  ([D, x] = 1).
+func armor_power(tpl: String, wave: int) -> int:
+	var info: Dictionary = TEMPLATES.get(tpl, {})
+	if not ARMOR_KINDS.has(info.get("kind", "")) or COUNTERS.has(tpl) or tpl == "child" or info.get("gen", false):
+		return 0
+	if not STAGES.has(Game.stage_id):
+		return 0
+	var ch := chapter_of(Game.stage_id)
+	if ch < 2:
+		return 0
+	var m := int((clampi(wave, 1, WAVES_PER_STAGE) - 1) / 5.0) + (1 if ch >= 5 else 0)   # w1–5: 0, w6–10: 1, w11–15: 2
+	if info.get("boss", false):
+		m += 1
+	if Game.stage_id.ends_with("-1"):
+		m -= 1   # a chapter's first stage introduces its new operator before the armour arrives
+	return maxi(0, m)
+
+
+## The actual function an enemy is made of (base shape × multiplicity armour).
 func make_expr(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
+	var f := _make_base(tpl, rng, wave)
+	var m := armor_power(tpl, wave)
+	if m > 0:
+		var boss: bool = TEMPLATES[tpl].get("boss", false)
+		f.times_x(m if boss else rng.randi_range(0, m))   # a mix of light and heavy; bosses always carry full armour
+	return f
+
+
+func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
 	var w := clampi(wave, 1, WAVES_PER_STAGE)
 	match tpl:
 		"n1":
@@ -777,9 +809,9 @@ func make_expr(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
 		"wave_l":
 			return Expr.new().add_term(1, 2, 0, 0, 0).add_term(2, 1, 0, 1, 0).add_term(1, 0, 0, 2, 0)
 		"wave_mix":
-			return make_expr("wave2", rng).add_term(1, 0, 1, 0, -1).add_expr(Expr.poly([3]))
+			return _make_base("wave2", rng).add_term(1, 0, 1, 0, -1).add_expr(Expr.poly([3]))
 		"boss_wave":
-			return make_expr("wave3", rng).add_expr(make_expr("wave_l", rng)).add_exp(2)
+			return _make_base("wave3", rng).add_expr(_make_base("wave_l", rng)).add_exp(2)
 		"signal_counter":
 			return _series([1, 3, 5, 7, 9, 11, 13, 15], 4, false)
 		"sig2":

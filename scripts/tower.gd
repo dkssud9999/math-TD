@@ -312,28 +312,32 @@ func _process(delta: float) -> void:
 	main.spawn_projectile(global_position + aim * 16.0, tg, type, op_params(), data["color"])
 
 
-## Σ: add up to k functions in range into the leader. With 「기저 정리」 only same-annihilator functions merge.
+## Σ: add up to k functions in range into the leader (the one furthest along).
+## With 「기저 정리」 it first looks for a linearly dependent subset and cancels it to 0.
 func _do_merge(cands: Array) -> bool:
 	if cands.size() < 2:
 		return false
 	var k := int(power())
-	var smart := Progress.has("merge2")
-	var groups := {}
-	for e in cands:
-		var key: String = e.ann_text if smart else "all"
-		if not groups.has(key):
-			groups[key] = []
-		groups[key].append(e)
-	var best: Array = []
-	for key in groups:
-		if groups[key].size() > best.size():
-			best = groups[key]
-	if best.size() < 2:
-		return false
-	best.sort_custom(func(a, b): return a.progress > b.progress)
-	var leader = best[0]
-	for i in range(1, mini(k, best.size())):
-		var o = best[i]
+	cands.sort_custom(func(a, b): return a.progress > b.progress)
+	var pool: Array = cands.slice(0, k)
+	if Progress.has("merge2"):
+		var fs: Array = []
+		for e in pool:
+			fs.append(e.f)
+		var dep: Array = Expr.dependent_set(fs)
+		if dep.size() >= 2:
+			var at: Vector2 = pool[dep[0]].global_position
+			for i in dep:
+				main.spawn_zap(global_position, pool[i].global_position, data["color"])
+			main.spawn_text(at + Vector2(0, -34), "선형 종속 → 0", data["color"], 16)
+			for i in dep:
+				pool[i]._die()
+			Sfx.play("pulse", 1.5)
+			flash = 0.2
+			return true
+	var leader = pool[0]
+	for i in range(1, pool.size()):
+		var o = pool[i]
 		main.spawn_zap(o.global_position, leader.global_position, data["color"])
 		leader.absorb(o)
 		if not leader.alive:
@@ -364,7 +368,7 @@ func describe() -> String:
 		"harm":
 			lines.append("연산: f → (D² + %d)%s f" % [omega * omega, Expr.sup(int(power())) if int(power()) > 1 else ""])
 		"merge":
-			lines.append("연산: 최대 %d개를 f₁ + f₂ + … 로 합침%s" % [int(power()), "  (같은 소멸자끼리만)" if Progress.has("merge2") else ""])
+			lines.append("연산: 최대 %d개를 f₁ + f₂ + … 로 합침%s" % [int(power()), "  · 선형 종속이면 0으로 소거" if Progress.has("merge2") else ""])
 		"damp":
 			lines.append("연산: f → e⁻%sˣ · f  (μ → μ − %d)" % ["" if int(power()) == 1 else "²", int(power())])
 		"dtl":

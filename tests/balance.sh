@@ -49,7 +49,7 @@ done
 run_case() {
   local st="$1" rs="$2" i="$3"
   local out
-  out=$(timeout 300 "$GODOT" --headless --fixed-fps 60 --path . res://scenes/main.tscn -- \
+  out=$(timeout 600 "$GODOT" --headless --fixed-fps 60 --path . res://scenes/main.tscn -- \
         --autotest --stage="$st" --budget --research="$rs" --ts=1 2>&1)
   local line
   line=$(echo "$out" | grep "\[autotest\] done" | sed 's/\[autotest\] done: //')

@@ -51,6 +51,13 @@ func setup(p_template: String, p_main, p_f: Expr, start_progress: float) -> void
 	f = p_f
 	var meta: Dictionary = Data.TEMPLATES[template]
 	base_speed = float(meta["speed"]) * (1.0 + 0.012 * (Game.wave - 1))
+	var armor := 0   # xᵐ armour makes the slope steep; heavy enemies walk slower instead of faster
+	var probe := f.clone()
+	while armor < 8 and probe.divisible_by_x() and not probe.is_constant():
+		probe.div_x()
+		armor += 1
+	if Data.chapter_of(Game.stage_id) >= 2 and armor > 1:
+		base_speed /= 1.0 + 0.25 * (armor - 1)
 	boss = meta.get("boss", false)
 	gen = meta.get("gen", false)
 	special = meta.get("special", "")
@@ -108,7 +115,7 @@ func _refresh() -> void:
 			sublabel = "「이 적은 이 체계 안에서 처치할 수 없다」"
 		_:
 			label = _short(f.to_text())
-			threat = harm(f.value_at(Game.x_end, tt))
+			threat = harm(f.value_at(Game.x_end, tt)) + (members - 1)   # each function Σ merged in adds 1
 			ann_text = "Ann " + f.annihilator()
 			if f.has_t():
 				ann_text += "   ·   ᵗ " + f.t_annihilator()
@@ -303,6 +310,8 @@ func absorb(o) -> void:
 	if not alive or not o.alive or o == self or special != "" or o.special != "":
 		return
 	f.add_expr(o.f)
+	if Data.COUNTERS.has(o.template) and not Data.COUNTERS.has(template):
+		template = o.template   # a counterexample swallowed by Σ is still the counterexample
 	reward += o.reward
 	members += o.members
 	boss = boss or o.boss
@@ -339,7 +348,7 @@ func _die(by_induction: bool = false) -> void:
 func _reach_core() -> void:
 	alive = false
 	if Data.COUNTERS.has(template) and not Progress.flag(Data.COUNTERS[template]["flag"]):
-		if main.counter_reach(template):
+		if main.counter_reach(template, members):
 			queue_free()
 			return
 	if threat == 0:
@@ -370,7 +379,7 @@ func _process(delta: float) -> void:
 		t_refresh -= delta
 		if t_refresh <= 0.0:
 			t_refresh = 0.25
-			threat = harm(f.value_at(Game.x_end, tt))
+			threat = harm(f.value_at(Game.x_end, tt)) + (members - 1)   # each function Σ merged in adds 1
 		trail_t -= delta
 		if trail_t <= 0.0:
 			trail_t = 0.2

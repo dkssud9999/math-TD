@@ -131,6 +131,16 @@ func _build_side_panel() -> void:
 	vb.add_theme_constant_override("separation", 5)
 	side.add_child(vb)
 	vb.add_child(_label("연산", 13, Color("5bc0be")))
+	# the operator list scrolls, so a long list never pushes the income buttons off-screen
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 110)
+	vb.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 5)
+	scroll.add_child(list)
 	var idx := 1
 	var grouped := Data.chapter_of(Game.stage_id) >= 2
 	var arith_count := 0
@@ -146,7 +156,7 @@ func _build_side_panel() -> void:
 		group_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		group_button.custom_minimum_size = Vector2(0, 24)
 		group_button.add_theme_color_override("font_color", Color("b0bec5"))
-		vb.add_child(group_button)
+		list.add_child(group_button)
 	for type in main.available_towers:
 		var b := _button("", main.select_build.bind(type), 14)
 		b.toggle_mode = true
@@ -155,7 +165,7 @@ func _build_side_panel() -> void:
 		b.add_theme_color_override("font_color", Data.TOWERS[type]["color"])
 		b.tooltip_text = "[%d] %s" % [idx, Data.TOWERS[type]["desc"]]
 		tower_buttons[type] = b
-		vb.add_child(b)
+		list.add_child(b)
 		idx += 1
 	vb.add_child(HSeparator.new())
 	info_title = _label("", 16, Color("ffd166"))
@@ -180,9 +190,6 @@ func _build_side_panel() -> void:
 		else:
 			main.cycle_target(), 13)
 	vb.add_child(btn_target)
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vb.add_child(spacer)
 	vb.add_child(HSeparator.new())
 	vb.add_child(_label("수입 (웨이브 중에만)", 12, Color("5bc0be")))
 	lbl_formula = _label("", 15, Color("c5e1a5"))

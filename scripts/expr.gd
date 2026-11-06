@@ -547,6 +547,49 @@ func divisible_by_x() -> bool:
 	return true
 
 
+## f → xᵐ · f  (raises the multiplicity of every mode by m: Ann gains m factors per mode)
+func times_x(m: int) -> Expr:
+	var old := t
+	t = {}
+	for key: Array in old:
+		_add(K(int(key[0]) + m, key[1], key[2], key[3], key[4]), old[key])
+	return self
+
+
+## Indices of a linearly dependent subset of fs (Σ cᵢfᵢ = 0 with every listed cᵢ ≠ 0), or [] if independent.
+## Exact Gaussian elimination over ℚ(i), one function at a time.
+static func dependent_set(fs: Array) -> Array:
+	var rows: Array = []   # {piv, vec, combo}
+	for i in fs.size():
+		var vec: Dictionary = (fs[i] as Expr).t.duplicate(true)
+		if vec.is_empty():
+			return [i]
+		var combo := {i: cre(rn(1))}
+		for row: Dictionary in rows:
+			var piv: Array = row["piv"]
+			if not vec.has(piv):
+				continue
+			var c := cdiv(vec[piv], row["vec"][piv])
+			for key: Array in row["vec"]:
+				var nz := cadd(vec.get(key, Z()), cneg(cmul(c, row["vec"][key])))
+				if cz(nz):
+					vec.erase(key)
+				else:
+					vec[key] = nz
+			for j in row["combo"]:
+				var nc := cadd(combo.get(j, Z()), cneg(cmul(c, row["combo"][j])))
+				if cz(nc):
+					combo.erase(j)
+				else:
+					combo[j] = nc
+		if vec.is_empty():
+			var out: Array = combo.keys()
+			out.sort()
+			return out
+		rows.append({"piv": vec.keys()[0], "vec": vec, "combo": combo})
+	return []
+
+
 ## f → f / x
 func div_x() -> void:
 	var old := t
