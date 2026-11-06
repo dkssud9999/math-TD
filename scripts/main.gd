@@ -4,6 +4,8 @@ extends Node2D
 const MapScript := preload("res://scripts/map.gd")
 const EnemyScript := preload("res://scripts/enemy.gd")
 const TowerScript := preload("res://scripts/tower.gd")
+const CodeEditorScript := preload("res://scripts/code_editor.gd")
+var code_editor = null
 const ProjectileScript := preload("res://scripts/projectile.gd")
 const EffectScript := preload("res://scripts/effect.gd")
 const WaveScript := preload("res://scripts/wave_manager.gd")
@@ -557,7 +559,7 @@ func cycle_target() -> void:
 # ---------- input ----------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if state not in ["build", "wave"]:
+	if state not in ["build", "wave"] or (code_editor != null and code_editor.visible):
 		return
 	if event is InputEventMouseMotion:
 		_update_hover()
@@ -586,12 +588,33 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_pause()
 		elif kc == KEY_W:
 			cycle_omega()
+		elif kc == KEY_E:
+			open_code_editor()
 		elif kc == KEY_F9 and Progress.dev_mode:
 			_dev_clear()
 		elif kc == KEY_0 and available_towers.size() >= 10:
 			select_build(available_towers[9])
 		elif kc >= KEY_1 and kc <= KEY_9 and kc - KEY_1 < available_towers.size():
 			select_build(available_towers[kc - KEY_1])
+
+
+## The attack-algorithm editor (research 「알고리즘」). Opens on the selected tower, pauses the game.
+func open_code_editor() -> void:
+	if not Progress.has("code"):
+		spawn_text(Vector2(Data.PLAY_W / 2.0, 360), "연구 「알고리즘」이 필요합니다 (6장)", Color("b0bec5"), 16)
+		return
+	if code_editor == null:
+		code_editor = CodeEditorScript.new()
+		code_editor.main = self
+		add_child(code_editor)
+	cancel_build_only()
+	code_editor.open(selected_tower if is_instance_valid(selected_tower) else null)
+
+
+func cancel_build_only() -> void:
+	if build_type != "":
+		build_type = ""
+		map.show_hover = false
 
 
 func _update_hover() -> void:
@@ -721,10 +744,15 @@ func _parse_autotest_args() -> void:
 			Progress.current_stage = a.substr(8)
 		elif a == "--budget":
 			autotest_budget = true
+		elif a.begins_with("--shot="):
+			autotest_shot = a.substr(7)
 		elif a == "--ult":
 			autotest_ult = true
 		elif a.begins_with("--ts="):
 			autotest_ts = float(a.substr(5))
+		elif a.begins_with("--algo="):   # --algo=damp:res://tests/algos/damp.py  (towers of that type run the file)
+			var kv := a.substr(7).split(":", true, 1)
+			Progress.algo_default[kv[0]] = kv[1]
 		elif a.begins_with("--research="):
 			var which := a.substr(11)
 			if which == "all":
@@ -765,10 +793,25 @@ func _autotest_start() -> void:
 
 var autotest_probe: float = 0.0
 var autotest_ult: bool = false
+var autotest_shot: String = ""
+var autotest_shot_frames: int = 0
 var autotest_pred: int = 0
 
 
 func _autotest_tick() -> void:
+	if autotest_shot != "":   # --shot=path.png: open the algorithm editor mid-stage and save a screenshot
+		if code_editor != null and code_editor.visible:
+			autotest_shot_frames += 1
+			if autotest_shot_frames == 20:
+				get_viewport().get_texture().get_image().save_png(autotest_shot)
+				print("[autotest] screenshot " + autotest_shot)
+				code_editor.close()
+				autotest_shot = ""
+			return
+		if Game.wave >= 3 and state == "wave" and not occupied.is_empty():
+			selected_tower = occupied.values()[0]
+			open_code_editor()
+			return
 	# exercise the hover prediction (and optionally the ultimate) so runtime errors surface in sweeps
 	autotest_probe -= get_process_delta_time()
 	if autotest_probe <= 0.0 and state == "wave":
@@ -1001,6 +1044,13 @@ func _autotest_plan() -> Array:
 
 
 func _autotest_finish() -> void:
+	var algo_errs := 0
+	for row in Algo.console:
+		if row[1]:
+			algo_errs += 1
+			print("[autotest] algo error: " + str(row[0]))
+	if not Progress.algo_default.is_empty():
+		print("[autotest] algorithms %s, errors %d" % [str(Progress.algo_default), algo_errs])
 	var comp := {}
 	for tw in occupied.values():
 		var key: String = tw.glyph()

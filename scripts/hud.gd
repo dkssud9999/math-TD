@@ -18,6 +18,7 @@ var info_body: Label
 var btn_upgrade: Button
 var btn_sell: Button
 var btn_target: Button
+var btn_algo: Button
 var lbl_formula: Label
 var btn_c1: Button
 var btn_c2: Button
@@ -190,6 +191,8 @@ func _build_side_panel() -> void:
 		else:
 			main.cycle_target(), 13)
 	vb.add_child(btn_target)
+	btn_algo = _button("", func(): main.open_code_editor(), 13)
+	vb.add_child(btn_algo)
 	vb.add_child(HSeparator.new())
 	vb.add_child(_label("수입 (웨이브 중에만)", 12, Color("5bc0be")))
 	lbl_formula = _label("", 15, Color("c5e1a5"))
@@ -339,6 +342,12 @@ func _refresh_info() -> void:
 	_chg(btn_upgrade, "visible", show_up)
 	_chg(btn_sell, "visible", show_up)
 	_chg(btn_target, "visible", show_target)
+	var show_algo: bool = show_up and Progress.has("code")
+	_chg(btn_algo, "visible", show_algo)
+	if show_algo:
+		var a: String = tw.algo if tw.algo != "" else "기본 조준"
+		_chg(btn_algo, "text", ("</> %s  ⚠ 오류" if tw.algo_error != "" else "</> %s  [E]") % a)
+		_chg(btn_algo, "tooltip_text", tw.algo_error if tw.algo_error != "" else "공격 알고리즘 편집기 열기")
 
 
 # ---------- overlays ----------

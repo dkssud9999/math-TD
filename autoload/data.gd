@@ -407,6 +407,8 @@ var RESEARCH: Array = [
 		"desc": "감쇠장 타워 해금. eˣ · D · e⁻ˣ = D − 1: e⁻ˣ를 곱하면 고윳값이 1씩 내려갑니다."},
 	{"id": "damp2", "chapter": 6, "name": "이중 감쇠", "cost": 45, "req": ["damp"], "stage": "6-2",
 		"desc": "감쇠장 3레벨이 e⁻²ˣ·가 됩니다. e³ˣ → eˣ를 한 번에."},
+	{"id": "code", "chapter": 6, "name": "알고리즘", "cost": 20, "req": [], "flag": "met_exp2",
+		"desc": "타워마다 공격 알고리즘(.py 파일)을 직접 짭니다 [E]. 연산자의 정의역을 정하는 일입니다: 예를 들어 감쇠장이 상수 1까지 e⁻ˣ로 바꿔 버리지 않게."},
 	{"id": "dtl", "chapter": 7, "name": "편미분", "cost": 25, "req": [], "flag": "met_time",
 		"desc": "시간 소멸 ∂ₜ − 1 타워 해금. 곱 g(x)·eᵗ를 시간 인수 하나로 지웁니다."},
 	{"id": "dtl2", "chapter": 7, "name": "성장률", "cost": 38, "req": ["dtl"], "stage": "7-1",
@@ -428,6 +430,71 @@ var RESEARCH: Array = [
 	{"id": "ax_ind", "chapter": 10, "name": "공리: 귀납", "cost": 45, "req": [], "flag": "met_godel", "axiom": true,
 		"desc": "수학적 귀납법. 한 함수가 0이 되면 전장의 똑같은 함수가 모두 함께 0이 됩니다."},
 ]
+
+# ---------------- attack algorithms (in-game Python) ----------------
+const EXAMPLE_ATTACK := """# 공격 알고리즘
+# 타워가 쏠 준비가 될 때마다 attack(enemies)가 불립니다.
+#   enemies : 사거리 안에 있는 적들의 리스트
+#   적 하나를 돌려주면 그 적을 쏩니다.
+#   리스트를 돌려주면 범위 타워(감쇠장, 필터, Σ)는 그 적들에게만 작용합니다.
+#   None을 돌려주면 이번에는 쏘지 않습니다.
+# 오른쪽 목록에서 적과 타워가 가진 값을 볼 수 있습니다.
+
+def attack(enemies):
+    good = []
+    for e in enemies:
+        a = e.after()          # 이 타워가 한 번 쏜 뒤의 모습
+        if a.zero or a.ann_degree < e.ann_degree or a.damage < e.damage:
+            good.append(e)
+    if not good:
+        return None
+    # 그중 코어에 가장 가까운 적
+    return max(good, key=lambda e: e.progress)
+"""
+
+const EXAMPLE_DAMP := """# 감쇠장 e⁻ˣ· 전용 예시
+# 성장 모드(고윳값의 실수부 > 0)가 있는 적에게만 작용합니다.
+# 상수 1에 e⁻ˣ를 곱하면 e⁻ˣ가 되어 D로는 지울 수 없게 되니까요.
+
+def attack(enemies):
+    return [e for e in enemies if e.growing]
+"""
+
+const ALGO_HELP := """[b]적 e[/b]
+[code]e.f[/code]  식 (문자열)
+[code]e.value[/code]  코어에서의 값
+[code]e.damage[/code]  코어에 닿으면 받는 피해
+[code]e.ann[/code]  소멸자 [[a, b, 중복도], …]  고윳값 a ± bi
+[code]e.ann_degree[/code]  소멸자 차수 = 필요한 타격 수
+[code]e.mult(a, b=0)[/code]  고윳값 a+bi의 중복도 (없으면 0)
+[code]e.has_mode(a, b=0)[/code]
+[code]e.degree[/code]  다항식 부분 차수 (−1: 없음)
+[code]e.armor[/code]  x로 나누어떨어지는 횟수
+[code]e.const[/code]  상수인가
+[code]e.growing[/code]  성장 모드(실수부 > 0)가 있는가
+[code]e.has_t[/code]  t를 포함하는가
+[code]e.freq[/code]  가장 높은 진동수
+[code]e.boss  e.members  e.name  e.special[/code]
+[code]e.progress[/code]  경로 진행도 0–1
+[code]e.x  e.dist  e.speed[/code]
+[code]e.useful[/code]  기본 조준이 쓸모 있다고 보는가
+[code]e.after()[/code]  이 타워가 한 번 쏜 뒤의 모습 (같은 값들을 가짐, 이어서 .after() 가능)
+[code]e.zero[/code]  0이 되었는가 (after()에서 유용)
+
+[b]타워[/b]
+[code]me.op  me.name  me.level  me.param  me.range[/code]
+[code]set_param(v)[/code]  ω 또는 λ를 바꿈 (연구 필요)
+
+[b]전역[/b]  [code]wave  rho  integrity[/code]
+
+[b]내장 함수[/b]
+print len range min max abs sorted sum any all int float str round list enumerate zip reversed
+min·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code], sorted는 [code]reverse=[/code]
+
+[b]문법[/b]  def, return, if/elif/else, for, while, break, continue, lambda, 리스트 내포, global
+한 번 실행에 20,000단계까지. 오류가 나면 그 타워는 기본 조준으로 돌아갑니다.
+"""
+
 
 # ---------------- enemy templates ----------------
 # kind: num | sq | p2 | poly | exp | trig   (used for previews and the test bot)

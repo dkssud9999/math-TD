@@ -17,6 +17,9 @@ var palette_open: bool = false  # chapter 2+: arithmetic towers folded into one 
 var dev_mode: bool = false      # developer tools visible in the menu, F9 = instant clear
 var dev_short: bool = false     # developer: stages play 5 of their 15 waves
 var auto_wave: bool = false     # start the next wave by itself after a short breather
+var algo_default: Dictionary = {}   # tower type -> .py file new towers of that type run
+const SCRIPT_DIR := "user://scripts"
+var _script_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -152,6 +155,7 @@ func save_game() -> void:
 	f.store_string(JSON.stringify({
 		"insight": insight, "research": research, "stars": stars, "flags": flags, "seen": seen, "axioms": axioms_on,
 		"palette_open": palette_open, "dev_mode": dev_mode, "dev_short": dev_short, "auto_wave": auto_wave,
+		"algo_default": algo_default,
 	}))
 
 
@@ -173,10 +177,77 @@ func load_game() -> void:
 	dev_mode = d.get("dev_mode", false)
 	dev_short = d.get("dev_short", false)
 	auto_wave = d.get("auto_wave", false)
+	algo_default = d.get("algo_default", {})
 	stars = {}
 	var raw: Dictionary = d.get("stars", {})
 	for k in raw:
 		stars[k] = int(raw[k])
+
+
+# ---------- attack algorithms: real .py files in user://scripts ----------
+
+func list_scripts() -> Array:
+	var out: Array = []
+	var dir := DirAccess.open(SCRIPT_DIR)
+	if dir == null:
+		return out
+	for fn in dir.get_files():
+		if fn.ends_with(".py"):
+			out.append(fn)
+	out.sort()
+	return out
+
+
+func read_script(name: String) -> String:
+	if name == "":
+		return ""
+	if _script_cache.has(name):
+		return _script_cache[name]
+	var path := name if name.begins_with("res://") else SCRIPT_DIR + "/" + name
+	var txt := ""
+	if FileAccess.file_exists(path):
+		txt = FileAccess.get_file_as_string(path)
+	_script_cache[name] = txt
+	return txt
+
+
+func write_script(name: String, src: String) -> void:
+	DirAccess.make_dir_recursive_absolute(SCRIPT_DIR)
+	var f := FileAccess.open(SCRIPT_DIR + "/" + name, FileAccess.WRITE)
+	if f != null:
+		f.store_string(src)
+		f.close()
+	_script_cache[name] = src
+
+
+func delete_script(name: String) -> void:
+	DirAccess.remove_absolute(SCRIPT_DIR + "/" + name)
+	_script_cache.erase(name)
+	for k in algo_default.keys():
+		if algo_default[k] == name:
+			algo_default.erase(k)
+	save_game()
+
+
+func rename_script(old: String, new_name: String) -> bool:
+	if new_name == old or FileAccess.file_exists(SCRIPT_DIR + "/" + new_name):
+		return false
+	var src := read_script(old)
+	write_script(new_name, src)
+	delete_script(old)
+	return true
+
+
+## Drop external edits (files changed outside the game) so the next read sees them.
+func reload_scripts() -> void:
+	_script_cache.clear()
+
+
+func ensure_example_scripts() -> void:
+	if not list_scripts().is_empty():
+		return
+	write_script("attack.py", Data.EXAMPLE_ATTACK)
+	write_script("damp.py", Data.EXAMPLE_DAMP)
 
 
 ## Developer: every chapter met and every stage open (skips the reveals).

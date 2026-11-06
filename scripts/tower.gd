@@ -16,6 +16,9 @@ var lam: int = 1
 var flash: float = 0.0
 var aim: Vector2 = Vector2.RIGHT
 var t: float = 0.0
+var algo: String = ""          # .py file this tower runs ("" = built-in targeting)
+var algo_host: Algo = null
+var algo_error: String = ""
 
 
 func setup(p_type: String, p_main, p_cell: Vector2i) -> void:
@@ -27,6 +30,8 @@ func setup(p_type: String, p_main, p_cell: Vector2i) -> void:
 	position = Data.cell_center(cell)
 	if type in ["sqrt", "log2", "div", "newton", "bisect"]:
 		target_mode = 1   # biggest first
+	if Progress.has("code"):
+		algo = String(Progress.algo_default.get(type, ""))
 
 
 func stat(key: String) -> float:
@@ -252,6 +257,15 @@ static func op_useful(type: String, f: Expr, k: int = 1) -> bool:
 	return false
 
 
+## Every living enemy in range, useful or not (what an attack algorithm gets to choose from).
+func in_range(r: float) -> Array:
+	var out: Array = []
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e.alive and e.global_position.distance_to(global_position) <= r:
+			out.append(e)
+	return out
+
+
 func candidates(r: float) -> Array:
 	var out: Array = []
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -285,7 +299,24 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	if cooldown > 0.0:
 		return
-	var cands := candidates(range_px())
+	var cands: Array = []
+	var scripted := false
+	if algo != "" and Progress.has("code"):
+		var near := in_range(range_px())
+		if near.is_empty():
+			return
+		if algo_host == null:
+			algo_host = Algo.new(self)
+		var res: Dictionary = algo_host.run(near)
+		algo_error = res["error"]
+		if res["ok"]:
+			scripted = true
+			cands = res["targets"]
+			if cands.is_empty():
+				cooldown = 0.12   # the algorithm chose to wait; ask again shortly
+				return
+	if not scripted:
+		cands = candidates(range_px())
 	if cands.is_empty():
 		return
 	if type == "merge":
@@ -301,7 +332,7 @@ func _process(delta: float) -> void:
 		Sfx.play("pulse", 0.7 if type == "damp" else 1.5)
 		flash = 0.2
 		return
-	var tg = pick_target(cands)
+	var tg = cands[0] if scripted else pick_target(cands)
 	aim = (tg.global_position - global_position).normalized()
 	if type in ["sqrt", "log2", "newton", "bisect"]:
 		main.spawn_zap(global_position, tg.global_position, data["color"])
@@ -388,6 +419,12 @@ func describe() -> String:
 	return "\n".join(PackedStringArray(lines))
 
 
+func _exit_tree() -> void:
+	if algo_host != null:
+		algo_host.dispose()
+		algo_host = null
+
+
 func _draw() -> void:
 	var c: Color = data["color"]
 	var r := range_px()
@@ -403,3 +440,5 @@ func _draw() -> void:
 	Data.draw_text_centered(self, g, Vector2(0, -2), fs, c)
 	for i in level:
 		draw_circle(Vector2(-6 + i * 6, 12), 1.8, c)
+	if algo != "" and Progress.has("code"):
+		Data.draw_text_centered(self, "</>", Vector2(12, -21), 9, Color("ef5350") if algo_error != "" else Color("80cbc4"))

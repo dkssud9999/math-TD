@@ -30,6 +30,7 @@ Godot_v4.7.2-stable_win64.exe --path .
 | A | 자동 진행 (웨이브를 깨면 1.5초 뒤 다음 웨이브 자동 시작) |
 | Space (웨이브 중) | 조기 호출: 스폰이 끝났으면 다음 웨이브를 바로 불러 보너스 ρ |
 | X | 궁극기: 화면의 모든 함수에 x = 0 대입 (2장부터, 스테이지당 2회) |
+| E | 알고리즘 편집기: 선택한 타워의 공격 알고리즘(.py)을 직접 짭니다 (6장 연구 「알고리즘」) |
 | 적에 마우스 | 식 · 소멸자 · 피해 · 지금 배치로 통과할 때의 예측 |
 | P | 일시정지 |
 | 우클릭 / Esc | 취소 |
@@ -50,6 +51,9 @@ Godot_v4.7.2-stable_win64.exe --path .
 ```
 # 수학 계산 검증 (실제 항등식 약 2,880개)
 godot --headless --path . --script res://tests/test_expr.gd
+
+# 게임 속 파이썬 인터프리터 검증 (실제 파이썬과 같은 출력인지)
+godot --headless --path . --script res://tests/test_py.gd
 
 # 전 스테이지 봇 밸런스 측정 (병렬, 약 10분)
 bash tests/balance.sh            # 각 경우 2회
