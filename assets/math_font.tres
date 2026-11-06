@@ -1,0 +1,4 @@
+[gd_resource type="SystemFont" format=3]
+
+[resource]
+font_names = PackedStringArray("Malgun Gothic", "Segoe UI", "Segoe UI Symbol", "Cambria Math", "Arial")

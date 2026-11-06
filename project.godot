@@ -1,0 +1,27 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="Limit Break"
+config/description="An advanced-math tower defence."
+run/main_scene="res://scenes/menu.tscn"
+config/features=PackedStringArray("4.7")
+
+[autoload]
+Data="*res://autoload/data.gd"
+Progress="*res://autoload/progress.gd"
+Game="*res://autoload/game.gd"
+Sfx="*res://autoload/sfx.gd"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[gui]
+theme/custom_font="res://assets/math_font.tres"
+
+[rendering]
+anti_aliasing/quality/msaa_2d=2
+environment/defaults/default_clear_color=Color(0.039, 0.078, 0.141, 1)
