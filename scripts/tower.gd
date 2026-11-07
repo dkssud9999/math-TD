@@ -102,7 +102,7 @@ func sell_value() -> int:
 
 
 func uses_targeting() -> bool:
-	return type not in ["merge", "damp", "lpf", "zeno", "accel"]
+	return type not in ["merge", "damp", "lpf", "zeno", "accel", "spring"]
 
 
 ## The second parameter some towers expose: ω for the harmonic tower, λ for the time tower.
@@ -303,6 +303,19 @@ func _process(delta: float) -> void:
 	flash = maxf(0.0, flash - delta)
 	cooldown -= delta
 	queue_redraw()
+	if type == "spring":
+		if cooldown <= 0.0:
+			var hit := 0
+			for e in in_range(range_px()):
+				var cap: float = [60.0, 80.0, 100.0][level - 1]
+				if e.knockback(minf(cap, float(power()) * e.progress)) > 0.0:
+					hit += 1
+			if hit > 0:
+				cooldown = 1.0 / rate()
+				main.spawn_ring(global_position, range_px(), data["color"])
+				Sfx.play("pulse", 0.5)
+				flash = 0.2
+		return
 	if type == "zeno" or type == "accel":
 		return   # a field, not a shooter: enemies ask main.slow_at() while walking
 	if cooldown > 0.0:
@@ -322,7 +335,7 @@ func _process(delta: float) -> void:
 			scripted = true
 			cands = res["targets"]
 			if cands.is_empty():
-				cooldown = 0.12 + algo_delay   # the algorithm chose to wait; thinking still took time
+				cooldown = 0.25 + algo_delay   # the algorithm chose to wait; thinking still took time
 				return
 	if not scripted:
 		cands = candidates(range_px())
@@ -403,6 +416,10 @@ func describe() -> String:
 		lines.append("효과: 범위 안의 타워 공격 속도 × %.1f" % float(power()))
 		return "
 ".join(lines)
+	if type == "spring":
+		lines.append("효과: 지나온 거리 × %.2f만큼 되밀기 (최대 %d)" % [float(power()), [60, 80, 100][level - 1]])
+		return "
+".join(lines)
 	if Data.cursed() and (algo == "" or not Progress.has("code")):
 		lines.append("⚠ 저주: 사거리 안의 모든 함수를 때립니다" + ("  ·  [E] 알고리즘" if Progress.has("code") else ""))
 	match type:
@@ -455,7 +472,7 @@ func _draw() -> void:
 	if main.selected_tower == self:
 		draw_circle(Vector2.ZERO, r, Color(c, 0.07))
 		draw_arc(Vector2.ZERO, r, 0, TAU, 72, Color(c, 0.55), 1.5, true)
-	if (type == "zeno" or type == "accel") and main.selected_tower != self:
+	if type in ["zeno", "accel", "spring"] and main.selected_tower != self:
 		draw_arc(Vector2.ZERO, r, 0, TAU, 64, Color(c, 0.22), 1.0, true)   # the field is always visible
 	var s := 17.0
 	draw_rect(Rect2(-s, -s, 2 * s, 2 * s), Color("0d1b2a"))

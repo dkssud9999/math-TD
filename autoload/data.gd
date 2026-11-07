@@ -26,25 +26,25 @@ var MAPS: Array = [
 # ---------------- chapters & stages ----------------
 var CHAPTERS: Dictionary = {
 	1: {"name": "1장 · 산술", "sub": "수 방어전", "rho": 150, "integrity": 100,
-		"towers": ["zeno", "accel", "sub", "div", "sqrt", "log2"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "sqrt", "log2"]},
 	2: {"name": "2장 · 변화율", "sub": "f(x) = x", "rho": 200, "integrity": 40,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
 	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 320, "integrity": 90,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
 	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 400, "integrity": 120,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "int", "merge"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "int", "merge"]},
 	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 400, "integrity": 70,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
 	6: {"name": "6장 · 연산자 순서", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 420, "integrity": 100,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
 	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 380, "integrity": 100,
-		"towers": ["zeno", "accel", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
+		"towers": ["zeno", "accel", "spring", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
 	8: {"name": "8장 · 주파수 영역", "sub": "D ⟷ iω", "rho": 380, "integrity": 100,
-		"towers": ["zeno", "accel", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "lpf"]},
+		"towers": ["zeno", "accel", "spring", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "lpf"]},
 	9: {"name": "9장 · 근사", "sub": "εₙ₊₁ ≈ C · εₙ²", "rho": 340, "integrity": 90,
-		"towers": ["zeno", "accel", "sub", "div", "divx", "diff", "dm1", "harm", "merge", "lpf", "newton", "bisect"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "diff", "dm1", "harm", "merge", "lpf", "newton", "bisect"]},
 	10: {"name": "10장 · 공리", "sub": "LIMIT BREAK", "rho": 440, "integrity": 120,
-		"towers": ["zeno", "accel", "sub", "diff", "dm1", "harm", "merge", "damp", "dtl", "lpf", "newton", "bisect"]},
+		"towers": ["zeno", "accel", "spring", "sub", "diff", "dm1", "harm", "merge", "damp", "dtl", "lpf", "newton", "bisect"]},
 }
 
 var STAGE_ORDER: Array = [
@@ -225,7 +225,7 @@ var STAGES: Dictionary = {
 	"7-6": {"chapter": 7, "name": "신호", "map": 5, "x_end": 7.0, "base": 5, "growth": 0.75, "interval": [1.2, 0.7],
 		"desc": "7장의 마지막 스테이지. 모든 연산자는 한 번에 한 가지 모드를 다룹니다. 모드가 무한히 많다면?",
 		"mix": [["sep1", 1, 1], ["wave2", 1, 1], ["sig2", 1, 4], ["wave_mix", 1, 7]], "boss": [["boss_wave", 1]], "counter": "signal_counter"},
-	"8-1": {"chapter": 8, "name": "스펙트럼", "map": 0, "x_end": 8.0, "flag": "met_signal", "base": 5, "growth": 0.8, "interval": [1.25, 0.7],
+	"8-1": {"chapter": 8, "name": "스펙트럼", "map": 0, "x_end": 8.0, "flag": "met_ch8_old", "base": 5, "growth": 0.8, "interval": [1.25, 0.7],
 		"desc": "전장이 주파수 영역으로 바뀌었습니다. 적은 이제 스펙트럼입니다: 막대 하나가 진동수 하나. 저역 통과 필터는 컷오프보다 높은 막대를 전부 0으로 곱합니다.",
 		"mix": [["sig2", 2, 1], ["sin", 1, 1], ["sig3", 1, 4], ["acs", 1, 6]], "boss": [["boss_sig", 2]]},
 	"8-2": {"chapter": 8, "name": "저역 통과", "map": 1, "x_end": 8.0, "base": 7, "growth": 0.9, "interval": [1.1, 0.6],
@@ -280,7 +280,7 @@ var STAGES: Dictionary = {
 }
 
 # ---------------- towers ----------------
-var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "sqrt", "log2", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
+var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "spring", "sqrt", "log2", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
 
 var TOWERS: Dictionary = {
 	"sub": {
@@ -302,6 +302,11 @@ var TOWERS: Dictionary = {
 		"name": "가속도", "glyph": ["a", "a", "a"], "color": Color("ffcc80"), "cost": 90, "upgrade": [90, 140],
 		"range": [95, 110, 125], "rate": [1.0, 1.0, 1.0], "power": [1.3, 1.5, 1.7], "research": "accel",
 		"desc": "a = d²x/dt². 범위 안의 다른 타워가 빨리 쏩니다 (×1.3, 강화하면 ×1.5, ×1.7). 여러 개가 겹치면 가장 강한 하나만 적용됩니다. 스스로는 공격하지 않습니다.",
+	},
+	"spring": {
+		"name": "복원력", "glyph": ["−kx", "−kx", "−kx"], "color": Color("a5d6a7"), "cost": 85, "upgrade": [80, 130],
+		"range": [100, 115, 130], "rate": [0.35, 0.42, 0.5], "power": [0.10, 0.13, 0.16], "research": "spring",
+		"desc": "훅의 법칙 F = −kx. 범위 안의 적을 지나온 거리의 k배만큼 되밀어냅니다 (한 번에 최대 60 / 80 / 100). 적은 최근 10초 동안 밀린 횟수만큼 버팁니다: 한 번 밀릴 때마다 다음 밀림 −25%, 네 번째부터는 그냥 직진. 보스는 절반만 밀립니다.",
 	},
 	"zeno": {
 		"name": "제논", "glyph": ["½v", "⅖v", "⅓v"], "color": Color("90caf9"), "cost": 70, "upgrade": [70, 110],

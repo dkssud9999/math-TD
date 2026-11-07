@@ -268,11 +268,11 @@ func reload_scripts() -> void:
 	_script_cache.clear()
 
 
+## Examples are created only when the file does not exist. A player's file is never overwritten,
+## even if it uses an older API (the editor shows the error; the guide has current examples).
 func ensure_example_scripts() -> void:
-	# (re)write the examples when missing or still in the first version's API (e.growing, e.ann_degree …)
 	for pair in [["attack.py", Data.EXAMPLE_ATTACK], ["pair.py", Data.EXAMPLE_DAMP]]:
-		var old := read_script(pair[0])
-		if old == "" or old.contains("e.growing") or old.contains("ann_degree") or old.contains("def attack(enemies):\n    return enemies[0]") or old.contains("e.f.has(\"exp\")"):
+		if not FileAccess.file_exists(SCRIPT_DIR + "/" + pair[0]):
 			write_script(pair[0], pair[1])
 
 

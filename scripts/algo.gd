@@ -183,13 +183,29 @@ static func tree_of(f: Expr) -> Dictionary:
 	return {"kind": "add", "args": terms, "value": null, "text": " + ".join(tt).replace("+ -", "- ")}
 
 
+# Shared by every tower within one frame: the same function gives the same tree and the same
+# simulated shot, so they are built once. Scripts are still charged the full cost every time
+# (the cache is a speed-up for the computer, not a discount for the player).
+static var _cache_frame: int = -1
+static var _tree_cache: Dictionary = {}
+static var _after_cache: Dictionary = {}
+
+
+static func _fresh_cache() -> void:
+	var fr := Engine.get_process_frames()
+	if fr != _cache_frame:
+		_cache_frame = fr
+		_tree_cache.clear()
+		_after_cache.clear()
+
+
 func _tree(f: Expr, vm_: PyVM) -> Dictionary:
-	var id := f.get_instance_id()
-	if not _trees.has(id):
-		var t := tree_of(f)
-		_trees[id] = t
-		vm_.steps += 2 * f.t.size()
-	return {"__obj": "node", "d": _trees[id]}
+	vm_.steps += 2 * f.t.size()
+	_fresh_cache()
+	var key := str(f.t)
+	if not _tree_cache.has(key):
+		_tree_cache[key] = tree_of(f)
+	return {"__obj": "node", "d": _tree_cache[key]}
 
 
 ## x-degree of a term (a product): x → 1, x^k → k, otherwise 0 per factor.
@@ -296,15 +312,21 @@ func _expr_of(obj: Dictionary) -> Expr:
 
 func _after(obj: Dictionary, vm_: PyVM) -> Dictionary:
 	vm_.steps += AFTER_COST
-	var g := _expr_of(obj).clone()
-	match tower.type:
-		"int":
-			g.integrate()
-		"merge", "newton", "bisect":
-			pass
-		_:
-			TowerScript.transform(tower.type, g, tower.op_params())
-	return {"__obj": "snap", "node": obj["node"], "f": g}
+	_fresh_cache()
+	var src := _expr_of(obj)
+	var params: Dictionary = tower.op_params()
+	var key := "%s|%s|%s" % [str(src.t), tower.type, str(params)]
+	if not _after_cache.has(key):
+		var g := src.clone()
+		match tower.type:
+			"int":
+				g.integrate()
+			"merge", "newton", "bisect":
+				pass
+			_:
+				TowerScript.transform(tower.type, g, params)
+		_after_cache[key] = g
+	return {"__obj": "snap", "node": obj["node"], "f": _after_cache[key]}
 
 
 func py_attr(obj: Dictionary, name: String, vm_: PyVM):

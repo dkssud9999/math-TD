@@ -49,7 +49,7 @@ run_case() {
   local st="$1" rs="$2" i="$3"
   local out
   out=$(timeout 600 "$GODOT" --headless --fixed-fps 60 --path . res://scenes/main.tscn -- \
-        --autotest --stage="$st" --budget --research="$rs" --ts=1 2>&1)
+        --autotest --stage="$st" --tag="$RUN_TAG" --budget --research="$rs" --ts=1 2>&1)
   local line
   line=$(echo "$out" | grep "\[autotest\] done" | sed 's/\[autotest\] done: //')
   local err
@@ -67,10 +67,27 @@ run_case() {
 export -f run_case
 export GODOT
 
+# Stopping the script (Ctrl+C, closed shell, killed task) must also stop every Godot it started:
+# the run is a child process group; on exit its whole Windows process tree is killed.
+export RUN_TAG="lbt$$x$RANDOM"   # every Godot this run starts carries --tag=$RUN_TAG
+cleanup() {
+  [ -n "$RUN_PID" ] && kill -- -"$RUN_PID" 2>/dev/null
+  # the loop (xargs, run_case shells) and every Godot carry the tag; two passes catch anything spawned in between
+  for pass in 1 2; do
+    powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -match '$RUN_TAG' -and \$_.CommandLine -notmatch 'Get-CimInstance' } | ForEach-Object { try { Stop-Process -Id \$_.ProcessId -Force -ErrorAction Stop } catch {} }" > /dev/null 2>&1
+  done
+}
+trap cleanup INT TERM HUP EXIT
 start=$(date +%s)
+set -m
+(
 for c in "${CASES[@]}"; do
   for i in $(seq 1 "$RUNS"); do
     echo "$c $i"
   done
-done | xargs -P "$JOBS" -L 1 bash -c 'run_case "$0" "$1" "$2"' | sort
+done | xargs -P "$JOBS" -L 1 bash -c "run_case \"\$0\" \"\$1\" \"\$2\"  # $RUN_TAG" | sort
+) &
+RUN_PID=$!
+wait "$RUN_PID"
+RUN_PID=""
 echo "총 소요: $(( $(date +%s) - start ))초"

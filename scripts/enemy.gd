@@ -25,6 +25,7 @@ var color: Color = Color.WHITE
 var label_w: float = 20.0
 var flash: float = 0.0
 var t: float = 0.0
+var pushes: Array = []        # own-clock times of recent 복원력 pushes (resistance memory, 10 s)
 var tt: float = 0.0          # the function's own time variable
 var t_refresh: float = 0.0
 var numeric: bool = true
@@ -346,6 +347,15 @@ func _die(by_induction: bool = false) -> void:
 	queue_free()
 
 
+## What reaching the core costs: digits (+ merged count), and bosses add +8 (hard +12) on top.
+func leak_damage(base: int) -> int:
+	if base <= 0:
+		return 0
+	if boss and not Data.COUNTERS.has(template):
+		return base + (12 if Game.hard else 8)   # a boss at the gate is a disaster (genre convention)
+	return base
+
+
 func _reach_core() -> void:
 	alive = false
 	if Data.COUNTERS.has(template) and not Progress.flag(Data.COUNTERS[template]["flag"]):
@@ -358,12 +368,10 @@ func _reach_core() -> void:
 		return
 	if main.autotest and OS.get_cmdline_user_args().has("--leaks"):
 		print("[leak] w%d %s (%s)" % [Game.wave, f.to_text(), template])
-	var msg := ("−%d" % threat) if (numeric or special != "") else ("f(%s) ≈ %s  →  −%d" % [_xe(), _compact(f.value_at(Game.x_end, tt)), threat])
+	var msg := ("−%d" % leak_damage(threat)) if (numeric or special != "") else ("f(%s) ≈ %s  →  −%d" % [_xe(), _compact(f.value_at(Game.x_end, tt)), leak_damage(threat)])
 	main.spawn_text(main.map.core_position() + Vector2(0, -40), msg, Color("ef5350"), 18)
 	Sfx.play("leak")
-	var dmg := threat
-	if boss and not Data.COUNTERS.has(template):
-		dmg += 12 if Game.hard else 8   # a boss at the gate is a disaster (genre convention)
+	var dmg := leak_damage(threat)
 	main.shake(6.0 + minf(14.0, dmg * 0.2))
 	Game.damage(dmg)
 	queue_free()
@@ -409,6 +417,30 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## 복원력: pushed back along the path. Each push in the last 10 s makes the next one 25% weaker;
+## from the 4th on the enemy walks straight through. Bosses take half.
+const PUSH_MEMORY := 10.0
+const PUSH_RESIST_STEP := 0.25
+
+
+func push_resist() -> float:
+	while not pushes.is_empty() and t - float(pushes[0]) > PUSH_MEMORY:
+		pushes.pop_front()
+	return minf(1.0, pushes.size() * PUSH_RESIST_STEP)
+
+
+func knockback(px: float) -> float:
+	if not alive:
+		return 0.0
+	var d := px * (1.0 - push_resist()) * (0.5 if boss else 1.0)
+	if d <= 0.5:
+		return 0.0
+	pushes.append(t)
+	progress = maxf(0.0, progress - d)
+	flash = 0.15
+	return d
+
+
 func _draw() -> void:
 	if trail.size() > 1:
 		var pts := PackedVector2Array()
@@ -416,6 +448,9 @@ func _draw() -> void:
 			pts.append(p - global_position)
 		pts.append(Vector2.ZERO)
 		draw_polyline(pts, Color(color, 0.25), 2.0, true)
+	if not pushes.is_empty():   # push resistance: ↺1 … ↺4 (4 = walks straight through)
+		var n := mini(4, pushes.size())
+		Data.draw_text_centered(self, "↺%d" % n, Vector2(-label_w / 2.0 - 14, 0), 10, Color("a5d6a7") if n < 4 else Color("ef9a9a"))
 	if main.map.spectrum and special == "":
 		_draw_spectrum()
 		return
@@ -444,7 +479,7 @@ func _draw() -> void:
 	elif not numeric:
 		var tc := Color(1.0, 0.45, 0.45, 0.85) if threat >= 4 else Color(1.0, 0.75, 0.75, 0.6)
 		var where := "f(%s)" % _xe() if not f.has_t() else "f(%s, %.1f)" % [_xe(), tt]
-		Data.draw_text_centered(self, "%s≈%s  −%d" % [where, _compact(f.value_at(Game.x_end, tt)), threat], Vector2(0, h / 2 + 9), 10, tc)
+		Data.draw_text_centered(self, "%s≈%s  −%d" % [where, _compact(f.value_at(Game.x_end, tt)), leak_damage(threat)], Vector2(0, h / 2 + 9), 10, tc)
 		if Progress.has("ann"):
 			Data.draw_text_centered(self, ann_text, Vector2(0, -h / 2 - 9), 10, Color("80deea"))
 	elif threat == 0:

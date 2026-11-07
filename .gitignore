@@ -1,6 +1,5 @@
 # Godot 4
 .godot/
 *.tmp
-export_presets.cfg
 build/
 tools/

@@ -342,7 +342,7 @@ func _refresh_info() -> void:
 	_chg(btn_upgrade, "visible", show_up)
 	_chg(btn_sell, "visible", show_up)
 	_chg(btn_target, "visible", show_target)
-	var show_algo: bool = show_up and Progress.has("code") and tw.type not in ["zeno", "accel"]
+	var show_algo: bool = show_up and Progress.has("code") and tw.type not in ["zeno", "accel", "spring"]
 	_chg(btn_algo, "visible", show_algo)
 	if show_algo:
 		var a: String = tw.algo if tw.algo != "" else "기본 (맨 앞 적)"
@@ -414,7 +414,12 @@ func show_result(won: bool, earned_stars: int, insight_gain: int) -> void:
 	body += "\n\n★ 클리어   ★ 코어 체력 절반 이상   ★ 누출 0"
 	var buttons: Array = []
 	if won and main.next_stage() != "":
-		buttons.append(["다음 스테이지  ▶", func(): main.go_stage(main.next_stage())])
+		buttons.append(["다음 · 일반  ▶", func():
+			Game.hard = false
+			main.go_stage(main.next_stage())])
+		buttons.append(["다음 · 하드  ▶", func():
+			Game.hard = true
+			main.go_stage(main.next_stage())])
 	buttons.append(["다시 도전", func(): main.restart()])
 	buttons.append(["연구 · 스테이지 선택", func(): main.to_menu()])
 	if won:

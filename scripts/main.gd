@@ -385,7 +385,7 @@ func use_ultimate() -> void:
 func predict(e) -> Dictionary:
 	var steps: Array = []
 	if e.special != "":
-		return {"steps": steps, "dead": false, "f": e.f, "dmg": e.threat}
+		return {"steps": steps, "dead": false, "f": e.f, "dmg": e.leak_damage(e.threat)}
 	var g: Expr = e.f.clone()
 	var events: Array = []
 	var spd: float = maxf(1.0, e.speed())
@@ -420,7 +420,7 @@ func predict(e) -> Dictionary:
 		if g.is_zero():
 			break
 	var dmg: int = 0 if g.is_zero() else EnemyScript.harm(g.value_at(Game.x_end, e.tt)) + int(e.members) - 1
-	return {"steps": steps, "dead": g.is_zero(), "f": g, "dmg": dmg}
+	return {"steps": steps, "dead": g.is_zero(), "f": g, "dmg": e.leak_damage(dmg)}
 
 
 func hovered_enemy():
@@ -1087,11 +1087,13 @@ func _autotest_best_tower() -> String:
 				best = "div"
 			elif nd < 5 or nm < 3:
 				best = "diff" if nd <= nm * 2 else "merge"
-	# a few 제논 fields once the basics stand (about one in six towers)
-	if available_towers.has("zeno") and occupied.size() >= 4 and int(owned.get("zeno", 0)) * 6 < occupied.size():
+	# support towers once the operators stand: about one 제논 per 10, one 가속도 and one 복원력 per 12
+	if available_towers.has("zeno") and occupied.size() >= 8 and int(owned.get("zeno", 0)) * 10 < occupied.size():
 		best = "zeno"
-	elif available_towers.has("accel") and occupied.size() >= 8 and int(owned.get("accel", 0)) * 8 < occupied.size():
+	elif available_towers.has("accel") and occupied.size() >= 12 and int(owned.get("accel", 0)) * 12 < occupied.size():
 		best = "accel"
+	elif available_towers.has("spring") and occupied.size() >= 10 and int(owned.get("spring", 0)) * 12 < occupied.size() - 4:
+		best = "spring"
 	if available_towers.has("int") and not Data.cursed() and int(owned.get("int", 0)) < 2 and occupied.size() >= 6 and occupied.size() % 5 == 0:
 		best = "int"
 	return best

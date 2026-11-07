@@ -10,6 +10,12 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = Data.make_theme()
 	_build()
+	for a in OS.get_cmdline_user_args():   # --shot-menu=path.png: screenshot of the menu, then quit (tests)
+		if a.begins_with("--shot-menu="):
+			for i in 20:
+				await get_tree().process_frame
+			get_viewport().get_texture().get_image().save_png(a.substr(12))
+			get_tree().quit()
 
 
 func _label(text: String, size: int, color: Color = Color("e0e1dd")) -> Label:
@@ -109,7 +115,7 @@ func _build() -> void:
 	rscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(rscroll)
 	var right := VBoxContainer.new()
-	right.custom_minimum_size = Vector2(550, 0)
+	right.custom_minimum_size = Vector2(530, 0)
 	right.add_theme_constant_override("separation", 6)
 	rscroll.add_child(right)
 	right.add_child(_label("연구", 22, Color("ffd166")))
@@ -130,7 +136,8 @@ func _build() -> void:
 			var ab := _button("%s  %s
 %s" % ["● 켜짐" if on else "○ 꺼짐", node["name"], node["desc"]], _toggle_axiom.bind(node["id"]), 13)
 			ab.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			ab.custom_minimum_size = Vector2(550, 50)
+			ab.custom_minimum_size = Vector2(530, 50)
+			ab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # long descriptions wrap instead of running off-screen
 			ab.add_theme_color_override("font_color", Color("ffd166") if on else Color("b0bec5"))
 			right.add_child(ab)
 			continue
@@ -155,7 +162,8 @@ func _build() -> void:
 		var b := _button(head if body == "" else "%s
 %s" % [head, body], _buy.bind(node), 13)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.custom_minimum_size = Vector2(550, 26 if body == "" else 50)
+		b.custom_minimum_size = Vector2(530, 26 if body == "" else 50)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # long descriptions wrap instead of running off-screen
 		b.disabled = st != "available" or Progress.insight < int(node["cost"])
 		if st == "owned":
 			b.add_theme_color_override("font_disabled_color", Color("81c784"))

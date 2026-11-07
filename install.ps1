@@ -5,6 +5,10 @@ $dest = Join-Path $env:LOCALAPPDATA "LimitBreak"
 # Only the game files live in $dest. Progress and algorithms are in %APPDATA%\Godot\app_userdata\Limit Break
 # (Godot's user://) and are never touched by installing or updating.
 $save = Join-Path $env:APPDATA "Godot\app_userdata\Limit Break"
+if (Get-Process -Name "LimitBreak" -ErrorAction SilentlyContinue) {
+    Write-Host "LIMIT BREAK이 실행 중입니다. 게임을 닫은 뒤 이 명령을 다시 실행하세요." -ForegroundColor Yellow
+    return
+}
 Write-Host "LIMIT BREAK: 최신 릴리스를 찾는 중..."
 $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ "User-Agent" = "limitbreak-installer" }
 $asset = $rel.assets | Where-Object { $_.name -like "*.zip" } | Select-Object -First 1
