@@ -210,7 +210,7 @@ func refresh() -> void:
 	lbl_stage.text = "%s %s%s" % [Game.stage_id, st["name"], "  · 하드" if Game.hard else ""]
 	lbl_rho.text = "ρ %d" % int(Game.rho)
 	lbl_rate.text = "+%d/s" % Game.rho_rate()
-	lbl_life.text = "무결성 %d" % Game.integrity
+	lbl_life.text = "코어 체력 %d" % Game.integrity
 	_chg(lbl_wave, "text", "웨이브 %d / %d%s" % [Game.wave, main.waves.size(), "  (짧게)" if Progress.dev_short else ""])
 	var early: bool = main.can_call_early()
 	_chg(btn_start, "disabled", main.state != "build" and not early)
@@ -411,7 +411,7 @@ func show_intro() -> void:
 func show_result(won: bool, earned_stars: int, insight_gain: int) -> void:
 	var star_txt := "★".repeat(earned_stars) + "☆".repeat(3 - earned_stars)
 	var body := "%s\n\n처치 %d   ·   누출 %d   ·   최대 연쇄 ×%d\n통찰 +%d   (보유 %d)" % [star_txt, Game.kills, Game.leaked, Game.max_combo, insight_gain, Progress.insight]
-	body += "\n\n★ 클리어   ★ 무결성 절반 이상   ★ 누출 0"
+	body += "\n\n★ 클리어   ★ 코어 체력 절반 이상   ★ 누출 0"
 	var buttons: Array = []
 	if won and main.next_stage() != "":
 		buttons.append(["다음 스테이지  ▶", func(): main.go_stage(main.next_stage())])
