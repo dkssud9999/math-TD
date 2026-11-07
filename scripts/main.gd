@@ -676,7 +676,7 @@ func spawn_enemy(template: String, progress: float) -> void:
 	e.setup(template, self, Data.make_expr(template, rng, lv), progress)
 	enemies_node.add_child(e)
 	if Progress.see(template) and not autotest:
-		spawn_text(e.global_position + Vector2(40, -30), "새 개체: %s  (통찰 +1)" % _tpl_name(template), Color("5bc0be"), 13, 2.0)
+		spawn_text(e.global_position + Vector2(40, -30), "새 개체: %s" % _tpl_name(template), Color("5bc0be"), 13, 2.0)
 
 
 ## Developer: finish the current stage at once (counts as a 3-star clear).

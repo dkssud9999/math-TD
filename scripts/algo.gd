@@ -70,7 +70,8 @@ func run(cands: Array, dry: bool = false) -> Dictionary:
 		proxies.append({"__obj": "enemy", "node": e})
 	var me := {"__obj": "tower"}
 	var g := {"enemies": proxies, "me": me, "wave": Game.wave, "rho": int(Game.rho), "integrity": Game.integrity,
-		"attack": {"__bm": "attack", "self": me}, "set_param": {"__bm": "set_param", "self": me}}
+		"attack": {"__bm": "attack", "self": me}, "set_param": {"__bm": "set_param", "self": me},
+		"derivative": {"__bm": "derivative", "self": {"__obj": "math"}}}
 	chosen = null
 	chose = false
 	vm.output.clear()
@@ -125,27 +126,63 @@ func _error(msg: String) -> Dictionary:
 # ---------- the expression tree ----------
 # A node is {"kind", "args", "value", "text"}; kinds: add, mul, pow, exp, sin, cos, num, x, t.
 
+static func _const_expr(n: int, d: int = 1) -> Expr:
+	var f := Expr.new()
+	if n != 0:
+		f._add(Expr.CONST(), Expr.cre(Expr.rn(n, d)))
+	return f
+
+
+## x^k or t^k as an exact function
+static func _mono(v: String, k: int) -> Expr:
+	var f := Expr.new()
+	f._add(Expr.K(k) if v == "x" else Expr.K(0, 0, 0, k), Expr.cre(Expr.rn(1)))
+	return f
+
+
 static func _num(n: int, d: int = 1) -> Dictionary:
 	return {"kind": "num", "args": [], "value": float(n) / float(d) if d != 1 else n,
-		"text": str(n) if d == 1 else "%d/%d" % [n, d]}
+		"text": str(n) if d == 1 else "%d/%d" % [n, d], "expr": _const_expr(n, d)}
 
 
 static func _var(v: String) -> Dictionary:
-	return {"kind": v, "args": [], "value": null, "text": v}
+	return {"kind": v, "args": [], "value": null, "text": v, "expr": _mono(v, 1)}
 
 
 static func _scaled(c: int, v: String) -> Dictionary:
 	if c == 1:
 		return _var(v)
-	return {"kind": "mul", "args": [_num(c), _var(v)], "value": null, "text": "%d%s" % [c, v]}
+	var f := _mono(v, 1)
+	f.scale(c, 1)
+	return {"kind": "mul", "args": [_num(c), _var(v)], "value": null, "text": "%d%s" % [c, v], "expr": f}
 
 
-static func _fn(kind: String, inner: Dictionary) -> Dictionary:
-	return {"kind": kind, "args": [inner], "value": null, "text": "%s(%s)" % [kind, inner["text"]]}
+static func _fn(kind: String, inner: Dictionary, c: int = 1, v: String = "x") -> Dictionary:
+	var f := Expr.new()
+	if kind == "exp":
+		f._add(Expr.K(0, c) if v == "x" else Expr.K(0, 0, 0, 0, c), Expr.cre(Expr.rn(1)))
+	elif kind == "sin":
+		f.add_trig_q(Expr.rn(0), Expr.rn(1), 0, 0, c)
+	else:
+		f.add_trig_q(Expr.rn(1), Expr.rn(0), 0, 0, c)
+	return {"kind": kind, "args": [inner], "value": null, "text": "%s(%s)" % [kind, inner["text"]], "expr": f}
 
 
 static func _pow(v: String, k: int) -> Dictionary:
-	return {"kind": "pow", "args": [_var(v), _num(k)], "value": null, "text": "%s^%d" % [v, k]}
+	return {"kind": "pow", "args": [_var(v), _num(k)], "value": null, "text": "%s^%d" % [v, k], "expr": _mono(v, k)}
+
+
+## One real term (from Expr.real_terms) as an exact function.
+static func _term_expr(rt: Dictionary) -> Expr:
+	var f := Expr.new()
+	var c := Expr.rn(rt["num"], rt["den"])
+	if rt["trig"] == "":
+		f._add(Expr.K(rt["k"], rt["a"], 0, rt["j"], rt["g"]), Expr.cre(c))
+	elif rt["trig"] == "cos":
+		f.add_trig_q(c, Expr.rn(0), rt["k"], rt["a"], rt["b"], rt["j"], rt["g"])
+	else:
+		f.add_trig_q(Expr.rn(0), c, rt["k"], rt["a"], rt["b"], rt["j"], rt["g"])
+	return f
 
 
 static func tree_of(f: Expr) -> Dictionary:
@@ -157,13 +194,13 @@ static func tree_of(f: Expr) -> Dictionary:
 		if rt["k"] > 0:
 			facs.append(_var("x") if rt["k"] == 1 else _pow("x", rt["k"]))
 		if rt["a"] != 0:
-			facs.append(_fn("exp", _scaled(rt["a"], "x")))
+			facs.append(_fn("exp", _scaled(rt["a"], "x"), rt["a"]))
 		if rt["trig"] != "":
-			facs.append(_fn(rt["trig"], _scaled(rt["b"], "x")))
+			facs.append(_fn(rt["trig"], _scaled(rt["b"], "x"), rt["b"]))
 		if rt["j"] > 0:
 			facs.append(_var("t") if rt["j"] == 1 else _pow("t", rt["j"]))
 		if rt["g"] != 0:
-			facs.append(_fn("exp", _scaled(rt["g"], "t")))
+			facs.append(_fn("exp", _scaled(rt["g"], "t"), rt["g"], "t"))
 		if not (n == 1 and d == 1) or facs.is_empty():
 			facs.push_front(_num(n, d))
 		if facs.size() == 1:
@@ -172,15 +209,17 @@ static func tree_of(f: Expr) -> Dictionary:
 			var parts := PackedStringArray()
 			for x in facs:
 				parts.append(("(%s)" % x["text"]) if x["kind"] == "num" and x["value"] < 0 else x["text"])
-			terms.append({"kind": "mul", "args": facs, "value": null, "text": "·".join(parts)})
+			terms.append({"kind": "mul", "args": facs, "value": null, "text": "·".join(parts), "expr": _term_expr(rt)})
 	if terms.is_empty():
 		return _num(0)
 	if terms.size() == 1:
-		return terms[0]
+		var only: Dictionary = terms[0].duplicate()
+		only["expr"] = f.clone()
+		return only
 	var tt := PackedStringArray()
 	for x in terms:
 		tt.append(x["text"])
-	return {"kind": "add", "args": terms, "value": null, "text": " + ".join(tt).replace("+ -", "- ")}
+	return {"kind": "add", "args": terms, "value": null, "text": " + ".join(tt).replace("+ -", "- "), "expr": f.clone()}
 
 
 # Shared by every tower within one frame: the same function gives the same tree and the same
@@ -199,7 +238,25 @@ static func _fresh_cache() -> void:
 		_after_cache.clear()
 
 
-func _tree(f: Expr, vm_: PyVM) -> Dictionary:
+## charge: steps for reading a function (e.f). Results of arithmetic pass a flat charge instead:
+## the intuitive way (a.f + b.f == 0) should not be the slow way; loops are what cost.
+## The real tree of a node (arithmetic results are built on first read).
+func _mat(obj: Dictionary) -> Dictionary:
+	var d: Dictionary = obj["d"]
+	if d.has("lazy"):
+		_fresh_cache()
+		var f: Expr = d["expr"]
+		var key := str(f.t)
+		if not _tree_cache.has(key):
+			_tree_cache[key] = tree_of(f)
+		obj["d"] = _tree_cache[key]
+	return obj["d"]
+
+
+func _tree(f: Expr, vm_: PyVM, charge: int = -1) -> Dictionary:
+	if charge >= 0:   # an arithmetic result: the tree is built only if someone reads it (_mat)
+		vm_.steps += charge
+		return {"__obj": "node", "d": {"expr": f, "lazy": true}}
 	vm_.steps += 2 * f.t.size()
 	_fresh_cache()
 	var key := str(f.t)
@@ -293,7 +350,13 @@ func _node_attr(d: Dictionary, name: String, vm_: PyVM):
 			return _degree(d)
 		"has":
 			return {"__bm": "has", "self": {"__obj": "node", "d": d}}
-	vm_.fail("식에는 .%s 가 없습니다 (kind, args, terms, factors, inner, coef, shape, degree, value, has())" % name)
+		"is_number":
+			return d["kind"] == "num"
+		"is_zero":
+			return d.has("expr") and (d["expr"] as Expr).is_zero()
+		"derivative", "at":
+			return {"__bm": name, "self": {"__obj": "node", "d": d}}
+	vm_.fail("식에는 .%s 가 없습니다 (terms, factors, inner, coef, degree, is_number, is_zero, has(), derivative(), at())" % name)
 	return null
 
 
@@ -331,7 +394,7 @@ func _after(obj: Dictionary, vm_: PyVM) -> Dictionary:
 
 func py_attr(obj: Dictionary, name: String, vm_: PyVM):
 	if obj["__obj"] == "node":
-		return _node_attr(obj["d"], name, vm_)
+		return _node_attr(_mat(obj), name, vm_)
 	if obj["__obj"] == "tower":
 		match name:
 			"op":
@@ -398,10 +461,32 @@ func py_call(obj: Dictionary, name: String, args: Array, _kwargs: Dictionary, vm
 		chose = true
 		vm_.halt()   # jump to EOF: this run is over
 		return null
+	if obj["__obj"] == "math":   # derivative(f): the same as f.derivative()
+		if args.size() != 1 or not _is_node(args[0]):
+			vm_.fail("%s()에는 식 하나가 필요합니다: 예) %s(e.f)" % [name, name])
+			return null
+		return py_call(args[0], name, [], {}, vm_)
 	if obj["__obj"] == "node":
+		var d: Dictionary = _mat(obj)
 		if name == "has" and args.size() == 1 and args[0] is String:
-			return _has(obj["d"], args[0])
-		vm_.fail("has()에는 종류 이름 하나가 필요합니다: 예) f.has(\"sin\")")
+			return _has(d, args[0])
+		if name == "has":
+			vm_.fail("has()에는 종류 이름 하나가 필요합니다: 예) f.has(\"sin\")")
+			return null
+		var fx = _expr_of_node(obj, vm_)
+		if fx == null:
+			return null
+		if name == "derivative":
+			var g: Expr = (fx as Expr).clone()
+			g.derive()
+			return _tree(g, vm_, 1)
+		if name == "at":
+			if args.size() != 1 or not PyVM._is_num(args[0]):
+				vm_.fail("at()에는 x 값 하나가 필요합니다: 예) e.f.at(3)")
+				return null
+			vm_.steps += 2 * (fx as Expr).t.size()
+			return (fx as Expr).value_at(float(args[0]), 0.0)
+		vm_.fail("식에는 %s()가 없습니다" % name)
 		return null
 	if obj["__obj"] == "tower":
 		if name == "set_param":
@@ -426,10 +511,96 @@ func py_call(obj: Dictionary, name: String, args: Array, _kwargs: Dictionary, vm
 	return null
 
 
+static func _is_node(v) -> bool:
+	return v is Dictionary and v.get("__obj", "") == "node"
+
+
+func _expr_of_node(obj: Dictionary, vm_: PyVM):
+	if not obj["d"].has("expr"):
+		vm_.fail("이 식으로는 계산할 수 없습니다")
+		return null
+	return obj["d"]["expr"]
+
+
+## Arithmetic on functions, exactly: f + g, f - g, -f, 3 * f, f / 2, f == g, f == 0.
+## Returns PyVM.NOT_MINE when neither side is a function (the VM then reports its own error).
+func py_binop(op: String, a, b, vm_: PyVM):
+	if not (_is_node(a) or _is_node(b)):
+		return PyVM.NOT_MINE
+	var fa = _operand(a, op, vm_)
+	if vm_.err != "":
+		return null
+	if op == "neg":
+		var n: Expr = (fa as Expr).clone()
+		n.scale(-1, 1)
+		return _tree(n, vm_, 1)
+	var fb = _operand(b, op, vm_)
+	if vm_.err != "":
+		return null
+	vm_.steps += 1
+	match op:
+		"==", "!=":
+			var same: bool = (fa as Expr).equals(fb)
+			return same if op == "==" else not same
+		"+", "-":
+			var g: Expr = (fa as Expr).clone()
+			var h: Expr = (fb as Expr).clone()
+			if op == "-":
+				h.scale(-1, 1)
+			return _tree(g.add_expr(h), vm_, 1)
+		"*":
+			if _is_node(a) and _is_node(b):
+				vm_.fail("함수끼리 곱하기는 없습니다. 수 × 함수만 됩니다 (예: 2 * e.f)")
+				return null
+			var g2: Expr = ((fb if _is_node(b) else fa) as Expr).clone()
+			var r2 := _ratio(a if not _is_node(a) else b)
+			g2.scale(r2[0], r2[1])
+			return _tree(g2, vm_, 1)
+		"/":
+			if _is_node(b):
+				vm_.fail("함수로 나누기는 없습니다. 함수 ÷ 수만 됩니다 (예: e.f / 2)")
+				return null
+			var r := _ratio(b)
+			if r[0] == 0:
+				vm_.fail("0으로 나눌 수 없습니다")
+				return null
+			var g3: Expr = (fa as Expr).clone()
+			g3.scale(r[1] * signi(r[0]), absi(r[0]))
+			return _tree(g3, vm_, 1)
+	vm_.fail("함수에는 %s 계산이 없습니다 (+ - * / == 만 됩니다)" % op)
+	return null
+
+
+## A function, or a number: a constant function for + - ==, a plain factor for * /.
+func _operand(v, op: String, vm_: PyVM):
+	if _is_node(v):
+		return _expr_of_node(v, vm_)
+	if PyVM._is_num(v):
+		if op in ["*", "/"]:
+			return v
+		var r := _ratio(v)
+		return _const_expr(r[0], r[1])
+	vm_.fail("함수와 %s 는 계산할 수 없습니다" % vm_._type_name(v))
+	return null
+
+
+## A number as an exact fraction [num, den] (0.5 → 1/2).
+static func _ratio(v) -> Array:
+	if v is bool:
+		return [int(v), 1]
+	if v is int:
+		return [v, 1]
+	var den := 1
+	var x := float(v)
+	while absf(x * den - roundf(x * den)) > 1e-9 and den < 1000000:
+		den *= 10
+	return [int(roundf(x * den)), den]
+
+
 func py_repr(obj: Dictionary) -> String:
 	match obj["__obj"]:
 		"node":
-			return obj["d"]["text"]
+			return _mat(obj)["text"]
 		"tower":
 			return "<타워 %s>" % tower.data["name"]
 		"snap":

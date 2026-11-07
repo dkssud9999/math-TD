@@ -153,14 +153,14 @@ var STAGES: Dictionary = {
 	"3-6": {"chapter": 3, "name": "순환", "map": 5, "x_end": 3.0, "base": 7, "growth": 1.0, "interval": [0.9, 0.45],
 		"desc": "3장의 마지막 스테이지. 다항식은 미분으로, 지수는 로그로. 이제 못 푸는 함수가 있을까요?",
 		"mix": [["xpe", 1, 1], ["exc", 1, 1], ["xex", 1, 3], ["exs", 1, 6], ["e2x", 1, 9]], "boss": [["boss_chain", 1]], "counter": "sin_counter"},
-	"4-1": {"chapter": 4, "name": "코딩 입문", "map": 0, "x_end": 4.0, "flag": "met_sin", "integrity": 150, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
-		"desc": "sin x는 D를 두 번 맞으면 −sin x가 됩니다. sin x와 −sin x를 Σ로 더하면 0. 혼자서는 못 하고, 타워 둘이 손을 맞춰야 합니다.\n\n따라 해 보세요 (적이 적고 느린 연습 스테이지입니다):\n1. D 타워 하나와 Σ 타워 하나를 짓고, D 타워를 선택한 뒤 E.\n2. 편집기 「가이드」를 1번부터 읽고, 5번 예시(D용)를 새 파일로 열어 D 타워에 붙이기.\n3. 6번 예시(Σ용)를 Σ 타워에 붙이기. 「테스트 실행」으로 확인.\n4. Esc로 돌아와 웨이브 시작. 타워 위 </> 표시가 알고리즘이 돌고 있다는 뜻입니다.",
-		"mix": [["s1", 2, 1], ["n1", 1, 1], ["ex", 1, 3]], "boss": [["boss_sc", 2]]},
+	"4-1": {"chapter": 4, "name": "코딩 입문", "map": 0, "x_end": 4.0, "flag": "met_sin", "integrity": 95, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
+		"desc": "sin x와 −sin x가 함께 옵니다. Σ로 더하면 0. 그런데 저주 때문에 Σ는 범위 안의 함수를 아무렇게나 다 더해 버립니다.\n\n이 스테이지에서 코딩할 타워는 [Σ 하나]뿐입니다 (적이 적고 느린 연습 스테이지):\n1. Σ 타워를 짓고, 선택한 뒤 E.\n2. 가이드가 열립니다. 「처음 시작」을 차례로 읽고, 마지막 과제를 풀어 보세요.\n3. 「테스트 실행」으로 확인하고 Esc. 타워 위 </> 표시는 내 알고리즘이 돌고 있다는 뜻입니다.",
+		"mix": [["s1", 2, 1], ["ms1", 2, 1]], "boss": [["boss_sp", 1], ["boss_sm", 1]]},
 	"4-2": {"hard": 2.8, "chapter": 4, "name": "위상", "map": 1, "x_end": 4.0, "base": 5, "growth": 0.95, "interval": [1.2, 0.65],
-		"desc": "cos x에 D를 한 번 쏘면 −sin x. 옆에 sin x가 있다면 그걸로 충분합니다. 누가 누구의 짝인지 읽는 코드가 필요합니다.",
-		"mix": [["s1", 2, 1], ["c1", 2, 1], ["s1c", 1, 4], ["exc", 1, 7]], "boss": [["boss_sc", 2]]},
+		"desc": "cos x에는 −cos x 짝이 오지 않습니다. 하지만 cos x에 D를 한 번 쏘면 −sin x, 그러면 sin x와 짝이 됩니다.\n\n이번에 새로 코딩할 타워는 D입니다. 가이드에 새 페이지가 열려 있습니다.",
+		"mix": [["s1", 2, 1], ["c1", 2, 1], ["ms1", 1, 4]], "boss": [["boss_sc", 2]]},
 	"4-3": {"chapter": 4, "name": "생성", "map": 2, "x_end": 4.0, "base": 5, "growth": 0.9, "interval": [1.2, 0.65],
-		"desc": "생성하는 적은 몇 초마다 자기 도함수를 낳습니다: sin → cos → −sin → … 부모와 자손이 서로의 짝입니다.",
+		"desc": "생성하는 적은 몇 초마다 자기 도함수를 낳습니다: sin → cos → −sin → … 부모와 자손이 서로의 짝입니다.\n\n숫자와 x + eˣ도 섞여 옵니다. 빼기·로그 같은 다른 타워도 이제 고를 줄 알아야 합니다. 가이드의 새 페이지를 보세요.",
 		"mix": [["gen_sin", 1, 1], ["s1", 2, 1], ["c1", 1, 3], ["xpe", 1, 6]], "boss": [["boss_sc", 2]]},
 	"4-4": {"hard": 1.4, "chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "integrity": 220, "base": 4, "growth": 0.55, "interval": [1.4, 0.8],
 		"desc": "sin 2x를 두 번 미분하면 −4 sin 2x. 짝이 되려면 크기를 맞춰야 합니다: ÷2를 두 번.",
@@ -414,31 +414,31 @@ var RESEARCH: Array = [
 		"desc": "적분 수확 ×1.5. 넓이를 더 정확하게 셉니다."},
 	{"id": "ln", "essential": true, "chapter": 3, "name": "자연로그", "cost": 15, "req": [], "flag": "met_exp",
 		"desc": "로그 타워가 함수에도 작동합니다: log(c·eᵃˣ) = ax + ln c. 지수함수 하나짜리에만, 그리고 계수 c가 클수록 c배 오래 걸립니다. 상수항이 붙어 있거나(eˣ + 3) 다른 항과 더해져 있으면(x + eˣ) 먼저 떼어 내야 합니다."},
-	{"id": "sub_range", "chapter": 1, "name": "넓은 빼기", "cost": 15, "req": [], "mod": {"kind": "range", "tower": "sub", "mult": 1.2},
+	{"id": "sub_range", "upgrade": true, "chapter": 1, "name": "넓은 빼기", "cost": 15, "req": [], "mod": {"kind": "range", "tower": "sub", "mult": 1.2},
 		"desc": "빼기 타워 사거리 +20%."},
-	{"id": "start_rho", "chapter": 1, "name": "종잣돈", "cost": 18, "req": [],
+	{"id": "start_rho", "upgrade": true, "chapter": 1, "name": "종잣돈", "cost": 18, "req": [],
 		"desc": "모든 스테이지의 시작 ρ +30."},
-	{"id": "divx_fast", "chapter": 2, "name": "인수분해 감각", "cost": 25, "req": [], "mod": {"kind": "rate", "tower": "divx", "mult": 1.3},
+	{"id": "divx_fast", "upgrade": true, "chapter": 2, "name": "인수분해 감각", "cost": 25, "req": [], "mod": {"kind": "rate", "tower": "divx", "mult": 1.3},
 		"desc": "÷x 타워 공격 속도 +30%."},
-	{"id": "diff_range", "chapter": 2, "name": "접선의 시야", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "diff", "mult": 1.15},
+	{"id": "diff_range", "upgrade": true, "chapter": 2, "name": "접선의 시야", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "diff", "mult": 1.15},
 		"desc": "미분 타워 사거리 +15%."},
-	{"id": "log_fast", "chapter": 3, "name": "로그 법칙", "cost": 30, "req": [],
+	{"id": "log_fast", "upgrade": true, "chapter": 3, "name": "로그 법칙", "cost": 30, "req": [],
 		"desc": "log(c·eᵃˣ)의 계수 지연이 절반으로: c배 대신 (1 + c)/2배."},
-	{"id": "merge_range", "chapter": 3, "name": "넓은 결합", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "merge", "mult": 1.2},
+	{"id": "merge_range", "upgrade": true, "chapter": 3, "name": "넓은 결합", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "merge", "mult": 1.2},
 		"desc": "Σ 타워 사거리 +20%."},
-	{"id": "think_cheap", "chapter": 4, "name": "컴파일러", "cost": 30, "req": [],
+	{"id": "think_cheap", "upgrade": true, "chapter": 4, "name": "컴파일러", "cost": 30, "req": [],
 		"desc": "알고리즘의 계산 비용이 절반으로 (1,000단계 = 0.125초)."},
-	{"id": "diff_fast", "chapter": 4, "name": "빠른 미분", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "diff", "mult": 1.25},
+	{"id": "diff_fast", "upgrade": true, "chapter": 4, "name": "빠른 미분", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "diff", "mult": 1.25},
 		"desc": "미분 타워 공격 속도 +25%."},
-	{"id": "merge_fast", "chapter": 4, "name": "빠른 결합", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "merge", "mult": 1.3},
+	{"id": "merge_fast", "upgrade": true, "chapter": 4, "name": "빠른 결합", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "merge", "mult": 1.3},
 		"desc": "Σ 타워 공격 속도 +30%."},
-	{"id": "dtl_fast", "chapter": 5, "name": "빠른 시간", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "dtl", "mult": 1.3},
+	{"id": "dtl_fast", "upgrade": true, "chapter": 5, "name": "빠른 시간", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "dtl", "mult": 1.3},
 		"desc": "시간 소멸 타워 공격 속도 +30%."},
-	{"id": "wave_fast", "chapter": 5, "name": "빠른 파동", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "wave", "mult": 1.3},
+	{"id": "wave_fast", "upgrade": true, "chapter": 5, "name": "빠른 파동", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "wave", "mult": 1.3},
 		"desc": "□ 타워 공격 속도 +30%."},
-	{"id": "damp_range", "chapter": 6, "name": "넓은 감쇠", "cost": 35, "req": [], "mod": {"kind": "range", "tower": "damp", "mult": 1.2},
+	{"id": "damp_range", "upgrade": true, "chapter": 6, "name": "넓은 감쇠", "cost": 35, "req": [], "mod": {"kind": "range", "tower": "damp", "mult": 1.2},
 		"desc": "감쇠장 사거리 +20%."},
-	{"id": "core_up", "chapter": 6, "name": "견고한 코어", "cost": 40, "req": [],
+	{"id": "core_up", "upgrade": true, "chapter": 6, "name": "견고한 코어", "cost": 40, "req": [],
 		"desc": "모든 스테이지의 코어 체력 +20%."},
 	{"id": "dm1", "chapter": 8, "name": "지수 소멸 D−1", "cost": 15, "req": [], "flag": "met_signal",
 		"desc": "D − 1 타워 해금. (D − 1)eˣ = 0. 고윳값을 빼면 고유함수가 사라집니다."},
@@ -492,99 +492,66 @@ const EXAMPLE_ATTACK := """# 기본 알고리즘 — 4장부터 모든 타워가
 attack(enemies[0])
 """
 
-const EXAMPLE_DAMP := """# Σ 타워 예시: 더해서 0이 되는 짝을 찾아 더하기
-# 범위 타워는 attack([a, b])처럼 리스트를 주면 그 적들에게만 작용합니다.
+## Type stub for external editors: VS Code (Pylance) reads __builtins__.pyi in the opened folder.
+const BUILTINS_STUB := """# LIMIT BREAK — 자동완성용 파일입니다 (게임이 매번 새로 씁니다. 고치지 마세요).
+# VS Code에서 이 폴더를 통째로 열면 enemies, attack, e.f.derivative() 등이 자동완성됩니다.
+from typing import List, Union
 
-for a in enemies:
-    for b in enemies:
-        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
-            attack([a, b])
+class Func:
+    '''적의 식. 수학처럼 계산할 수 있습니다: f + g, f - g, -f, 2 * f, f / 2, f == 0'''
+    terms: List["Func"]      # 덧셈으로 나뉜 항들
+    factors: List["Func"]    # 곱으로 나뉜 인수들
+    inner: "Func"            # sin(2x) → 2x
+    coef: float              # 앞에 붙은 수
+    degree: int              # x의 차수
+    kind: str                # "add" "mul" "pow" "exp" "sin" "cos" "num" "x" "t"
+    shape: str               # 계수를 뺀 모양
+    value: float             # 수일 때 그 값
+    is_number: bool
+    is_zero: bool
+    def has(self, kind: str) -> bool: '''식 어딘가에 그 종류가 있는가: "sin" "cos" "exp" "x" "t"'''
+    def derivative(self) -> "Func": '''미분한 식 (D 한 방을 맞은 모습)'''
+    def at(self, x: float) -> float: '''x에서의 값'''
+    def __add__(self, o: Union["Func", float]) -> "Func": ...
+    def __radd__(self, o: Union["Func", float]) -> "Func": ...
+    def __sub__(self, o: Union["Func", float]) -> "Func": ...
+    def __neg__(self) -> "Func": ...
+    def __mul__(self, k: float) -> "Func": ...
+    def __rmul__(self, k: float) -> "Func": ...
+    def __truediv__(self, k: float) -> "Func": ...
+
+class Enemy:
+    f: Func                  # 적의 식
+    value: float             # 코어에서의 값
+    damage: int              # 코어에 닿으면 받는 피해
+    zero: bool               # after() 결과가 0인가
+    progress: float          # 진행도 0–1
+    x: float
+    dist: float              # 이 타워와의 거리
+    speed: float
+    boss: bool
+    members: int
+    name: str
+    special: str
+    def after(self) -> "Enemy": '''이 타워가 한 번 쏜 뒤의 모습 (40단계, 비쌈)'''
+
+class Tower:
+    op: str
+    name: str
+    level: int
+    param: int
+    range: float
+
+enemies: List[Enemy]         # 사거리 안의 적, 코어에 가까운 적부터
+me: Tower                    # 이 타워
+wave: int
+rho: int
+integrity: int
+
+def attack(target: Union[Enemy, List[Enemy], None]) -> None: '''치고 실행을 끝냅니다'''
+def set_param(v: int) -> bool: '''λ·ω 바꾸기 (연구 필요)'''
+def derivative(f: Func) -> Func: '''f.derivative()와 같음'''
 """
-
-const ALGO_LESSONS := [
-	["1. 첫 알고리즘", "이 파일은 타워가 쏠 때마다 맨 위부터 실행됩니다. enemies는 사거리 안의 적들이고, 코어에 가까운 적이 앞에 옵니다. attack(e)를 부르면 e를 치고 실행이 끝납니다. 아래가 기본 타워와 똑같은 알고리즘입니다.",
-"""attack(enemies[0])
-"""],
-	["2. 고르기", "for로 적을 하나씩 봅니다. e.f는 적의 식이고, kind가 \"num\"이면 그냥 숫자입니다. attack을 부르는 순간 끝나니, 처음 찾은 적만 칩니다. 아무도 못 찾고 파일 끝에 닿으면 이번엔 쉽니다.",
-"""for e in enemies:
-    if e.f.kind != "num":    # 숫자는 건너뛴다
-        attack(e)
-"""],
-	["3. 식을 항으로 쪼개기", "e.f.terms는 덧셈으로 나뉜 항들입니다. 항마다 차수(degree), 계수(coef), 계수를 뺀 모양(shape)을 볼 수 있습니다. print는 아래 콘솔에 찍힙니다. 「테스트 실행」으로 확인해 보세요.",
-"""for e in enemies:
-    for term in e.f.terms:
-        print(term, "모양", term.shape, "계수", term.coef, "차수", term.degree)
-attack(enemies[0])
-"""],
-	["4. 곱과 합성", "항은 곱으로 다시 나뉩니다: term.factors. sin(2x), exp(2x) 같은 합성함수는 .inner로 안쪽을 꺼냅니다. sin(2x)의 inner는 2x이고, 그 계수가 진동수 2입니다.",
-"""for e in enemies:
-    for term in e.f.terms:
-        for fac in term.factors:
-            if fac.kind == "sin" and fac.inner.coef == 2:
-                attack(e)            # sin 2x가 들어 있는 첫 적
-"""],
-	["5. 협업 ① — D 타워", "sin x 둘이 오면, 하나를 두 번 미분해 −sin x로 만듭니다. 짝이 이미 있는 적(더하면 0이 되는 상대가 있는 적)은 건드리지 않습니다. 이 파일을 D 타워에 붙이세요.",
-"""def has_partner(a):
-    for b in enemies:
-        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
-            return True
-    return False
-
-for e in enemies:
-    if e.f.has("sin") or e.f.has("cos"):
-        if not has_partner(e):
-            attack(e)
-"""],
-	["6. 협업 ② — Σ 타워", "Σ는 attack([a, b])로 두 적을 더합니다. 모양이 같고 계수가 반대인 짝(sin x와 −sin x)을 찾으면 더해서 0. 이 파일을 Σ 타워에 붙이세요.",
-"""for a in enemies:
-    for b in enemies:
-        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
-            attack([a, b])
-"""],
-	["7. 쏴 보기 전에 미리 보기", "e.after()는 이 타워가 한 번 쏜 뒤의 모습입니다. 쏘면 피해가 줄거나 0이 되는 적만 고를 수 있습니다. 대신 비쌉니다: after() 한 번이 40단계입니다.",
-"""for e in enemies:
-    a = e.after()
-    if a.zero or a.damage < e.damage:
-        attack(e)
-"""],
-	["8. 계산은 공짜가 아니다", "알고리즘이 쓴 단계만큼 타워가 늦게 쏩니다 (1,000단계 = 0.25초). 타워 정보에 지난번 단계 수가 나옵니다. 위 5번처럼 이중 반복문은 적이 많을 때 비쌉니다. 앞에서 찾자마자 attack하고, 비싼 after()는 꼭 필요할 때만.",
-"""for e in enemies:              # 앞에서부터: 찾자마자 끝
-    if e.f.has("sin"):
-        attack(e)
-"""],
-]
-
-const ALGO_HELP := """[b]실행[/b]  파일이 맨 위부터 실행됩니다. [code]attack(e)[/code] 또는 [code]attack([a, b])[/code]를 부르면 치고 끝. 안 부르고 끝나면 쉼.
-
-[b]적 e[/b]  (enemies는 앞선 적부터)
-[code]e.f[/code]  식 (아래 '식' 참고)
-[code]e.value[/code]  코어에서의 값    [code]e.damage[/code]  코어에 닿으면 받는 피해
-[code]e.after()[/code]  이 타워가 한 번 쏜 뒤의 모습 (40단계, 비쌈)
-[code]e.zero[/code]  0이 되었는가 (after()에서)
-[code]e.progress[/code]  진행도 0–1   [code]e.x  e.dist  e.speed[/code]
-[code]e.boss  e.members  e.name  e.special[/code]
-
-[b]식 f[/b]
-[code]f.kind[/code]  "add" 합 · "mul" 곱 · "pow" 거듭제곱 · "exp" "sin" "cos" · "num" 수 · "x" · "t"
-[code]f.terms[/code]  덧셈으로 나눈 항들      [code]f.factors[/code]  곱으로 나눈 인수들
-[code]f.inner[/code]  exp·sin·cos의 안쪽 (sin(2x) → 2x)
-[code]f.base  f.exponent[/code]  거듭제곱 x^3 → x, 3
-[code]f.coef[/code]  수 계수 (3·x^2 → 3)    [code]f.shape[/code]  계수를 뺀 모양 ("sin(x)")
-[code]f.degree[/code]  x의 차수
-[code]f.value[/code]  수일 때 그 값    [code]f.args[/code]  자식들
-[code]f.has("sin")[/code]  그 종류가 어딘가에 있는가    [code]print(f)[/code]  식 출력
-
-[b]타워[/b]  [code]me.op  me.name  me.level  me.param  me.range[/code]
-[code]set_param(v)[/code]  ω 또는 λ 바꾸기 (연구 필요)
-[b]전역[/b]  [code]wave  rho  integrity[/code]
-
-[b]내장 함수[/b]  print len range min max abs sorted sum any all int float str round list enumerate zip reversed
-min·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code]
-
-[b]비용[/b]  1단계 = 0.00025초 지연. 한 번 실행에 20,000단계까지.
-오류가 나면 그 타워는 기본(맨 앞 적)으로 돌아갑니다. 예전 방식 def attack(enemies): return … 도 그대로 작동합니다.
-"""
-
 
 # ---------------- enemy templates ----------------
 # kind: num | sq | p2 | poly | exp | trig   (used for previews and the test bot)
@@ -627,6 +594,9 @@ var TEMPLATES: Dictionary = {
 	"s1": {"speed": 50, "name": "a sin x", "kind": "trig", "noarmor": true},
 	"c1": {"speed": 50, "name": "a cos x", "kind": "trig", "noarmor": true},
 	"s1c": {"speed": 48, "name": "a sin x + c", "kind": "trig", "noarmor": true},
+	"ms1": {"speed": 50, "name": "−a sin x", "kind": "trig", "noarmor": true},
+	"boss_sp": {"speed": 30, "boss": true, "name": "5 sin x", "kind": "trig", "noarmor": true},
+	"boss_sm": {"speed": 30, "boss": true, "name": "−5 sin x", "kind": "trig", "noarmor": true},
 	"s2": {"speed": 50, "name": "a sin 2x", "kind": "trig", "noarmor": true},
 	"c2": {"speed": 50, "name": "a cos 2x", "kind": "trig", "noarmor": true},
 	"tse": {"speed": 44, "name": "a sin x + eˣ", "kind": "trig", "noarmor": true},
@@ -929,11 +899,17 @@ func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr
 			return Expr.poly([0, 1]).add_exp(1)
 		"boss_chain":
 			return Expr.new().add_exp(4, 2, 2)
-		"s1", "c1", "s1c", "s2", "c2", "tse", "boss_sc", "boss_s2":
+		"boss_sp":
+			return Expr.new().add_trig(0, 5)
+		"boss_sm":
+			return Expr.new().add_trig(0, -5)
+		"s1", "ms1", "c1", "s1c", "s2", "c2", "tse", "boss_sc", "boss_s2":
 			var amp := 1 + int((w - 1) / 5.0)   # one amplitude per wave, so pairs can cancel
 			match tpl:
 				"s1":
 					return Expr.new().add_trig(0, amp)
+				"ms1":
+					return Expr.new().add_trig(0, -amp)
 				"c1":
 					return Expr.new().add_trig(amp, 0)
 				"s1c":

@@ -17,6 +17,11 @@ var save_timer: float = -1.0
 var was_paused: bool = false
 var seen_serial: int = -1
 var _loading: bool = false
+var guide                        # guide_panel.gd (F1)
+var btn_guide: Button
+var mini_title: Label
+var mini_body: RichTextLabel
+var seen_scripts: int = -1       # Progress.scripts_serial last handled (external edits)
 
 
 func _ready() -> void:
@@ -46,7 +51,12 @@ func _ready() -> void:
 	top.add_child(sp)
 	top.add_child(_button("새 파일", _new_file))
 	top.add_child(_button("삭제", _delete_file))
+	var ext := _button("VS Code로 열기", _open_external)
+	ext.tooltip_text = "스크립트 폴더를 외부 편집기로 엽니다. 저장하면 게임이 바로 다시 읽습니다."
+	top.add_child(ext)
 	top.add_child(_button("폴더 열기", func(): OS.shell_open(ProjectSettings.globalize_path(Progress.SCRIPT_DIR))))
+	btn_guide = _button("가이드  [F1]", func(): _toggle_guide(not guide.visible))
+	top.add_child(btn_guide)
 	top.add_child(_button("다시 읽기", func():
 		Progress.reload_scripts()
 		_refresh_files()
@@ -123,20 +133,31 @@ func _ready() -> void:
 		Algo.console.clear()
 		Algo.console_serial += 1))
 	right.add_child(test_row)
-	var tabs := TabContainer.new()
-	tabs.custom_minimum_size = Vector2(0, 260)
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.add_theme_font_size_override("font_size", 13)
-	right.add_child(tabs)
-	tabs.add_child(_build_guide())
-	var help := RichTextLabel.new()
-	help.name = "API"
-	help.bbcode_enabled = true
-	help.add_theme_font_size_override("normal_font_size", 12)
-	help.add_theme_font_size_override("bold_font_size", 13)
-	help.add_theme_font_size_override("mono_font_size", 12)
-	help.text = Data.ALGO_HELP
-	tabs.add_child(help)
+	# the page the player is reading, small, so it can stay open next to the code
+	var ghead := HBoxContainer.new()
+	ghead.add_theme_constant_override("separation", 6)
+	mini_title = _label("가이드", 14, Color("ffd166"))
+	mini_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mini_title.clip_text = true
+	ghead.add_child(mini_title)
+	ghead.add_child(_button("◀", func(): guide._step(-1)))
+	ghead.add_child(_button("▶", func(): guide._step(1)))
+	ghead.add_child(_button("크게", func(): _toggle_guide(true)))
+	right.add_child(ghead)
+	mini_body = RichTextLabel.new()
+	mini_body.bbcode_enabled = true
+	mini_body.custom_minimum_size = Vector2(0, 250)
+	mini_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mini_body.add_theme_font_size_override("normal_font_size", 13)
+	mini_body.add_theme_font_size_override("bold_font_size", 13)
+	mini_body.add_theme_font_size_override("mono_font_size", 12)
+	mini_body.add_theme_constant_override("line_separation", 3)
+	var msb := StyleBoxFlat.new()
+	msb.bg_color = Color(0.06, 0.085, 0.13)
+	msb.set_corner_radius_all(6)
+	msb.set_content_margin_all(8)
+	mini_body.add_theme_stylebox_override("normal", msb)
+	right.add_child(mini_body)
 	right.add_child(_label("콘솔", 12, Color("5bc0be")))
 	console_box = RichTextLabel.new()
 	console_box.bbcode_enabled = true
@@ -151,41 +172,82 @@ func _ready() -> void:
 	console_box.add_theme_font_size_override("normal_font_size", 12)
 	right.add_child(console_box)
 
-
-## 「가이드」: step-by-step lessons; each can be opened as a new file to try.
-func _build_guide() -> Control:
-	var sc := ScrollContainer.new()
-	sc.name = "가이드"
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO   # long code lines scroll instead of widening the panel
-	var vb := VBoxContainer.new()
-	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vb.add_theme_constant_override("separation", 6)
-	sc.add_child(vb)
-	for li in Data.ALGO_LESSONS.size():
-		var lesson: Array = Data.ALGO_LESSONS[li]
-		vb.add_child(_label(lesson[0], 14, Color("ffd166")))
-		var body := _label(lesson[1], 12, Color("cfd8dc"))
-		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		body.custom_minimum_size = Vector2(330, 0)
-		vb.add_child(body)
-		var pre := _label(lesson[2], 12, Color("c3e88d"))
-		vb.add_child(pre)
-		var idx := li
-		vb.add_child(_button("이 예시를 새 파일로 열기", func(): _open_lesson(idx)))
-		vb.add_child(HSeparator.new())
-	return sc
+	# ---- the full guide (F1), over everything below the top bar ----
+	guide = preload("res://scripts/guide_panel.gd").new()
+	guide.editor = self
+	guide.visible = false
+	bg.add_child(guide)
+	guide.closed.connect(func(): _toggle_guide(false))
+	guide.open_example.connect(_open_example)
+	guide.page_changed.connect(_show_mini)
 
 
-func _open_lesson(idx: int) -> void:
+func _toggle_guide(on: bool) -> void:
+	guide.visible = on
+	if on:
+		guide.show_page(guide.current_id)
+	else:
+		code.grab_focus()
+	_refresh_guide_button()
+
+
+func _refresh_guide_button() -> void:
+	var n := Guide.unread_count()
+	btn_guide.text = ("가이드  [F1]   ● 새 %d" % n) if n > 0 else "가이드  [F1]"
+	btn_guide.add_theme_color_override("font_color", Color("ffd166") if n > 0 else Color("e0e0e0"))
+
+
+## The small copy of the current page beside the code.
+func _show_mini(p: Dictionary) -> void:
+	mini_title.text = p["title"]
+	var txt := String(p["body"]).replace("[code]", "[color=#c3e88d][code]").replace("[/code]", "[/code][/color]")
+	if p.has("code"):
+		txt += "\n\n[color=#c3e88d][code]%s[/code][/color]" % String(p["code"]).replace("[", "[lb]")
+	if p.has("task"):
+		txt += "\n\n[color=#ffd166]과제[/color]\n[color=#ffe0a3][code]%s[/code][/color]" % String(p["task"]).replace("[", "[lb]")
+	if p.has("hints"):
+		txt += "\n[color=#78909c]힌트는 「크게」에서 하나씩 열 수 있습니다.[/color]"
+	if p.has("try"):
+		txt += "\n\n[color=#a5d6a7]해 보기 ▸ %s[/color]" % p["try"]
+	mini_body.text = txt
+	mini_body.scroll_to_line(0)
+	_refresh_guide_button()
+
+
+func _open_example(p: Dictionary) -> void:
 	_flush()
-	var fn := "lesson%d.py" % (idx + 1)
-	if not Progress.list_scripts().has(fn):
-		Progress.write_script(fn, "# %s
-" % Data.ALGO_LESSONS[idx][0] + Data.ALGO_LESSONS[idx][2])
+	var fn := "guide_%s.py" % p["id"]
+	if not Progress.list_scripts().has(fn):   # never overwrite: the player may already be working on it
+		var body: String = String(p["task"]) if p.has("task") else String(p["code"])
+		var head := "# %s — ____ 를 채우세요\n" % p["title"] if p.has("task") else "# 가이드: %s\n" % p["title"]
+		Progress.write_script(fn, head + body)
+	_toggle_guide(false)
 	_refresh_files()
 	_open_file(fn)
 	_refresh_assign()
 	status.text = "%s 열림 — 오른쪽 위에서 타워에 붙이고 「테스트 실행」" % fn
+
+
+## VS Code (or any editor) on the scripts folder; falls back to the file explorer.
+func _open_external() -> void:
+	_flush()
+	var dir := ProjectSettings.globalize_path(Progress.SCRIPT_DIR)
+	var pid := -1
+	if OS.get_name() == "Windows":
+		var code_cmd := OS.get_environment("LOCALAPPDATA") + "\\Programs\\Microsoft VS Code\\bin\\code.cmd"
+		if FileAccess.file_exists(code_cmd):
+			pid = OS.create_process("cmd.exe", ["/c", code_cmd, dir])
+		else:
+			var out: Array = []
+			if OS.execute("where", ["code"], out) == 0:
+				pid = OS.create_process("cmd.exe", ["/c", "code", dir])
+	else:
+		pid = OS.create_process("code", [dir])
+	if pid <= 0:
+		OS.shell_open(dir)
+		status.text = "VS Code를 찾지 못해 폴더를 열었습니다. 원하는 편집기로 폴더째 여세요."
+	else:
+		status.text = "VS Code에서 엽니다. 저장하면 게임이 바로 다시 읽습니다."
 
 
 func _label(t: String, size: int, c: Color) -> Label:
@@ -240,7 +302,15 @@ func open(for_tower) -> void:
 		want = all[0] if not all.is_empty() else ""
 	_open_file(want)
 	_refresh_assign()
+	seen_scripts = Progress.scripts_serial
 	code.grab_focus()
+	# new pages since last time: open the guide on the first one (the very first visit starts there too)
+	if Guide.unread_count() > 0:
+		guide.current_id = ""
+		_toggle_guide(true)
+	else:
+		guide.show_page(guide.current_id)
+		_toggle_guide(false)
 
 
 func close() -> void:
@@ -254,8 +324,14 @@ func close() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
-		close()
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
+		_toggle_guide(not guide.visible)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		if guide.visible:
+			_toggle_guide(false)
+		else:
+			close()
 		get_viewport().set_input_as_handled()
 
 
@@ -266,6 +342,9 @@ func _process(delta: float) -> void:
 		save_timer -= delta
 		if save_timer <= 0.0:
 			_flush()
+	if seen_scripts != Progress.scripts_serial:
+		seen_scripts = Progress.scripts_serial
+		_external_change()
 	if seen_serial != Algo.console_serial:
 		seen_serial = Algo.console_serial
 		var parts := PackedStringArray()
@@ -276,6 +355,27 @@ func _process(delta: float) -> void:
 
 
 # ---------- files ----------
+
+## A file was changed, added or removed in another program (VS Code …).
+func _external_change() -> void:
+	_refresh_files()
+	if current == "" or save_timer > 0.0:
+		return   # unsaved typing here wins; it is written in a moment
+	if not Progress.list_scripts().has(current):
+		var all := Progress.list_scripts()
+		_open_file(all[0] if not all.is_empty() else "")
+		return
+	var disk := Progress.read_script(current)
+	if disk != code.text:
+		var line := code.get_caret_line()
+		var col := code.get_caret_column()
+		_loading = true
+		code.text = disk
+		_loading = false
+		code.set_caret_line(mini(line, code.get_line_count() - 1))
+		code.set_caret_column(col)
+		_check()
+		status.text = "외부 편집기에서 바뀐 내용을 다시 읽었습니다 ✓"
 
 func _refresh_files() -> void:
 	files.clear()
@@ -320,6 +420,9 @@ func _check() -> void:
 	if ok and not code.text.contains("attack"):
 		ok = false
 		err_msg = "attack(…)을 부르는 곳이 없습니다 — 이 타워는 쏘지 않습니다"
+	if ok and code.text.contains("____"):
+		ok = false
+		err_msg = "빈칸 ____ 이 남아 있습니다 — 채우기 전까지 이 타워는 기본 동작으로 싸웁니다"
 	if ok:
 		status.text = "저장됨 ✓  문법 이상 없음"
 		status.add_theme_color_override("font_color", Color("a5d6a7"))

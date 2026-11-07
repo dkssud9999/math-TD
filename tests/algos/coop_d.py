@@ -19,6 +19,13 @@ def partnered(e):
             return True
     return False
 
+def grown(e):
+    # D multiplies sin kx by k each time; past 2 it is the ÷2 tower's turn, not more D
+    for t in e.f.terms:
+        if (t.has("sin") or t.has("cos")) and t.shape not in ["sin(x)", "cos(x)"] and abs(t.coef) > 2:
+            return True
+    return False
+
 def size(f):
     return sum(t.degree + 1 for t in f.terms)
 
@@ -26,7 +33,7 @@ for e in enemies:
     if e.special != "":
         continue
     if e.f.has("sin") or e.f.has("cos"):
-        if not partnered(e) and not too_big(e):
+        if not partnered(e) and not too_big(e) and not grown(e):
             attack(e)
     else:
         a = e.after()

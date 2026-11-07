@@ -25,6 +25,7 @@ var globals_env: Dictionary = {"vars": {}, "parent": null, "globals": {}}
 var output: PackedStringArray = []
 
 const HALT := "__halt__"     # attack() ends the run like reaching EOF; not an error
+const NOT_MINE := "__not_mine__"   # host.py_binop: "these are not my objects"
 var program: Array = []
 
 var _toks: Array = []
@@ -905,6 +906,10 @@ func _eval(e: Dictionary, env: Dictionary):
 			var a = _eval(e["a"], env)
 			if err != "":
 				return null
+			if not _is_num(a) and e["op"] == "-":
+				var hr = _host_binop("neg", a, null)
+				if not (hr is String and hr == NOT_MINE):
+					return hr
 			if not _is_num(a):
 				fail("숫자가 아닌 값에 부호를 붙였습니다")
 				return null
@@ -1158,6 +1163,9 @@ func _binop(op: String, a, b):
 		return _repeat(b, a)
 	if op == "%" and a is String:
 		return a % (b if b is Array else [b])
+	var hr = _host_binop(op, a, b)
+	if not (hr is String and hr == NOT_MINE):
+		return hr
 	fail("'%s' %s '%s' 는 계산할 수 없습니다" % [_type_name(a), op, _type_name(b)])
 	return null
 
@@ -1171,9 +1179,24 @@ static func _repeat(v, n: int):
 	return out
 
 
+## Host objects may define arithmetic (functions: f + g, 2 * f, f == 0 …).
+func _host_binop(op: String, a, b):
+	var mine: bool = (a is Dictionary and a.has("__obj")) or (b is Dictionary and b.has("__obj"))
+	if not mine or host == null or not host.has_method("py_binop"):
+		return NOT_MINE
+	return host.py_binop(op, a, b, self)
+
+
 func _eq(a, b) -> bool:
 	if _is_num(a) and _is_num(b):
 		return _num(a) == _num(b)
+	if (a is Dictionary and a.get("__obj", "") == "node") or (b is Dictionary and b.get("__obj", "") == "node"):
+		if _is_num(a) or _is_num(b) or (a is Dictionary and b is Dictionary and a.get("__obj", "") == b.get("__obj", "")):
+			var hr = _host_binop("==", a, b)
+			if hr is bool:
+				return hr
+			err = ""
+		return false
 	if typeof(a) != typeof(b):
 		return false
 	if a is Dictionary and a.has("__obj") and b.has("__obj") and a["__obj"] == "node":

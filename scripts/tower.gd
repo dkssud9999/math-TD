@@ -20,6 +20,8 @@ var algo: String = ""          # .py file this tower runs ("" = built-in targeti
 var algo_host: Algo = null
 var algo_error: String = ""
 var algo_delay: float = 0.0     # seconds the last decision cost (computation is not free)
+var algo_idle: float = 0.0      # seconds the script has kept waiting while enemies were in range
+const IDLE_WARN := 3.0          # a logic bug that never calls attack() is not an error: say so after this
 
 
 func setup(p_type: String, p_main, p_cell: Vector2i) -> void:
@@ -336,7 +338,15 @@ func _process(delta: float) -> void:
 			cands = res["targets"]
 			if cands.is_empty():
 				cooldown = 0.25 + algo_delay   # the algorithm chose to wait; thinking still took time
+				var was := algo_idle
+				algo_idle += cooldown
+				if was < IDLE_WARN and algo_idle >= IDLE_WARN:
+					Algo.log_line("[%s %s] 적이 사거리에 있는데 %d초째 쉬고 있습니다. attack()까지 가지 않는 것 같습니다 (조건을 print로 확인해 보세요)" % [glyph(), algo, int(IDLE_WARN)], true)
+					queue_redraw()
 				return
+			if algo_idle >= IDLE_WARN:
+				queue_redraw()
+			algo_idle = 0.0
 	if not scripted:
 		cands = candidates(range_px())
 	if cands.is_empty():
@@ -484,4 +494,5 @@ func _draw() -> void:
 	for i in level:
 		draw_circle(Vector2(-6 + i * 6, 12), 1.8, c)
 	if algo != "" and Progress.has("code"):
-		Data.draw_text_centered(self, "</>", Vector2(12, -21), 9, Color("ef5350") if algo_error != "" else Color("80cbc4"))
+		var badge := Color("ef5350") if algo_error != "" else (Color("ffb74d") if algo_idle >= IDLE_WARN else Color("80cbc4"))
+		Data.draw_text_centered(self, "</>" if algo_idle < IDLE_WARN or algo_error != "" else "</>…", Vector2(12, -21), 9, badge)

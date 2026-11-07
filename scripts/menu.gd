@@ -103,9 +103,11 @@ func _build() -> void:
 			b.custom_minimum_size = Vector2(190, 60)
 			b.disabled = not unlocked
 			grid.add_child(b)
+	if Progress.save_error != "":
+		left.add_child(_label("⚠ 저장 실패: %s" % Progress.save_error, 14, Color("ef9a9a")))
 	if Progress.stars.is_empty():
 		var hint := _label("숫자를 0으로 만들어 코어를 지키세요.
-스테이지를 깨거나, 져도, 통찰이 쌓입니다. 통찰로 새 연산을 연구하세요.", 15, Color("b0bec5"))
+스테이지를 처음 깨면 통찰을 얻습니다 (일반·하드 각각 한 번). 통찰로 새 연산을 연구하세요.", 15, Color("b0bec5"))
 		left.add_child(hint)
 
 	# ---- research (newest chapter on top, scrollable; owned items shrink to one line) ----

@@ -9,6 +9,14 @@ if (Get-Process -Name "LimitBreak" -ErrorAction SilentlyContinue) {
     Write-Host "LIMIT BREAK이 실행 중입니다. 게임을 닫은 뒤 이 명령을 다시 실행하세요." -ForegroundColor Yellow
     return
 }
+$new = "$dest.new"
+$old = "$dest.old"
+# An earlier update that stopped between its two renames leaves the working game only in $old:
+# put it back before anything else, so nothing below can delete the last working install.
+if ((-not (Test-Path $dest)) -and (Test-Path $old)) {
+    Rename-Item $old (Split-Path $dest -Leaf)
+    Write-Host "지난번에 중단된 업데이트를 되돌려 기존 설치를 복구했습니다."
+}
 # Before anything changes: copy the whole save folder (progress + algorithms) to a dated backup.
 # If the backup cannot be made, nothing is updated. The newest 5 backups are kept.
 if (Test-Path $save) {
@@ -34,8 +42,8 @@ Write-Host "내려받는 중: $($rel.tag_name) ($([math]::Round($asset.size / 1M
 Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing
 # Unpack next to the install first; the old install is replaced only once the new files are complete,
 # so a broken download never leaves the player without a working game.
-$new = "$dest.new"
-$old = "$dest.old"
+# leftovers: an unfinished unpack ($new), or an old install whose replacement already succeeded
+# ($dest exists here, so $old is never the only working copy)
 foreach ($d in @($new, $old)) { if (Test-Path $d) { Remove-Item $d -Recurse -Force } }
 try {
     Expand-Archive $zip -DestinationPath $new -Force

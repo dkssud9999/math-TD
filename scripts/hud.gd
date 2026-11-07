@@ -349,8 +349,19 @@ func _refresh_info() -> void:
 		var cost := ""
 		if tw.algo != "" and tw.algo_host != null:
 			cost = "  ·  %d단계 +%.2fs" % [tw.algo_host.last_steps, tw.algo_delay]
-		_chg(btn_algo, "text", ("</> %s  ⚠ 오류" if tw.algo_error != "" else "</> %s%s  [E]") % ([a] if tw.algo_error != "" else [a, cost]))
-		_chg(btn_algo, "tooltip_text", tw.algo_error if tw.algo_error != "" else "공격 알고리즘 편집기 열기")
+		var idle: bool = tw.algo_error == "" and tw.algo_idle >= tw.IDLE_WARN
+		if tw.algo_error != "":
+			_chg(btn_algo, "text", "</> %s  ⚠ 오류 — 기본 동작 중" % a)
+		elif idle:
+			_chg(btn_algo, "text", "</> %s  ⏸ 계속 쉬는 중" % a)
+		else:
+			_chg(btn_algo, "text", "</> %s%s  [E]" % [a, cost])
+		var tip := "공격 알고리즘 편집기 열기"
+		if tw.algo_error != "":
+			tip = tw.algo_error + "\n오류가 고쳐질 때까지 이 타워는 기본 동작(맨 앞 적)으로 싸웁니다."
+		elif idle:
+			tip = "적이 사거리에 있는데 attack()이 불리지 않고 있습니다. 조건을 print로 확인해 보세요."
+		_chg(btn_algo, "tooltip_text", tip)
 
 
 # ---------- overlays ----------
@@ -412,6 +423,8 @@ func show_result(won: bool, earned_stars: int, insight_gain: int) -> void:
 	var star_txt := "★".repeat(earned_stars) + "☆".repeat(3 - earned_stars)
 	var body := "%s\n\n처치 %d   ·   누출 %d   ·   최대 연쇄 ×%d\n통찰 +%d   (보유 %d)" % [star_txt, Game.kills, Game.leaked, Game.max_combo, insight_gain, Progress.insight]
 	body += "\n\n★ 클리어   ★ 코어 체력 절반 이상   ★ 누출 0"
+	if Progress.save_error != "":
+		body += "\n\n⚠ 저장 실패: %s" % Progress.save_error
 	var buttons: Array = []
 	if won and main.next_stage() != "":
 		buttons.append(["다음 · 일반  ▶", func():
@@ -425,7 +438,7 @@ func show_result(won: bool, earned_stars: int, insight_gain: int) -> void:
 	if won:
 		_overlay("클리어", "%s %s" % [Game.stage_id, Data.STAGES[Game.stage_id]["name"]], body, buttons)
 	else:
-		_overlay("붕괴", "웨이브 %d에서 코어가 무너졌습니다." % Game.wave, body + "\n\n패배해도 통찰은 쌓입니다. 연구로 새 연산을 여세요.", buttons, Color("ef5350"))
+		_overlay("붕괴", "웨이브 %d에서 코어가 무너졌습니다." % Game.wave, body + "\n\n통찰은 스테이지를 처음 깰 때 얻습니다. 배치를 바꾸거나, 가진 통찰로 연구한 뒤 다시 도전하세요.", buttons, Color("ef5350"))
 
 
 func show_credits() -> void:
