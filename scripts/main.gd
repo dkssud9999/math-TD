@@ -449,7 +449,7 @@ func predict(e) -> Dictionary:
 				steps.append([tw.glyph(), g.to_text()])
 		if g.is_zero():
 			break
-	var dmg: int = 0 if g.is_zero() else EnemyScript.harm(g.value_at(Game.x_end, e.tt)) + int(e.members) - 1
+	var dmg: int = 0 if g.is_zero() else EnemyScript.harm(g.value_at(Game.x_end, e.tt))
 	return {"steps": steps, "dead": g.is_zero(), "f": g, "dmg": e.leak_damage(dmg)}
 
 

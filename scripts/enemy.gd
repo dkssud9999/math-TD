@@ -118,7 +118,7 @@ func _refresh() -> void:
 			sublabel = "「이 적은 이 체계 안에서 처치할 수 없다」"
 		_:
 			label = _short(f.to_text())
-			threat = harm(f.value_at(Game.x_end, tt)) + (members - 1)   # each function Σ merged in adds 1
+			threat = harm(f.value_at(Game.x_end, tt))   # a Σ-merged enemy is judged by its new f alone
 			ann_text = "Ann " + f.annihilator()
 			if f.has_t():
 				ann_text += "   ·   ᵗ " + f.t_annihilator()
@@ -372,7 +372,7 @@ func _die(by_induction: bool = false) -> void:
 	queue_free()
 
 
-## What reaching the core costs: digits (+ merged count), and bosses add +8 (hard +12) on top.
+## What reaching the core costs: the digits of |f(core)| (a Σ-merged enemy: of its new f), bosses +8 (hard +12).
 func leak_damage(base: int) -> int:
 	if base <= 0:
 		return 0
@@ -420,7 +420,7 @@ func _process(delta: float) -> void:
 		t_refresh -= delta
 		if t_refresh <= 0.0:
 			t_refresh = 0.25
-			threat = harm(f.value_at(Game.x_end, tt)) + (members - 1)   # each function Σ merged in adds 1
+			threat = harm(f.value_at(Game.x_end, tt))   # a Σ-merged enemy is judged by its new f alone
 		trail_t -= delta
 		if trail_t <= 0.0:
 			trail_t = 0.2

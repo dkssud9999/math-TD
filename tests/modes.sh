@@ -32,7 +32,7 @@ run_case() {
   [ "$mode" != "N" ] && hard="--hard"
   local out
   out=$(timeout 900 "$GODOT" --headless --fixed-fps 60 --path . res://scenes/main.tscn -- \
-        --autotest --stage="$st" --tag="$RUN_TAG" --budget --research="$rs" --ts=1 $hard 2>&1)
+        --autotest --stage="$st" --tag="$RUN_TAG" --budget --research="$rs" --ts=2 $hard 2>&1)
   local line
   line=$(echo "$out" | grep "\[autotest\] done" | grep -o 'won=[a-z]* wave=[0-9]* integrity=[0-9]*')
   printf "%-5s %-3s %s\n" "$st" "$mode" "${line:-NO RESULT}"

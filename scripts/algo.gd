@@ -438,7 +438,7 @@ func py_attr(obj: Dictionary, name: String, vm_: PyVM):
 		"damage":
 			if not snap:
 				return e.threat
-			return 0 if f.is_zero() else EnemyScript.harm(f.value_at(Game.x_end, e.tt)) + e.members - 1
+			return 0 if f.is_zero() else EnemyScript.harm(f.value_at(Game.x_end, e.tt))
 		"zero":
 			return f.is_zero()
 		"boss":
