@@ -531,6 +531,8 @@ class Enemy:
     speed: float
     boss: bool
     members: int
+    integrations: int        # 지금까지 적분된 횟수
+    integrations_left: int   # 앞으로 적분할 수 있는 횟수 (한도 5회)
     name: str
     special: str
     def after(self) -> "Enemy": '''이 타워가 한 번 쏜 뒤의 모습 (40단계, 비쌈)'''

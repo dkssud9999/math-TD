@@ -125,7 +125,7 @@ const PAGES := [
 
 	# ---------------- 사전 (언제든 찾아보기) ----------------
 	{"id": "ref_enemy", "sec": "사전", "from": "4-1", "title": "적 e",
-	"body": "[code]e.f[/code]  식\n[code]e.value[/code]  코어에서의 값\n[code]e.damage[/code]  코어에 닿으면 받는 피해\n[code]e.after()[/code]  이 타워가 한 번 쏜 뒤 (40단계)\n[code]e.zero[/code]  after() 결과가 0인가\n[code]e.progress[/code]  진행도 0–1\n[code]e.x  e.dist  e.speed[/code]  위치·타워와의 거리·속도\n[code]e.boss  e.members  e.name[/code]"},
+	"body": "[code]e.f[/code]  식\n[code]e.value[/code]  코어에서의 값\n[code]e.damage[/code]  코어에 닿으면 받는 피해\n[code]e.after()[/code]  이 타워가 한 번 쏜 뒤 (40단계)\n[code]e.zero[/code]  after() 결과가 0인가\n[code]e.progress[/code]  진행도 0–1\n[code]e.x  e.dist  e.speed[/code]  위치·타워와의 거리·속도\n[code]e.boss  e.members  e.name[/code]\n[code]e.integrations[/code]  적분된 횟수   [code]e.integrations_left[/code]  남은 적분 횟수 (적 하나당 5회)"},
 
 	{"id": "ref_func", "sec": "사전", "from": "4-1", "title": "식 f",
 	"body": "[code]f + g   f - g   -f[/code]  식의 덧셈·뺄셈\n[code]2 * f   f / 2[/code]  수배\n[code]f == g   f == 0[/code]  같은가 / 0인가\n[code]f.derivative()[/code]  미분 ([code]derivative(f)[/code]도 같음)\n[code]f.at(3)[/code]  x = 3에서의 값\n[code]f.terms[/code]  항들     [code]f.factors[/code]  곱의 인수들\n[code]f.coef[/code]  계수     [code]f.degree[/code]  x의 차수\n[code]f.inner[/code]  sin(2x) → 2x\n[code]f.has(\"sin\")[/code]  종류: \"sin\" \"cos\" \"exp\" \"x\" \"t\"\n[code]f.is_number   f.is_zero[/code]\n[code]print(f)[/code]  식 출력"},

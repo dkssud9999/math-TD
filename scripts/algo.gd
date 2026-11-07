@@ -383,16 +383,22 @@ func _after(obj: Dictionary, vm_: PyVM) -> Dictionary:
 	_fresh_cache()
 	var src := _expr_of(obj)
 	var params: Dictionary = tower.op_params()
-	var key := "%s|%s|%s" % [str(src.t), tower.type, str(params)]
+	var spent: bool = tower.type == "int" and int(obj["node"].integrations) >= Data.MAX_INTEGRATIONS
+	var key := "%s|%s|%s|%s" % [str(src.t), tower.type, str(params), str(spent)]
 	if not _after_cache.has(key):
 		var g := src.clone()
+		Expr.overflow = false
 		match tower.type:
 			"int":
-				g.integrate()
+				if not spent:   # an enemy integrated to the limit is left as it is
+					g.integrate()
 			"merge", "newton", "bisect":
 				pass
 			_:
 				TowerScript.transform(tower.type, g, params)
+		if Expr.overflow:   # the real shot would be refused ("한계 초과"): nothing changes
+			Expr.overflow = false
+			g = src.clone()
 		_after_cache[key] = g
 	return {"__obj": "snap", "node": obj["node"], "f": _after_cache[key]}
 
@@ -439,6 +445,10 @@ func py_attr(obj: Dictionary, name: String, vm_: PyVM):
 			return e.boss
 		"members":
 			return e.members
+		"integrations":
+			return e.integrations
+		"integrations_left":
+			return maxi(0, Data.MAX_INTEGRATIONS - int(e.integrations))
 		"name":
 			return Data.tpl_name(e.template)
 		"special":
