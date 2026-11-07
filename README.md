@@ -2,7 +2,17 @@
 
 숫자를 0으로 만들어 코어를 지키는 타워 디펜스. (Godot 4.7, 한국어)
 
-## 실행
+## 설치 (Windows)
+
+PowerShell에서 한 줄:
+
+```
+irm https://raw.githubusercontent.com/dkssud9999/math-TD/main/install.ps1 | iex
+```
+
+최신 릴리스를 `%LOCALAPPDATA%\LimitBreak`에 설치하고 바탕화면에 바로가기를 만듭니다. 또는 [릴리스 페이지](https://github.com/dkssud9999/math-TD/releases)에서 LimitBreak.zip을 받아 풀고 LimitBreak.exe를 실행하세요.
+
+## 실행 (소스에서)
 
 Godot 4.7에서 이 폴더를 열고 **F5**. 또는:
 
