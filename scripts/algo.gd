@@ -24,6 +24,9 @@ var vm_name: String = ""
 var last_error: String = ""
 var last_steps: int = 0                 # steps the last call took (shown in the tower panel)
 var _trees: Dictionary = {}             # Expr instance id -> tree, for one call
+var compile_error: String = ""
+var chosen = null                       # what attack() was given this run
+var chose: bool = false
 
 
 static func log_line(s: String, is_error: bool = false) -> void:
@@ -39,7 +42,7 @@ func _init(p_tower) -> void:
 
 func dispose() -> void:
 	if vm != null:
-		vm.dispose()
+		vm.release()
 		vm = null
 
 
@@ -47,7 +50,8 @@ func _tag() -> String:
 	return "[%s %s]" % [tower.glyph(), tower.algo]
 
 
-## Compile (if the file changed) and run attack(). Returns {"ok", "targets", "error", "delay"}.
+## Run the file from the top (recompiling if it changed). attack(x) fires and ends the run, like
+## jumping to EOF; reaching EOF without attack() means "wait". Returns {"ok", "targets", "error", "delay"}.
 func run(cands: Array, dry: bool = false) -> Dictionary:
 	var src: String = Progress.read_script(tower.algo)
 	if vm == null or src != vm_src or vm_name != tower.algo:
@@ -56,35 +60,48 @@ func run(cands: Array, dry: bool = false) -> Dictionary:
 		vm.host = self
 		vm_src = src
 		vm_name = tower.algo
-		vm.set_global("me", {"__obj": "tower"})
-		vm.set_global("set_param", {"__bm": "set_param", "self": {"__obj": "tower"}})
-		_set_dynamic()
-		if not vm.load_source(src):
-			return _error(vm.error_text())
-	_set_dynamic()
+		compile_error = "" if vm.compile(src) else vm.error_text()
+	if compile_error != "":
+		return _error(compile_error)
 	var ordered := cands.duplicate()
 	ordered.sort_custom(func(a, b): return a.progress > b.progress)   # front first
 	var proxies: Array = []
 	for e in ordered:
 		proxies.append({"__obj": "enemy", "node": e})
+	var me := {"__obj": "tower"}
+	var g := {"enemies": proxies, "me": me, "wave": Game.wave, "rho": int(Game.rho), "integrity": Game.integrity,
+		"attack": {"__bm": "attack", "self": me}, "set_param": {"__bm": "set_param", "self": me}}
+	chosen = null
+	chose = false
 	vm.output.clear()
 	_trees.clear()
-	var res = vm.run_fn("attack", [proxies])
+	vm.exec_program(g)
+	if vm.ok() and not chose:
+		var fv = vm.globals_env["vars"].get("attack")
+		if fv is Dictionary and fv.has("__fn"):   # the older style: def attack(enemies): return …
+			vm.err = ""
+			var res = vm._call_value(fv, [proxies], {})
+			if vm.ok():
+				chosen = res
+				chose = true
 	last_steps = vm.steps
 	_trees.clear()
 	for line in vm.output:
 		log_line("%s %s" % [_tag(), line])
-	if vm.err != "":
-		return _error(vm.error_text())
+	var failed := not vm.ok()
+	var msg := vm.error_text()
+	vm.dispose()   # globals are rebuilt every run; drop them now so nothing cycles
+	if failed:
+		return _error(msg)
 	if last_error != "":
 		last_error = ""
 		if not dry:
 			log_line("%s 오류가 사라졌습니다" % _tag())
 	var targets: Array = []
-	var items: Array = res if res is Array else ([] if (res == null or res is bool) else [res])
+	var items: Array = chosen if chosen is Array else ([] if (chosen == null or chosen is bool) else [chosen])
 	for it in items:
 		if not (it is Dictionary and it.has("__obj") and it["__obj"] in ["enemy", "snap"]):
-			return _error("attack()은 적, 적의 리스트, 또는 None을 돌려줘야 합니다 (받은 것: %s)" % vm._str(it, true))
+			return _error("attack()에는 적, 적의 리스트, 또는 None을 주세요 (받은 것: %s)" % PyVM.new()._str(it, true))
 		var node = it["node"]
 		if is_instance_valid(node) and node.alive and node in cands and not node in targets:
 			targets.append(node)
@@ -207,6 +224,19 @@ static func _coef(d: Dictionary):
 	return 1
 
 
+## A term without its number: 3·sin(x) → "sin(x)", -x^2 → "x^2", 7 → "1".
+static func _shape(d: Dictionary) -> String:
+	if d["kind"] == "num":
+		return "1"
+	if d["kind"] != "mul":
+		return d["text"]
+	var parts := PackedStringArray()
+	for a in d["args"]:
+		if a["kind"] != "num":
+			parts.append(a["text"])
+	return "·".join(parts) if not parts.is_empty() else "1"
+
+
 static func _has(d: Dictionary, kind: String) -> bool:
 	if d["kind"] == kind:
 		return true
@@ -241,11 +271,13 @@ func _node_attr(d: Dictionary, name: String, vm_: PyVM):
 			return d["args"][1]["value"] if d["kind"] == "pow" else null
 		"coef":
 			return _coef(d)
+		"shape":
+			return _shape(d)
 		"degree":
 			return _degree(d)
 		"has":
 			return {"__bm": "has", "self": {"__obj": "node", "d": d}}
-	vm_.fail("식에는 .%s 가 없습니다 (kind, args, terms, factors, inner, coef, degree, value, has())" % name)
+	vm_.fail("식에는 .%s 가 없습니다 (kind, args, terms, factors, inner, coef, shape, degree, value, has())" % name)
 	return null
 
 
@@ -336,6 +368,14 @@ func py_attr(obj: Dictionary, name: String, vm_: PyVM):
 
 
 func py_call(obj: Dictionary, name: String, args: Array, _kwargs: Dictionary, vm_: PyVM):
+	if obj["__obj"] == "tower" and name == "attack":
+		if args.size() > 1:
+			vm_.fail("attack()에는 적 하나, 또는 적의 리스트 하나를 주세요")
+			return null
+		chosen = args[0] if args.size() == 1 else null
+		chose = true
+		vm_.halt()   # jump to EOF: this run is over
+		return null
 	if obj["__obj"] == "node":
 		if name == "has" and args.size() == 1 and args[0] is String:
 			return _has(obj["d"], args[0])

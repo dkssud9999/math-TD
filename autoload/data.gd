@@ -29,10 +29,10 @@ var CHAPTERS: Dictionary = {
 		"towers": ["sub", "div", "sqrt", "log2"]},
 	2: {"name": "2장 · 변화율", "sub": "f(x) = x", "rho": 200, "integrity": 40,
 		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
-	3: {"name": "3장 · 소멸자", "sub": "D eˣ = eˣ", "rho": 220, "integrity": 40,
-		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "dm1"]},
-	4: {"name": "4장 · 복소평면", "sub": "e^{ix} = cos x + i sin x", "rho": 240, "integrity": 40,
-		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "dm1", "harm"]},
+	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 320, "integrity": 90,
+		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
+	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 400, "integrity": 120,
+		"towers": ["sub", "div", "divx", "log2", "diff", "int", "merge"]},
 	5: {"name": "5장 · 선형대수", "sub": "L(f + g) = Lf + Lg", "rho": 260, "integrity": 70,
 		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "dm1", "harm", "merge"]},
 	6: {"name": "6장 · 연산자 대수", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 280, "integrity": 55,
@@ -84,18 +84,15 @@ x에 대한 연산자로는 이 적의 공간 쪽을 끝낼 수 없습니다. �
 	"swarm_counter": {"flag": "met_swarm", "insight": 40, "need": 10, "count": 120, "interval": 0.1, "sub": "L(f + g) = Lf + Lg",
 		"body": "하나하나는 D와 D² + 1 한 방씩이면 사라집니다. 하지만 수가 너무 많습니다.\n타워는 한 번에 하나의 함수에만 연산을 겁니다.\n\n그런데 모든 연산자는 선형입니다:  L(f + g) = L f + L g.\n같은 소멸자를 가진 함수들은 더해도 소멸자가 늘지 않습니다.\n3 sin x + 3 백 개를 더하면 300 sin x + 300.  소멸자는 여전히 D(D² + 1)입니다.\n\n통찰 +40\n새 장이 열렸습니다:  5장 · 선형대수\n연구 「선형성 Σ」가 가능해졌습니다."},
 	"exp2_counter": {"flag": "met_exp2", "insight": 45, "sub": "D e²ˣ = 2e²ˣ",
-		"body": "D는 2배로 키우고, D − 1은 그대로 두고, D² + 1은 5배로 키웁니다.\n가진 연산자 중 고윳값 2를 빼는 것은 없습니다.\n\n그런데 연산자 사이에 다른 연산자를 끼우면 새 연산자가 생깁니다.\n켤레 공식:  eˣ · D · e⁻ˣ = D − 1.\ne⁻ˣ를 곱하면 모든 고윳값이 1씩 내려갑니다:  e²ˣ → eˣ → 1.\n\n하지만 e⁻ˣ와 D는 교환되지 않습니다:  [D, e⁻ˣ] = −e⁻ˣ.\n이제부터 타워를 놓는 순서가 곧 곱셈의 순서입니다.\n\n통찰 +45\n새 장이 열렸습니다:  6장 · 연산자 대수\n연구 「켤레 공식」이 가능해졌습니다.
-
-그리고 하나 더. 지금까지 타워는 '쓸모 있는 적'만 골라 쐈습니다.
-그건 연산자가 아니라 신탁(oracle)이었습니다. 연산자는 정의역 전체에 작용합니다.
-6장부터 타워는 그냥 맨 앞의 함수를 때립니다.
-누구를 쏠지는 이제 당신이 정합니다: 타워를 선택하고 [E] — 알고리즘 편집기."},
+		"body": "D는 2배로 키우고, D − 1은 그대로 두고, D² + 1은 5배로 키웁니다.\n가진 연산자 중 고윳값 2를 빼는 것은 없습니다.\n\n그런데 연산자 사이에 다른 연산자를 끼우면 새 연산자가 생깁니다.\n켤레 공식:  eˣ · D · e⁻ˣ = D − 1.\ne⁻ˣ를 곱하면 모든 고윳값이 1씩 내려갑니다:  e²ˣ → eˣ → 1.\n\n하지만 e⁻ˣ와 D는 교환되지 않습니다:  [D, e⁻ˣ] = −e⁻ˣ.\n이제부터 타워를 놓는 순서가 곧 곱셈의 순서입니다.\n\n통찰 +45\n새 장이 열렸습니다:  6장 · 연산자 대수\n연구 「켤레 공식」이 가능해졌습니다."},
 	"x_counter": {"flag": "met_x", "extra_flag": "fake_ending", "insight": 25, "sub": "f(x) = x",
 		"body": "빼기는 상수항만 깎습니다. x에는 상수항이 없습니다.\n나누기는 나누어떨어질 때만 작동합니다. x의 계수는 1입니다.\n\n지금까지 당신은 '값'을 다뤘습니다.\n이것은 값이 아니라, 자리에 따라 '변하는 것'입니다.\n\n통찰 +25\n새 장이 열렸습니다:  2장 · 변화율\n연구 「x로 나누기」가 가능해졌습니다. 그 너머에는 「미분」이 있습니다."},
 	"exp_counter": {"flag": "met_exp", "insight": 30, "sub": "D eˣ = eˣ",
-		"body": "미분은 xⁿ의 차수를 하나씩 깎습니다. 그런데 eˣ는 미분해도 자기 자신입니다.\n적분해도 eˣ − 1. 다시 미분하면 eˣ.\n\neˣ는 D의 고유함수입니다:  D eˣ = 1 · eˣ.\n그렇다면 D에서 그 고윳값을 빼면?  (D − 1) eˣ = eˣ − eˣ = 0.\n\n통찰 +30\n새 장이 열렸습니다:  3장 · 소멸자\n연구 「지수 소멸 D−1」이 가능해졌습니다."},
+		"body": "미분은 xⁿ의 차수를 하나씩 깎습니다. 그런데 eˣ는 미분해도 자기 자신입니다.\n적분해도 eˣ − 1. 다시 미분하면 eˣ.\n\n지수를 깎을 수 없다면, 지수를 끌어내리면 됩니다.\n1장의 log₂는 2ⁿ → n이었습니다. 같은 일을 e에 대해 하면:  log eˣ = x.\n\n통찰 +30\n새 장이 열렸습니다:  3장 · 로그\n연구 「자연로그」가 가능해졌습니다."},
 	"sin_counter": {"flag": "met_sin", "insight": 35, "sub": "sin x → cos x → −sin x → −cos x → sin x",
-		"body": "D를 쏘면 sin은 cos이 되고, 네 번 쏘면 제자리로 돌아옵니다.\nD − 1을 쏘면 cos x − sin x. 사라지지 않습니다.\n\n실수 연산자 D − λ 중 sin을 죽이는 λ는 없습니다.\nsin x의 고윳값은 실수축 위에 없기 때문입니다.\n\n오일러:  e^{ix} = cos x + i sin x,   sin x = (e^{ix} − e^{−ix}) / 2i\n고윳값은 ±i.  (D − i)(D + i) = D² + 1.\n\n통찰 +35\n화면에 허수축이 열렸습니다:  4장 · 복소평면\n연구 「오일러 공식」이 가능해졌습니다."},
+		"body": "D를 쏘면 sin은 cos이 되고, 네 번 쏘면 제자리로 돌아옵니다. 로그는 듣지 않습니다.\n하나의 타워로는 끝이 없습니다.\n\n하지만 두 번 미분한 sin x는 −sin x입니다. 그리고 sin x + (−sin x) = 0.\n한 적을 미분하고, 다른 적과 더한다. 타워들이 손을 맞춰야 합니다.\n\n그리고 하나 더. 지금까지 타워는 '쓸모 있는 적'만 골라 쐈습니다.\n그건 연산자가 아니라 신탁(oracle)이었습니다. 이제부터 타워는 그냥 맨 앞의 함수를 칩니다.\n누구를 칠지는 당신이 코드로 정합니다: 타워를 선택하고 [E].\n\n통찰 +35\n새 장이 열렸습니다:  4장 · 프로그래밍"},
+	"tx_counter": {"flag": "met_swarm", "insight": 40, "sub": "f(x, t) = eˣ sin x · eᵗ",
+		"body": "이 적에는 x만 있는 게 아닙니다. 필드에 머문 시간 t가 들어 있고, 오래 둘수록 eᵗ배로 커집니다.\nD와 Σ로 eˣ sin x를 지우려면 f″ − 2f′ + 2f = 0: 두 배와 빼기가 섞인 결합이 필요합니다.\n가진 타워로는 그 결합을 만들 수 없습니다.\n\n그런데 이 함수는 시간 쪽으로 보면 단순합니다: g(x) · eᵗ.\n시간으로 미분하면 자기 자신. 2장의 eˣ와 같은 모양입니다.\n\n통찰 +40\n다음 장이 열렸습니다 (5장 이후는 개편 중: 지금은 이전 구성입니다)."},
 }
 
 # mix entries: [template, weight, first_wave]
@@ -136,42 +133,42 @@ var STAGES: Dictionary = {
 	"2-6": {"chapter": 2, "name": "멈추지 않는 것", "map": 5, "x_end": 2.0, "base": 5, "growth": 0.65, "interval": [1.2, 0.7],
 		"desc": "2장의 마지막 스테이지. 모든 다항식은 유한 번 미분하면 0이 됩니다. 모든 함수가 그럴까요?",
 		"mix": [["quad", 1, 1], ["n1", 1, 1], ["cubic", 1, 3], ["quart", 1, 6], ["quint", 1, 10]], "boss": [["boss_x6", 1]], "counter": "exp_counter"},
-	"3-1": {"chapter": 3, "name": "고유함수", "map": 0, "x_end": 3.0, "flag": "met_exp", "base": 8, "growth": 0.9, "interval": [1.0, 0.55],
-		"desc": "eˣ는 D의 고유함수입니다. (D − 1)은 eˣ를 0으로 보냅니다. 다른 모드에는 (μ − 1)배를 곱할 뿐입니다: 상수 5 → −5.",
-		"mix": [["ex", 2, 1], ["exs", 1, 1], ["n1", 1, 1], ["lin", 1, 5], ["exc", 1, 8]], "boss": [["boss_ex1", 2]]},
-	"3-2": {"chapter": 3, "name": "혼합 모드", "map": 1, "x_end": 3.0, "base": 8, "growth": 0.95, "interval": [1.0, 0.55],
-		"desc": "x² + eˣ의 소멸자는 D³(D − 1). D 세 번과 D − 1 한 번. 순서는 상관없습니다: 가환입니다.",
-		"mix": [["pex", 2, 1], ["exc", 1, 1], ["quad", 1, 1], ["ex", 1, 4], ["mix3", 1, 9]], "boss": [["mix3b", 2]]},
-	"3-3": {"chapter": 3, "name": "중근", "map": 2, "x_end": 3.0, "base": 8, "growth": 0.9, "interval": [1.0, 0.6],
-		"desc": "xeˣ의 소멸자는 (D − 1)², x²eˣ는 (D − 1)³. 같은 인수를 여러 번 채워야 합니다.",
-		"mix": [["xex", 2, 1], ["ex", 1, 1], ["x2ex", 1, 5], ["pex", 1, 3]], "boss": [["boss_x3ex", 2]]},
-	"3-4": {"chapter": 3, "name": "가환", "map": 4, "x_end": 3.0, "base": 6, "growth": 0.9, "interval": [1.2, 0.65],
-		"desc": "D와 D − 1은 서로 교환됩니다. 어느 인수를 먼저 채우든 결과는 같습니다. 대신 길이 길고, 적이 다양합니다.",
-		"mix": [["pex", 2, 1], ["cubic", 1, 1], ["mix3", 1, 3], ["xex", 1, 5], ["x2ex", 1, 10]], "boss": [["boss_ex", 2]]},
-	"3-5": {"chapter": 3, "name": "대군", "map": 4, "x_end": 3.0, "base": 13, "growth": 1.2, "interval": [0.7, 0.35],
-		"desc": "eˣ 무리. 하나하나는 약하지만 많고, 기울기가 커서 코어에 가까울수록 빨라집니다.",
-		"mix": [["ex", 3, 1], ["exs", 1, 1], ["exc", 1, 3], ["xc", 1, 1], ["xex", 1, 8]], "boss": [["boss_ex", 2]]},
-	"3-6": {"chapter": 3, "name": "순환", "map": 5, "x_end": 3.0, "base": 9, "growth": 1.05, "interval": [0.9, 0.45],
-		"desc": "3장의 마지막 스테이지. 다항식과 지수의 소멸자는 이제 당신의 것입니다. 모든 함수가 실수 고윳값을 가질까요?",
-		"mix": [["pex", 1, 1], ["exc", 1, 1], ["xex", 1, 3], ["mix3", 1, 6], ["x2ex", 1, 9]], "boss": [["boss_ex", 1]], "counter": "sin_counter"},
-	"4-1": {"chapter": 4, "name": "허수축", "map": 0, "x_end": 4.0, "flag": "met_sin", "base": 8, "growth": 0.9, "interval": [1.0, 0.55],
-		"desc": "코어는 x = 4. 진동은 크기가 일정해서 어디서든 자릿수 하나입니다. D² + 1은 sin과 cos을 0으로 보냅니다. 그 대신 상수 c는 c 그대로, eˣ는 2eˣ가 됩니다.",
-		"mix": [["sin", 2, 1], ["cos", 1, 1], ["asin", 1, 3], ["quad", 1, 5], ["ex", 1, 8], ["xsin", 1, 11]], "boss": [["boss_trig", 2]]},
-	"4-2": {"chapter": 4, "name": "위상", "map": 1, "x_end": 4.0, "base": 8, "growth": 0.95, "interval": [1.0, 0.55],
-		"desc": "A cos x + B sin x는 위상만 다른 하나의 진동입니다. 소멸자는 똑같이 D² + 1.",
-		"mix": [["acs", 2, 1], ["sin", 1, 1], ["n1", 1, 1], ["quad", 1, 4], ["asin", 1, 7]], "boss": [["boss_trig", 2]]},
-	"4-3": {"chapter": 4, "name": "공명", "map": 2, "x_end": 4.0, "base": 7, "growth": 0.9, "interval": [1.1, 0.6],
-		"desc": "x sin x의 소멸자는 (D² + 1)². 같은 고윳값이 두 번 — 공명입니다. 조화 소멸을 거듭제곱으로 연구하세요.",
-		"mix": [["xsin", 2, 1], ["acs", 1, 1], ["xcos", 1, 4], ["cubic", 1, 6]], "boss": [["boss_res", 2]]},
-	"4-4": {"chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "base": 6, "growth": 0.8, "interval": [1.1, 0.6],
-		"desc": "sin 2x의 소멸자는 D² + 4. D² + 1을 쏘면 (−4 + 1)배, 즉 −3배가 됩니다. 진동수를 연구해 ω를 맞추세요.",
-		"mix": [["sin2", 2, 1], ["sin", 1, 1], ["cos2", 1, 4], ["acs", 1, 6]], "boss": [["boss_w2", 2]]},
-	"4-5": {"chapter": 4, "name": "혼성", "map": 4, "x_end": 4.0, "base": 6, "growth": 0.85, "interval": [1.1, 0.6],
-		"desc": "진동과 지수와 다항식이 한 몸에. Ann(sin x + eˣ + x) = D²(D − 1)(D² + 1).",
-		"mix": [["tex", 2, 1], ["tpx", 1, 1], ["acs", 1, 3], ["pex", 1, 6], ["xsin", 1, 9]], "boss": [["boss_hy", 2]]},
-	"4-6": {"chapter": 4, "name": "대군", "map": 5, "x_end": 4.0, "base": 9, "growth": 1.05, "interval": [0.85, 0.45],
-		"desc": "4장의 마지막 스테이지. 한 마리 한 마리는 쉽습니다.",
-		"mix": [["sin", 2, 1], ["acs", 1, 1], ["tex", 1, 4], ["xsin", 1, 8]], "boss": [["boss_trig", 1]], "counter": "swarm_counter"},
+	"3-1": {"chapter": 3, "name": "자연로그", "map": 0, "x_end": 3.0, "flag": "met_exp", "base": 5, "growth": 0.85, "interval": [1.1, 0.6],
+		"desc": "로그 타워가 이제 함수에도 작동합니다: log eˣ = x, log e²ˣ = 2x. 그다음은 2장에서 하던 대로 ÷x와 빼기. 계수가 붙은 3eˣ도 되지만 세 배 오래 걸립니다. 먼저 ÷3을 할 수 있다면?",
+		"mix": [["ex", 2, 1], ["exs", 1, 1], ["n1", 1, 1], ["e2x", 1, 5], ["exc", 1, 8]], "boss": [["boss_ex1", 2]]},
+	"3-2": {"chapter": 3, "name": "순서", "map": 1, "x_end": 3.0, "base": 5, "growth": 0.9, "interval": [1.0, 0.55],
+		"desc": "eˣ + 4에는 로그가 듣지 않습니다. 상수부터 떼야 합니다. xeˣ도 그대로는 안 됩니다: ÷x가 먼저. 어떤 타워를 앞에 둘지가 곧 풀이 순서입니다.",
+		"mix": [["exc", 2, 1], ["xex", 1, 1], ["ex", 1, 1], ["lin", 1, 4], ["e2x", 1, 7]], "boss": [["boss_chain", 2]]},
+	"3-3": {"chapter": 3, "name": "섞인 몸", "map": 2, "x_end": 3.0, "base": 5, "growth": 0.9, "interval": [1.0, 0.6],
+		"desc": "x + eˣ는 로그도 ÷x도 안 됩니다. D를 두 번 쏘면 다항식 쪽이 먼저 사라집니다: x + eˣ → 1 + eˣ → eˣ.",
+		"mix": [["xpe", 2, 1], ["pex", 1, 1], ["exc", 1, 3], ["quad", 1, 5], ["xex", 1, 9]], "boss": [["mix3b", 2]]},
+	"3-4": {"chapter": 3, "name": "선형결합", "map": 4, "x_end": 3.0, "base": 7, "growth": 0.9, "interval": [0.7, 0.35],
+		"desc": "Σ 타워는 범위 안의 함수들을 하나로 더합니다. eˣ 여섯이 6eˣ 하나가 되고, ÷2 ÷3이면 다시 eˣ. 3eˣ와 −3eˣ는 더하는 순간 0입니다.",
+		"mix": [["ex", 3, 1], ["pm_ex", 1, 1], ["exs", 1, 3], ["n1", 1, 1], ["xex", 1, 8]], "boss": [["boss_ex1", 2]]},
+	"3-5": {"chapter": 3, "name": "대군", "map": 3, "x_end": 3.0, "base": 6, "growth": 0.85, "interval": [0.85, 0.45],
+		"desc": "많고 빠릅니다. 하나씩 풀면 늦습니다. 합칠 것인가, 나눠 풀 것인가.",
+		"mix": [["ex", 3, 1], ["exc", 1, 1], ["pm_ex", 1, 3], ["xpe", 1, 5], ["e2x", 1, 9]], "boss": [["boss_chain", 2]]},
+	"3-6": {"chapter": 3, "name": "순환", "map": 5, "x_end": 3.0, "base": 7, "growth": 1.0, "interval": [0.9, 0.45],
+		"desc": "3장의 마지막 스테이지. 다항식은 미분으로, 지수는 로그로. 이제 못 푸는 함수가 있을까요?",
+		"mix": [["xpe", 1, 1], ["exc", 1, 1], ["xex", 1, 3], ["exs", 1, 6], ["e2x", 1, 9]], "boss": [["boss_chain", 1]], "counter": "sin_counter"},
+	"4-1": {"chapter": 4, "name": "코딩 입문", "map": 0, "x_end": 4.0, "flag": "met_sin", "integrity": 150, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
+		"desc": "sin x는 D를 두 번 맞으면 −sin x가 됩니다. sin x와 −sin x를 Σ로 더하면 0. 혼자서는 못 하고, 타워 둘이 손을 맞춰야 합니다.\n\n따라 해 보세요 (적이 적고 느린 연습 스테이지입니다):\n1. D 타워 하나와 Σ 타워 하나를 짓고, D 타워를 선택한 뒤 E.\n2. 편집기 「가이드」를 1번부터 읽고, 5번 예시(D용)를 새 파일로 열어 D 타워에 붙이기.\n3. 6번 예시(Σ용)를 Σ 타워에 붙이기. 「테스트 실행」으로 확인.\n4. Esc로 돌아와 웨이브 시작. 타워 위 </> 표시가 알고리즘이 돌고 있다는 뜻입니다.",
+		"mix": [["s1", 2, 1], ["n1", 1, 1], ["ex", 1, 3]], "boss": [["boss_sc", 2]]},
+	"4-2": {"chapter": 4, "name": "위상", "map": 1, "x_end": 4.0, "base": 5, "growth": 0.8, "interval": [1.2, 0.65],
+		"desc": "cos x에 D를 한 번 쏘면 −sin x. 옆에 sin x가 있다면 그걸로 충분합니다. 누가 누구의 짝인지 읽는 코드가 필요합니다.",
+		"mix": [["s1", 2, 1], ["c1", 2, 1], ["s1c", 1, 4], ["exc", 1, 7]], "boss": [["boss_sc", 2]]},
+	"4-3": {"chapter": 4, "name": "생성", "map": 2, "x_end": 4.0, "base": 5, "growth": 0.8, "interval": [1.2, 0.65],
+		"desc": "생성하는 적은 몇 초마다 자기 도함수를 낳습니다: sin → cos → −sin → … 부모와 자손이 서로의 짝입니다.",
+		"mix": [["gen_sin", 1, 1], ["s1", 2, 1], ["c1", 1, 3], ["xpe", 1, 6]], "boss": [["boss_sc", 2]]},
+	"4-4": {"chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "integrity": 220, "base": 4, "growth": 0.7, "interval": [1.4, 0.8],
+		"desc": "sin 2x를 두 번 미분하면 −4 sin 2x. 짝이 되려면 크기를 맞춰야 합니다: ÷2를 두 번.",
+		"mix": [["s2", 2, 1], ["s1", 1, 1], ["c2", 1, 4], ["exs", 1, 7]], "boss": [["boss_s2", 2]]},
+	"4-5": {"chapter": 4, "name": "혼성", "map": 4, "x_end": 4.0, "base": 5, "growth": 0.85, "interval": [1.1, 0.6],
+		"desc": "sin x + eˣ. 로그는 덧셈을 못 넘고, D는 sin을 돌릴 뿐입니다. 다른 적의 −sin x를 더해 sin을 떼어 내면 eˣ만 남습니다.",
+		"mix": [["tse", 2, 1], ["s1", 2, 1], ["c1", 1, 3], ["xpe", 1, 6]], "boss": [["boss_sc", 2]]},
+	"4-6": {"chapter": 4, "name": "시간", "map": 5, "x_end": 4.0, "base": 6, "growth": 0.9, "interval": [1.0, 0.5],
+		"desc": "4장의 마지막 스테이지. 경로의 변수는 x입니다. 다른 변수는 없을까요?",
+		"mix": [["s1", 2, 1], ["c1", 1, 1], ["tse", 1, 4], ["xpe", 1, 8]], "boss": [["boss_sc", 2]], "counter": "tx_counter"},
 	"5-1": {"chapter": 5, "name": "선형결합", "map": 0, "x_end": 5.0, "flag": "met_swarm", "base": 11, "growth": 1.2, "interval": [0.55, 0.25],
 		"desc": "Σ는 범위 안의 함수들을 하나로 더합니다. 같은 종류끼리 더하면 소멸자가 늘지 않습니다: 숫자 무리는 D 한 방, eˣ 무리는 D − 1 한 방.",
 		"mix": [["n1", 2, 1], ["ex", 1, 1], ["sin", 1, 3], ["exs", 1, 6]], "boss": [["boss_ex1", 2]]},
@@ -190,15 +187,9 @@ var STAGES: Dictionary = {
 	"5-6": {"chapter": 5, "name": "폭발", "map": 5, "x_end": 5.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.7],
 		"desc": "5장의 마지막 스테이지. 지금까지의 모든 연산자와 Σ. 고윳값은 0, 1, ±i, ±2i. 그것으로 충분할까요?",
 		"mix": [["ex", 1, 1], ["sin", 1, 1], ["n1", 1, 1], ["tex", 1, 4], ["gen_x4", 1, 7], ["pm_ex", 1, 9]], "boss": [["boss_hy", 1]], "counter": "exp2_counter"},
-	"6-1": {"chapter": 6, "name": "코딩 입문", "map": 4, "x_end": 6.0, "flag": "met_exp2", "integrity": 150, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
-		"desc": "감쇠장 e⁻ˣ·는 모든 고윳값을 1씩 내립니다: e²ˣ → eˣ → 1. 그런데 저주 때문에 상수에도 걸려 1 → e⁻ˣ로 망칩니다.
-
-따라 해 보세요 (적이 적고 느린 연습 스테이지입니다):
-1. 감쇠장과 D − 1을 짓고, 감쇠장을 선택한 뒤 E.
-2. 편집기 「가이드」의 1–2번을 읽고, 4번 예시를 새 파일로 열기.
-3. 오른쪽 위에서 그 파일을 감쇠장에 붙이고 「테스트 실행」. 콘솔에 쏠 대상이 나옵니다.
-4. Esc로 돌아와 웨이브 시작. 타워 위 </> 표시가 알고리즘이 돌고 있다는 뜻입니다.",
-		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["n1", 1, 1], ["e2c", 1, 7]], "boss": [["boss_e2", 1]]},
+	"6-1": {"chapter": 6, "name": "켤레", "map": 4, "x_end": 6.0, "flag": "met_exp2", "base": 6, "growth": 0.8, "interval": [1.4, 0.75],
+		"desc": "감쇠장 e⁻ˣ·는 모든 고윳값을 1씩 내립니다. e²ˣ → eˣ → 1. 감쇠장 다음에 D − 1을 두면 e²ˣ가, D를 두면 eˣ가 사라집니다. 순서가 곧 연산입니다.",
+		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["exsin", 1, 4], ["e2c", 1, 7]], "boss": [["boss_e2", 2]]},
 	"6-2": {"chapter": 6, "name": "교환자", "map": 1, "x_end": 6.0, "base": 6, "growth": 0.85, "interval": [1.3, 0.7],
 		"desc": "[D, e⁻ˣ] = −e⁻ˣ. eˣ sin x는 감쇠장을 지나면 sin x가 됩니다. 그 다음에 D² + 1. 반대 순서는 통하지 않습니다.",
 		"mix": [["exsin", 2, 1], ["ex", 1, 1], ["e2x", 1, 3], ["sin", 1, 5]], "boss": [["boss_e2", 2]]},
@@ -398,19 +389,21 @@ var RESEARCH: Array = [
 		"desc": "미분 타워 3레벨이 d³/dx³가 됩니다."},
 	{"id": "int2", "chapter": 2, "name": "정적분", "cost": 45, "req": ["int"], "stage": "2-5",
 		"desc": "적분 수확 ×1.5. 넓이를 더 정확하게 셉니다."},
-	{"id": "dm1", "chapter": 3, "name": "지수 소멸 D−1", "cost": 15, "req": [], "flag": "met_exp",
+	{"id": "ln", "chapter": 3, "name": "자연로그", "cost": 15, "req": [], "flag": "met_exp",
+		"desc": "로그 타워가 함수에도 작동합니다: log(c·eᵃˣ) = ax + ln c. 지수함수 하나짜리에만, 그리고 계수 c가 클수록 c배 오래 걸립니다. 상수항이 붙어 있거나(eˣ + 3) 다른 항과 더해져 있으면(x + eˣ) 먼저 떼어 내야 합니다."},
+	{"id": "dm1", "chapter": 5, "name": "지수 소멸 D−1", "cost": 15, "req": [], "flag": "met_swarm",
 		"desc": "D − 1 타워 해금. (D − 1)eˣ = 0. 고윳값을 빼면 고유함수가 사라집니다."},
-	{"id": "ann", "chapter": 3, "name": "소멸자 이론", "cost": 18, "req": ["dm1"], "stage": "3-2",
+	{"id": "ann", "chapter": 5, "name": "소멸자 이론", "cost": 18, "req": ["dm1"], "stage": "5-1",
 		"desc": "적 위에 소멸자 Ann(f)를 표시합니다. 그 차수가 곧 필요한 타격 수입니다."},
-	{"id": "dbl", "chapter": 3, "name": "중근", "cost": 42, "req": ["dm1"], "stage": "3-3",
+	{"id": "dbl", "chapter": 5, "name": "중근", "cost": 42, "req": ["dm1"], "stage": "5-2",
 		"desc": "D − 1 타워 3레벨이 (D − 1)²가 됩니다. xeˣ를 한 방에."},
-	{"id": "harm", "chapter": 4, "name": "오일러 공식", "cost": 20, "req": [], "flag": "met_sin",
+	{"id": "harm", "chapter": 5, "name": "오일러 공식", "cost": 20, "req": [], "flag": "met_swarm",
 		"desc": "D² + 1 타워 해금. e^{ix} = cos x + i sin x 이므로 sin의 고윳값은 ±i, (D − i)(D + i) = D² + 1."},
-	{"id": "harm2", "chapter": 4, "name": "공명", "cost": 42, "req": ["harm"], "stage": "4-2",
+	{"id": "harm2", "chapter": 5, "name": "공명", "cost": 42, "req": ["harm"], "stage": "5-2",
 		"desc": "조화 소멸 3레벨이 (D² + ω²)²가 됩니다. x sin x를 한 방에."},
-	{"id": "omega2", "chapter": 4, "name": "진동수", "cost": 33, "req": ["harm"], "stage": "4-3",
+	{"id": "omega2", "chapter": 5, "name": "진동수", "cost": 33, "req": ["harm"], "stage": "5-3",
 		"desc": "조화 소멸 타워의 ω를 1 ↔ 2로 바꿀 수 있습니다 [W]. D² + 4는 sin 2x의 소멸자."},
-	{"id": "merge", "chapter": 5, "name": "선형성 Σ", "cost": 20, "req": [], "flag": "met_swarm",
+	{"id": "merge", "chapter": 3, "name": "선형성 Σ", "cost": 25, "req": ["ln"], "stage": "3-3",
 		"desc": "Σ 타워 해금. 범위 안의 함수들을 하나로 더합니다. 모든 타워는 선형이므로 합친 뒤 한 번에 처리할 수 있습니다."},
 	{"id": "merge2", "chapter": 5, "name": "기저 정리", "cost": 45, "req": ["merge"], "stage": "5-2",
 		"desc": "Σ가 계수를 고릅니다. 범위 안의 함수들이 선형 종속이면 (예: 3eˣ와 5eˣ, 또는 sin x, cos x, 2sin x + cos x 셋) 합이 0이 되는 결합을 찾아 모두 소거합니다."},
@@ -441,74 +434,80 @@ var RESEARCH: Array = [
 ]
 
 # ---------------- attack algorithms (in-game Python) ----------------
-const EXAMPLE_ATTACK := """# 기본 알고리즘 — 6장부터 모든 타워가 쓰는 것과 같습니다.
-# attack(enemies)는 타워가 쏠 준비가 될 때마다 불립니다.
-#   enemies : 사거리 안의 적들. 코어에 가까운(앞선) 적부터 정렬되어 있습니다.
-#   적 하나를 돌려주면 그 적을 쏩니다. None이면 이번엔 쉽니다.
+const EXAMPLE_ATTACK := """# 기본 알고리즘 — 4장부터 모든 타워가 쓰는 것과 같습니다.
+# 이 파일은 타워가 쏠 준비가 될 때마다 맨 위부터 실행됩니다.
+#   enemies : 사거리 안의 적들 (코어에 가까운 적부터)
+#   attack(e) : e를 칩니다. 그 순간 실행이 끝납니다 (파일 끝으로).
+#   attack을 안 부르고 끝나면 이번엔 쉽니다.
 
-def attack(enemies):
-    return enemies[0]
+attack(enemies[0])
 """
 
-const EXAMPLE_DAMP := """# 감쇠장(e⁻ˣ·) 예시: 지수함수 항이 있는 적에게만
-# 범위 타워는 리스트를 돌려주면 그 적들에게만 작용합니다.
-# 상수 1에 e⁻ˣ를 곱하면 e⁻ˣ가 되어 D로는 지울 수 없게 되니까요.
+const EXAMPLE_DAMP := """# Σ 타워 예시: 더해서 0이 되는 짝을 찾아 더하기
+# 범위 타워는 attack([a, b])처럼 리스트를 주면 그 적들에게만 작용합니다.
 
-def attack(enemies):
-    targets = []
-    for e in enemies:
-        if e.f.has("exp"):
-            targets.append(e)
-    return targets
+for a in enemies:
+    for b in enemies:
+        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
+            attack([a, b])
 """
 
 const ALGO_LESSONS := [
-	["1. 첫 알고리즘", "기본 타워는 맨 앞의 적을 쏩니다. enemies는 앞선 적부터 정렬되어 있으니 enemies[0]이 맨 앞입니다. 이 파일을 타워에 붙여도 아무것도 달라지지 않습니다. 여기서부터 고쳐 나가면 됩니다.",
-"""def attack(enemies):
-    return enemies[0]
+	["1. 첫 알고리즘", "이 파일은 타워가 쏠 때마다 맨 위부터 실행됩니다. enemies는 사거리 안의 적들이고, 코어에 가까운 적이 앞에 옵니다. attack(e)를 부르면 e를 치고 실행이 끝납니다. 아래가 기본 타워와 똑같은 알고리즘입니다.",
+"""attack(enemies[0])
 """],
-	["2. 고르기", "for로 적을 하나씩 보고, 조건에 맞는 첫 적을 쏩니다. e.f는 적의 식입니다. kind가 \"num\"이면 그냥 숫자(상수)입니다. 아무도 없으면 None으로 쉽니다.",
-"""def attack(enemies):
-    for e in enemies:
-        if e.f.kind != "num":    # 상수는 건너뛴다
-            return e
-    return None
+	["2. 고르기", "for로 적을 하나씩 봅니다. e.f는 적의 식이고, kind가 \"num\"이면 그냥 숫자입니다. attack을 부르는 순간 끝나니, 처음 찾은 적만 칩니다. 아무도 못 찾고 파일 끝에 닿으면 이번엔 쉽니다.",
+"""for e in enemies:
+    if e.f.kind != "num":    # 숫자는 건너뛴다
+        attack(e)
 """],
-	["3. 식을 항으로 쪼개기", "e.f.terms는 덧셈으로 나뉜 항들입니다. 각 항의 차수(degree)와 계수(coef)를 볼 수 있습니다. print는 아래 콘솔에 찍힙니다. 「테스트 실행」으로 확인해 보세요.",
-"""def attack(enemies):
-    for e in enemies:
-        for term in e.f.terms:
-            print(term, "차수", term.degree, "계수", term.coef)
-    return enemies[0]
+	["3. 식을 항으로 쪼개기", "e.f.terms는 덧셈으로 나뉜 항들입니다. 항마다 차수(degree), 계수(coef), 계수를 뺀 모양(shape)을 볼 수 있습니다. print는 아래 콘솔에 찍힙니다. 「테스트 실행」으로 확인해 보세요.",
+"""for e in enemies:
+    for term in e.f.terms:
+        print(term, "모양", term.shape, "계수", term.coef, "차수", term.degree)
+attack(enemies[0])
 """],
-	["4. 곱과 합성", "항은 곱으로 다시 나뉩니다: term.factors. sin(2x), exp(2x) 같은 합성함수는 .inner로 안쪽을 꺼냅니다. exp(2x)의 inner는 2x, 그 계수(coef)가 2입니다. 감쇠장은 지수가 양수인 항이 있는 적에게만 쓰면 됩니다.",
-"""def attack(enemies):
-    hit = []
-    for e in enemies:
-        for term in e.f.terms:
-            for fac in term.factors:
-                if fac.kind == "exp" and fac.inner.coef > 0:
-                    hit.append(e)
-    return hit
+	["4. 곱과 합성", "항은 곱으로 다시 나뉩니다: term.factors. sin(2x), exp(2x) 같은 합성함수는 .inner로 안쪽을 꺼냅니다. sin(2x)의 inner는 2x이고, 그 계수가 진동수 2입니다.",
+"""for e in enemies:
+    for term in e.f.terms:
+        for fac in term.factors:
+            if fac.kind == "sin" and fac.inner.coef == 2:
+                attack(e)            # sin 2x가 들어 있는 첫 적
 """],
-	["5. 쏴 보기 전에 미리 보기", "e.after()는 이 타워가 한 번 쏜 뒤의 모습입니다. 쏘면 피해가 줄거나 0이 되는 적만 고를 수 있습니다. 대신 비쌉니다: after() 한 번이 40단계입니다.",
-"""def attack(enemies):
-    for e in enemies:
-        a = e.after()
-        if a.zero or a.damage < e.damage:
-            return e
-    return None
+	["5. 협업 ① — D 타워", "sin x 둘이 오면, 하나를 두 번 미분해 −sin x로 만듭니다. 짝이 이미 있는 적(더하면 0이 되는 상대가 있는 적)은 건드리지 않습니다. 이 파일을 D 타워에 붙이세요.",
+"""def has_partner(a):
+    for b in enemies:
+        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
+            return True
+    return False
+
+for e in enemies:
+    if e.f.has("sin") or e.f.has("cos"):
+        if not has_partner(e):
+            attack(e)
 """],
-	["6. 계산은 공짜가 아니다", "알고리즘이 쓴 단계만큼 타워가 늦게 쏩니다 (1,000단계 = 0.25초). 타워 정보에 지난번 단계 수가 나옵니다. 앞에서 찾으면 바로 return하고, 비싼 after()는 꼭 필요할 때만 부르세요.",
-"""def attack(enemies):
-    for e in enemies:              # 앞에서부터: 찾자마자 끝
-        if e.f.has("sin") or e.f.has("cos"):
-            return e
-    return None
+	["6. 협업 ② — Σ 타워", "Σ는 attack([a, b])로 두 적을 더합니다. 모양이 같고 계수가 반대인 짝(sin x와 −sin x)을 찾으면 더해서 0. 이 파일을 Σ 타워에 붙이세요.",
+"""for a in enemies:
+    for b in enemies:
+        if a != b and a.f.shape == b.f.shape and a.f.coef == -b.f.coef:
+            attack([a, b])
+"""],
+	["7. 쏴 보기 전에 미리 보기", "e.after()는 이 타워가 한 번 쏜 뒤의 모습입니다. 쏘면 피해가 줄거나 0이 되는 적만 고를 수 있습니다. 대신 비쌉니다: after() 한 번이 40단계입니다.",
+"""for e in enemies:
+    a = e.after()
+    if a.zero or a.damage < e.damage:
+        attack(e)
+"""],
+	["8. 계산은 공짜가 아니다", "알고리즘이 쓴 단계만큼 타워가 늦게 쏩니다 (1,000단계 = 0.25초). 타워 정보에 지난번 단계 수가 나옵니다. 위 5번처럼 이중 반복문은 적이 많을 때 비쌉니다. 앞에서 찾자마자 attack하고, 비싼 after()는 꼭 필요할 때만.",
+"""for e in enemies:              # 앞에서부터: 찾자마자 끝
+    if e.f.has("sin"):
+        attack(e)
 """],
 ]
 
-const ALGO_HELP := """[b]적 e[/b]  (enemies는 앞선 적부터)
+const ALGO_HELP := """[b]실행[/b]  파일이 맨 위부터 실행됩니다. [code]attack(e)[/code] 또는 [code]attack([a, b])[/code]를 부르면 치고 끝. 안 부르고 끝나면 쉼.
+
+[b]적 e[/b]  (enemies는 앞선 적부터)
 [code]e.f[/code]  식 (아래 '식' 참고)
 [code]e.value[/code]  코어에서의 값    [code]e.damage[/code]  코어에 닿으면 받는 피해
 [code]e.after()[/code]  이 타워가 한 번 쏜 뒤의 모습 (40단계, 비쌈)
@@ -521,7 +520,8 @@ const ALGO_HELP := """[b]적 e[/b]  (enemies는 앞선 적부터)
 [code]f.terms[/code]  덧셈으로 나눈 항들      [code]f.factors[/code]  곱으로 나눈 인수들
 [code]f.inner[/code]  exp·sin·cos의 안쪽 (sin(2x) → 2x)
 [code]f.base  f.exponent[/code]  거듭제곱 x^3 → x, 3
-[code]f.coef[/code]  수 계수 (3·x^2 → 3)    [code]f.degree[/code]  x의 차수
+[code]f.coef[/code]  수 계수 (3·x^2 → 3)    [code]f.shape[/code]  계수를 뺀 모양 ("sin(x)")
+[code]f.degree[/code]  x의 차수
 [code]f.value[/code]  수일 때 그 값    [code]f.args[/code]  자식들
 [code]f.has("sin")[/code]  그 종류가 어딘가에 있는가    [code]print(f)[/code]  식 출력
 
@@ -533,7 +533,7 @@ const ALGO_HELP := """[b]적 e[/b]  (enemies는 앞선 적부터)
 min·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code]
 
 [b]비용[/b]  1단계 = 0.00025초 지연. 한 번 실행에 20,000단계까지.
-오류가 나면 그 타워는 기본(맨 앞 적)으로 돌아갑니다.
+오류가 나면 그 타워는 기본(맨 앞 적)으로 돌아갑니다. 예전 방식 def attack(enemies): return … 도 그대로 작동합니다.
 """
 
 
@@ -573,6 +573,17 @@ var TEMPLATES: Dictionary = {
 	"boss_x3ex": {"speed": 26, "boss": true, "name": "x³eˣ + 1", "kind": "exp"},
 	"boss_ex": {"speed": 26, "boss": true, "name": "x²eˣ + x³ + 5", "kind": "exp"},
 	"sin_counter": {"speed": 26, "boss": true, "name": "8 sin x", "kind": "trig"},
+	"xpe": {"speed": 46, "name": "x + eˣ", "kind": "exp"},
+	"boss_chain": {"speed": 28, "boss": true, "name": "4x²e²ˣ", "kind": "exp", "noarmor": true},
+	"s1": {"speed": 50, "name": "a sin x", "kind": "trig", "noarmor": true},
+	"c1": {"speed": 50, "name": "a cos x", "kind": "trig", "noarmor": true},
+	"s1c": {"speed": 48, "name": "a sin x + c", "kind": "trig", "noarmor": true},
+	"s2": {"speed": 50, "name": "a sin 2x", "kind": "trig", "noarmor": true},
+	"c2": {"speed": 50, "name": "a cos 2x", "kind": "trig", "noarmor": true},
+	"tse": {"speed": 44, "name": "a sin x + eˣ", "kind": "trig", "noarmor": true},
+	"boss_sc": {"speed": 28, "boss": true, "name": "b sin x + b cos x", "kind": "trig", "noarmor": true},
+	"boss_s2": {"speed": 28, "boss": true, "name": "b sin 2x + 5", "kind": "trig", "noarmor": true},
+	"tx_counter": {"speed": 26, "boss": true, "name": "eˣ sin x · eᵗ", "kind": "time"},
 	"sin": {"speed": 54, "name": "a sin x", "kind": "trig"}, "cos": {"speed": 54, "name": "a cos x", "kind": "trig"},
 	"asin": {"speed": 50, "name": "a sin x + c", "kind": "trig"}, "xsin": {"speed": 40, "name": "x sin x", "kind": "trig"},
 	"boss_trig": {"speed": 28, "boss": true, "name": "4cos x + 4sin x + x² + 3", "kind": "trig"},
@@ -712,8 +723,8 @@ func _unique(a: Array) -> Array:
 const ARMOR_KINDS := ["poly", "exp", "trig", "exp2"]
 
 
-const CURSE_CHAPTER := 6
-const CURSE_TEXT := "⚠ 6장의 저주 — 연산자는 상대를 고르지 않습니다.
+const CURSE_CHAPTER := 4
+const CURSE_TEXT := "⚠ 4장의 저주 — 연산자는 상대를 고르지 않습니다.
 타워는 사거리 맨 앞의 함수를, 쓸모가 있든 없든 그냥 때립니다 (범위 타워는 전부). 상수 1에 감쇠장을 걸면 e⁻ˣ가 되고, e²ˣ에 D를 쏘면 2배가 됩니다.
 누구를 쏠지는 직접 정하세요: 타워를 선택하고 [E]. 편집기의 「가이드」가 처음부터 알려 줍니다."
 
@@ -728,12 +739,12 @@ func cursed() -> bool:
 ## hit and works on every mode at once, but each D first costs a layer: D(xᵐg) = mxᵐ⁻¹g + xᵐg′  ([D, x] = 1).
 func armor_power(tpl: String, wave: int) -> int:
 	var info: Dictionary = TEMPLATES.get(tpl, {})
-	if not ARMOR_KINDS.has(info.get("kind", "")) or COUNTERS.has(tpl) or tpl == "child" or info.get("gen", false):
+	if not ARMOR_KINDS.has(info.get("kind", "")) or COUNTERS.has(tpl) or tpl == "child" or info.get("gen", false) or info.get("noarmor", false):
 		return 0
 	if not STAGES.has(Game.stage_id):
 		return 0
 	var ch := chapter_of(Game.stage_id)
-	if ch < 2:
+	if ch < 2 or ch == 3 or ch == 4:   # chapters 3–4 teach chains and teamwork; no armour on top of that
 		return 0
 	var m := int((clampi(wave, 1, WAVES_PER_STAGE) - 1) / 5.0) + (1 if ch >= 5 else 0)   # w1–5: 0, w6–10: 1, w11–15: 2
 	if info.get("boss", false):
@@ -819,6 +830,30 @@ func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr
 			return Expr.new().add_exp(1)
 		"ex":
 			return Expr.new().add_exp(1)
+		"xpe":
+			return Expr.poly([0, 1]).add_exp(1)
+		"boss_chain":
+			return Expr.new().add_exp(4, 2, 2)
+		"s1", "c1", "s1c", "s2", "c2", "tse", "boss_sc", "boss_s2":
+			var amp := 1 + int((w - 1) / 5.0)   # one amplitude per wave, so pairs can cancel
+			match tpl:
+				"s1":
+					return Expr.new().add_trig(0, amp)
+				"c1":
+					return Expr.new().add_trig(amp, 0)
+				"s1c":
+					return Expr.poly([rng.randi_range(1, 6)]).add_trig(0, amp)
+				"s2":
+					return Expr.new().add_trig(0, amp, 0, 0, 2)
+				"c2":
+					return Expr.new().add_trig(amp, 0, 0, 0, 2)
+				"tse":
+					return Expr.new().add_trig(0, amp).add_exp(1)
+				"boss_sc":
+					return Expr.new().add_trig(amp + 2, amp + 2)
+			return Expr.poly([5]).add_trig(0, amp + 1, 0, 0, 2)
+		"tx_counter":
+			return Expr.new().add_trig(0, 1, 0, 1).times_t(0, 1)
 		"exs":
 			return Expr.new().add_exp(rng.randi_range(2, 4))
 		"exc":

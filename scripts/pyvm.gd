@@ -24,6 +24,9 @@ var host = null
 var globals_env: Dictionary = {"vars": {}, "parent": null, "globals": {}}
 var output: PackedStringArray = []
 
+const HALT := "__halt__"     # attack() ends the run like reaching EOF; not an error
+var program: Array = []
+
 var _toks: Array = []
 var _pos: int = 0
 var _line: int = 0
@@ -39,30 +42,69 @@ const C_ERROR := 4
 
 # ======================= public =======================
 
-## Parse and run the top level (defines functions and globals). Returns false on a syntax or runtime error.
-func load_source(src: String) -> bool:
+## Parse only. Returns false on a syntax error (see error_text()).
+func compile(src: String) -> bool:
 	err = ""
+	err_line = 0
+	program = []
 	_toks = _tokenize(src)
 	if err != "":
 		return false
 	_pos = 0
-	var prog: Array = []
 	while _peek()["t"] != "EOF":
 		if _peek()["t"] == "NEWLINE":
 			_pos += 1
 			continue
 		var st = _statement()
 		if err != "":
+			program = []
 			return false
-		prog.append(st)
+		program.append(st)
+	return true
+
+
+## Run the whole file from the top with a fresh global scope (plus the given globals).
+## A halt() (the attack() builtin) ends the run cleanly, like reaching EOF.
+func exec_program(globals: Dictionary) -> void:
+	dispose()
+	globals_env = {"vars": globals.duplicate(), "parent": null, "globals": {}}
+	err = ""
+	err_line = 0
 	steps = 0
-	_exec_block(prog, globals_env)
-	return err == ""
+	_depth = 0
+	_exec_block(program, globals_env)
+
+
+func halted() -> bool:
+	return err == HALT
+
+
+func halt() -> void:
+	if err == "":
+		err = HALT
+
+
+func ok() -> bool:
+	return err == "" or err == HALT
+
+
+## Parse and run the top level (defines functions and globals). Returns false on a syntax or runtime error.
+func load_source(src: String) -> bool:
+	if not compile(src):
+		return false
+	steps = 0
+	_exec_block(program, globals_env)
+	return ok()
 
 
 ## Break the reference cycles (functions hold their defining scope; the host holds this VM).
 func dispose() -> void:
 	globals_env["vars"].clear()
+
+
+## dispose() and forget the host too (the VM is being thrown away).
+func release() -> void:
+	dispose()
 	host = null
 
 

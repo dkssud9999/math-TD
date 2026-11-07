@@ -42,8 +42,8 @@ func _ready() -> void:
 
 
 func has(id: String) -> bool:
-	if id == "code":   # algorithms come with the chapter-6 curse, free
-		return research.has("code") or flag("met_exp2")
+	if id == "code":   # algorithms come with the chapter-4 curse, free
+		return research.has("code") or flag("met_sin")
 	return id == "" or research.has(id)
 
 
@@ -247,9 +247,9 @@ func reload_scripts() -> void:
 
 func ensure_example_scripts() -> void:
 	# (re)write the examples when missing or still in the first version's API (e.growing, e.ann_degree …)
-	for pair in [["attack.py", Data.EXAMPLE_ATTACK], ["damp.py", Data.EXAMPLE_DAMP]]:
+	for pair in [["attack.py", Data.EXAMPLE_ATTACK], ["pair.py", Data.EXAMPLE_DAMP]]:
 		var old := read_script(pair[0])
-		if old == "" or old.contains("e.growing") or old.contains("ann_degree"):
+		if old == "" or old.contains("e.growing") or old.contains("ann_degree") or old.contains("def attack(enemies):\n    return enemies[0]") or old.contains("e.f.has(\"exp\")"):
 			write_script(pair[0], pair[1])
 
 

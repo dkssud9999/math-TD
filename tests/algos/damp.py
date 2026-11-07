@@ -1,4 +1,3 @@
-# bot: the damping field only touches enemies with a growing exponential factor
 def growing(f):
     for term in f.terms:
         for fac in term.factors:
@@ -6,5 +5,4 @@ def growing(f):
                 return True
     return False
 
-def attack(enemies):
-    return [e for e in enemies if e.special == "" and growing(e.f)]
+attack([e for e in enemies if e.special == "" and growing(e.f)])

@@ -355,6 +355,8 @@ func _reach_core() -> void:
 		main.spawn_text(main.map.core_position() + Vector2(0, -40), "무해", Color("78909c"), 15)
 		queue_free()
 		return
+	if main.autotest and OS.get_cmdline_user_args().has("--leaks"):
+		print("[leak] w%d %s (%s)" % [Game.wave, f.to_text(), template])
 	var msg := ("−%d" % threat) if (numeric or special != "") else ("f(%s) ≈ %s  →  −%d" % [_xe(), _compact(f.value_at(Game.x_end, tt)), threat])
 	main.spawn_text(main.map.core_position() + Vector2(0, -40), msg, Color("ef5350"), 18)
 	Sfx.play("leak")

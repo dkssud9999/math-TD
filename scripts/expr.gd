@@ -707,6 +707,30 @@ func is_pow2() -> bool:
 	return int(v[1]) == 1 and n >= 1 and (n & (n - 1)) == 0
 
 
+## [c, a] when f is a single c·e^{ax} with c > 0 and a ≠ 0 (no x powers, no trig, no t); else [].
+func single_exp() -> Array:
+	if t.size() != 1:
+		return []
+	var key: Array = t.keys()[0]
+	if int(key[0]) != 0 or int(key[1]) == 0 or int(key[2]) != 0 or int(key[3]) != 0 or int(key[4]) != 0:
+		return []
+	var z: Array = t[key]
+	if not rz(z[1]) or rf(z[0]) <= 0.0:
+		return []
+	return [z[0], int(key[1])]
+
+
+## Natural log of c·e^{ax}:  ln c + a·x  (ln c kept to 3 decimals; D or −k clears it either way).
+func ln_exp() -> void:
+	var se := single_exp()
+	var c: float = rf(se[0])
+	var a: int = se[1]
+	t = {}
+	_add(K(1), cre(rn(a)))
+	if absf(c - 1.0) > 1e-12:
+		_add(CONST(), cre(rn(int(round(log(c) * 1000.0)), 1000)))
+
+
 func log2_const() -> void:
 	var n: int = const_term()[0]
 	var k := 0
@@ -756,6 +780,9 @@ static func _arg(b: int) -> String:
 static func _fmt(m: Array, body: String, starts_with_x: bool) -> String:
 	var n: int = m[0]
 	var d: int = m[1]
+	if d > 10 and 1000 % d == 0:   # ln c from the log tower reads as a decimal: 1.099, not 1099/1000
+		var dec := ("%.3f" % (float(n) / float(d))).rstrip("0").rstrip(".")
+		return dec if body == "" else dec + body
 	if body == "":
 		return str(n) if d == 1 else "%d/%d" % [n, d]
 	if d == 1:

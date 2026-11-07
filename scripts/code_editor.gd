@@ -312,14 +312,11 @@ func _check() -> void:
 		status.text = "파일이 없습니다. 「새 파일」을 누르세요."
 		return
 	var vm := PyVM.new()
-	vm.host = null
-	vm.set_global("me", {"__obj": "tower"})
-	vm.set_global("set_param", {"__bi": "print"})
-	for g in ["wave", "rho", "integrity"]:
-		vm.set_global(g, 0)
-	var ok := vm.load_source(code.text) and vm.has_function("attack")
-	var err_msg := vm.error_text() if vm.err != "" else "def attack(enemies): 가 없습니다"
-	vm.dispose()
+	var ok := vm.compile(code.text)
+	var err_msg := vm.error_text()
+	if ok and not code.text.contains("attack"):
+		ok = false
+		err_msg = "attack(…)을 부르는 곳이 없습니다 — 이 타워는 쏘지 않습니다"
 	if ok:
 		status.text = "저장됨 ✓  문법 이상 없음"
 		status.add_theme_color_override("font_color", Color("a5d6a7"))

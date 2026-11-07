@@ -601,7 +601,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## The attack-algorithm editor (research 「알고리즘」). Opens on the selected tower, pauses the game.
 func open_code_editor() -> void:
 	if not Progress.has("code"):
-		spawn_text(Vector2(Data.PLAY_W / 2.0, 360), "알고리즘 편집기는 6장부터 열립니다", Color("b0bec5"), 16)
+		spawn_text(Vector2(Data.PLAY_W / 2.0, 360), "알고리즘 편집기는 4장부터 열립니다", Color("b0bec5"), 16)
 		return
 	if code_editor == null:
 		code_editor = CodeEditorScript.new()
@@ -770,10 +770,16 @@ func _autotest_start() -> void:
 	if Data.cursed() and Progress.algo_default.is_empty() and not autotest_no_algo:
 		Progress.research["code"] = true
 		for type in available_towers:
-			if type in ["int", "merge"]:
+			if type == "int":
 				continue
 			var fn := "smart.py"
-			if type == "damp":
+			if type == "diff":
+				fn = "coop_d.py"
+			elif type == "merge":
+				fn = "coop_sum.py"
+			elif type == "div":
+				fn = "coop_div.py"
+			elif type == "damp":
 				fn = "damp.py"
 			elif type in ["newton", "bisect"]:
 				fn = "root.py"
@@ -984,29 +990,46 @@ func _autotest_best_tower() -> String:
 		if sp == "godel":
 			continue
 		for i in 4:
-			var f: Expr = Data.make_expr(g[0], rng, w + 1)
-			var direct := false
-			for dt in ["diff", "dm1", "harm"]:
-				if available_towers.has(dt) and TowerScript.op_useful(dt, f, 1):
-					direct = true
-			for type in available_towers:
-				if type == "int" or type == "merge":
-					continue
-				if type == "damp" and direct:
-					continue
-				var ok: bool = TowerScript.op_useful(type, f, 2 if type == "div" else 1)
-				if type == "harm" and Progress.has("omega2"):
-					ok = f.has_mode(0, 1) or f.has_mode(0, 2)
-				if type == "dtl":
-					ok = f.has_t_mode(1) or (Progress.has("dtl2") and f.has_t_mode(2))
-				if type == "newton" or type == "bisect":
-					ok = false
-				if not ok and available_towers.has("damp") and type != "damp" and f.has_growing():
-					var damped: Expr = f.clone()
-					damped.shift(-1)   # what it becomes after the damping field
-					ok = TowerScript.op_useful(type, damped, 1)
-				if ok:
-					counts[type] = int(counts.get(type, 0)) + int(g[1])
+			var f0: Expr = Data.make_expr(g[0], rng, w + 1)
+			# look a few operations ahead: x + eˣ needs D now and log later, so both count
+			var forms: Array = [f0]
+			var frontier: Array = [f0]
+			for depth in (3 if Data.chapter_of(Game.stage_id) >= 3 else 0):
+				var nxt: Array = []
+				for h: Expr in frontier:
+					for tt in ["sub", "div", "divx", "diff", "log2", "sqrt"]:
+						if not available_towers.has(tt) or not TowerScript.op_useful(tt, h, 2 if tt == "div" else 1):
+							continue
+						var h2: Expr = h.clone()
+						if TowerScript.transform(tt, h2, {"k": 2 if tt == "div" else 1, "n": 1, "mult": 1.0, "w": 1, "lam": 1}) and not h2.is_zero():
+							nxt.append(h2)
+				frontier = nxt.slice(0, 6)
+				forms += frontier
+			var counted := {}
+			for f: Expr in forms:
+				var direct := false
+				for dt in ["diff", "dm1", "harm"]:
+					if available_towers.has(dt) and TowerScript.op_useful(dt, f, 1):
+						direct = true
+				for type in available_towers:
+					if type == "int" or type == "merge":
+						continue
+					if type == "damp" and direct:
+						continue
+					var ok: bool = TowerScript.op_useful(type, f, 2 if type == "div" else 1)
+					if type == "harm" and Progress.has("omega2"):
+						ok = f.has_mode(0, 1) or f.has_mode(0, 2)
+					if type == "dtl":
+						ok = f.has_t_mode(1) or (Progress.has("dtl2") and f.has_t_mode(2))
+					if type == "newton" or type == "bisect":
+						ok = false
+					if not ok and available_towers.has("damp") and type != "damp" and f.has_growing():
+						var damped: Expr = f.clone()
+						damped.shift(-1)   # what it becomes after the damping field
+						ok = TowerScript.op_useful(type, damped, 1)
+					if ok and not counted.has(type):
+						counted[type] = true
+						counts[type] = int(counts.get(type, 0)) + int(g[1])
 	var best := ""
 	var best_score := -1.0
 	for type in counts:
@@ -1025,7 +1048,24 @@ func _autotest_best_tower() -> String:
 			best = "merge"
 	if best == "":
 		best = available_towers[0]
-	if available_towers.has("int") and int(owned.get("int", 0)) < 2 and occupied.size() >= 6 and occupied.size() % 5 == 0:
+	# under the curse, trig enemies die only through D + Σ teamwork: keep both around
+	if Data.cursed() and available_towers.has("merge") and available_towers.has("diff"):
+		var trig := false
+		var freq2 := false
+		for g in waves[w]:
+			if Data.TEMPLATES[g[0]].get("kind", "") == "trig":
+				trig = true
+			if String(Data.TEMPLATES[g[0]].get("name", "")).contains("2x"):
+				freq2 = true
+		if trig:
+			var nd := int(owned.get("diff", 0))
+			var nm := int(owned.get("merge", 0))
+			var nv := int(owned.get("div", 0))
+			if freq2 and available_towers.has("div") and nv < 2 and nd >= 2 and nm >= 1:
+				best = "div"
+			elif nd < 5 or nm < 3:
+				best = "diff" if nd <= nm * 2 else "merge"
+	if available_towers.has("int") and not Data.cursed() and int(owned.get("int", 0)) < 2 and occupied.size() >= 6 and occupied.size() % 5 == 0:
 		best = "int"
 	return best
 

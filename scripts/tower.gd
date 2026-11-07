@@ -164,10 +164,13 @@ static func transform(op: String, f: Expr, params: Dictionary) -> bool:
 			f.sqrt_const()
 			return true
 		"log2":
-			if not f.is_pow2():
-				return false
-			f.log2_const()
-			return true
+			if f.is_pow2():
+				f.log2_const()
+				return true
+			if Progress.has("ln") and not f.single_exp().is_empty():
+				f.ln_exp()   # log(c·e^{ax}) = ax + ln c
+				return true
+			return false
 		"damp":
 			f.shift(-int(params["k"]))
 			return true
@@ -236,7 +239,7 @@ static func op_useful(type: String, f: Expr, k: int = 1) -> bool:
 		"sqrt":
 			return f.is_perfect_square() and (f.is_constant() or Progress.has("psqrt"))
 		"log2":
-			return f.is_pow2()
+			return f.is_pow2() or (Progress.has("ln") and not f.single_exp().is_empty())
 		"diff":
 			return f.degree() >= 0
 		"dm1":
@@ -339,6 +342,10 @@ func _process(delta: float) -> void:
 	var tg = cands[0] if scripted else pick_target(cands)
 	aim = (tg.global_position - global_position).normalized()
 	if type in ["sqrt", "log2", "newton", "bisect"]:
+		if type == "log2":   # a bigger coefficient takes longer: log(c·e^{ax}) costs c× the time
+			var se: Array = tg.f.single_exp()
+			if not se.is_empty():
+				cooldown *= clampf(Expr.rf(se[0]), 1.0, 9.0)
 		main.spawn_zap(global_position, tg.global_position, data["color"])
 		main.spawn_text(tg.global_position + Vector2(0, -32), glyph(), data["color"], 13)
 		tg.apply_op(type, op_params())
