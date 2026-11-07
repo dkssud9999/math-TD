@@ -19,6 +19,7 @@ var t: float = 0.0
 var algo: String = ""          # .py file this tower runs ("" = built-in targeting)
 var algo_host: Algo = null
 var algo_error: String = ""
+var algo_delay: float = 0.0     # seconds the last decision cost (computation is not free)
 
 
 func setup(p_type: String, p_main, p_cell: Vector2i) -> void:
@@ -267,6 +268,8 @@ func in_range(r: float) -> Array:
 
 
 func candidates(r: float) -> Array:
+	if Data.cursed():
+		return in_range(r)   # 6장의 저주: no oracle, every function in range gets hit
 	var out: Array = []
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if e.alive and e.global_position.distance_to(global_position) <= r and useful(e):
@@ -309,11 +312,12 @@ func _process(delta: float) -> void:
 			algo_host = Algo.new(self)
 		var res: Dictionary = algo_host.run(near)
 		algo_error = res["error"]
+		algo_delay = float(res["delay"])
 		if res["ok"]:
 			scripted = true
 			cands = res["targets"]
 			if cands.is_empty():
-				cooldown = 0.12   # the algorithm chose to wait; ask again shortly
+				cooldown = 0.12 + algo_delay   # the algorithm chose to wait; thinking still took time
 				return
 	if not scripted:
 		cands = candidates(range_px())
@@ -322,9 +326,9 @@ func _process(delta: float) -> void:
 	if type == "merge":
 		if not _do_merge(cands):
 			return
-		cooldown = 1.0 / rate()
+		cooldown = 1.0 / rate() + (algo_delay if scripted else 0.0)
 		return
-	cooldown = 1.0 / rate()
+	cooldown = 1.0 / rate() + (algo_delay if scripted else 0.0)
 	if type == "damp" or type == "lpf":
 		for e in cands:
 			e.apply_op(type, op_params())
@@ -381,6 +385,8 @@ func _do_merge(cands: Array) -> bool:
 
 func describe() -> String:
 	var lines: Array = [data["desc"], ""]
+	if Data.cursed() and (algo == "" or not Progress.has("code")):
+		lines.append("⚠ 저주: 사거리 안의 모든 함수를 때립니다" + ("  ·  [E] 알고리즘" if Progress.has("code") else ""))
 	match type:
 		"sub":
 			lines.append("연산: f → f − %d" % int(power()))

@@ -120,15 +120,20 @@ func _ready() -> void:
 		Algo.console.clear()
 		Algo.console_serial += 1))
 	right.add_child(test_row)
+	var tabs := TabContainer.new()
+	tabs.custom_minimum_size = Vector2(0, 260)
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.add_theme_font_size_override("font_size", 13)
+	right.add_child(tabs)
+	tabs.add_child(_build_guide())
 	var help := RichTextLabel.new()
+	help.name = "API"
 	help.bbcode_enabled = true
-	help.custom_minimum_size = Vector2(0, 260)
-	help.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	help.add_theme_font_size_override("normal_font_size", 12)
 	help.add_theme_font_size_override("bold_font_size", 13)
 	help.add_theme_font_size_override("mono_font_size", 12)
 	help.text = Data.ALGO_HELP
-	right.add_child(help)
+	tabs.add_child(help)
 	right.add_child(_label("콘솔", 12, Color("5bc0be")))
 	console_box = RichTextLabel.new()
 	console_box.bbcode_enabled = true
@@ -142,6 +147,42 @@ func _ready() -> void:
 	console_box.add_theme_stylebox_override("normal", csb)
 	console_box.add_theme_font_size_override("normal_font_size", 12)
 	right.add_child(console_box)
+
+
+## 「가이드」: step-by-step lessons; each can be opened as a new file to try.
+func _build_guide() -> Control:
+	var sc := ScrollContainer.new()
+	sc.name = "가이드"
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var vb := VBoxContainer.new()
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb.add_theme_constant_override("separation", 6)
+	sc.add_child(vb)
+	for li in Data.ALGO_LESSONS.size():
+		var lesson: Array = Data.ALGO_LESSONS[li]
+		vb.add_child(_label(lesson[0], 14, Color("ffd166")))
+		var body := _label(lesson[1], 12, Color("cfd8dc"))
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.custom_minimum_size = Vector2(340, 0)
+		vb.add_child(body)
+		var pre := _label(lesson[2], 12, Color("c3e88d"))
+		vb.add_child(pre)
+		var idx := li
+		vb.add_child(_button("이 예시를 새 파일로 열기", func(): _open_lesson(idx)))
+		vb.add_child(HSeparator.new())
+	return sc
+
+
+func _open_lesson(idx: int) -> void:
+	_flush()
+	var fn := "lesson%d.py" % (idx + 1)
+	if not Progress.list_scripts().has(fn):
+		Progress.write_script(fn, "# %s
+" % Data.ALGO_LESSONS[idx][0] + Data.ALGO_LESSONS[idx][2])
+	_refresh_files()
+	_open_file(fn)
+	_refresh_assign()
+	status.text = "%s 열림 — 오른쪽 위에서 타워에 붙이고 「테스트 실행」" % fn
 
 
 func _label(t: String, size: int, c: Color) -> Label:
@@ -364,7 +405,7 @@ func _refresh_assign() -> void:
 	assign_opt.disabled = false
 	btn_all.disabled = false
 	assign_label.text = "선택한 타워:  %s %s  ·  Lv %d" % [tower.glyph(), tower.data["name"], tower.level]
-	assign_opt.add_item("기본 조준 (알고리즘 없음)")
+	assign_opt.add_item("기본 (맨 앞 적)")
 	var sel := 0
 	var all := Progress.list_scripts()
 	for i in all.size():

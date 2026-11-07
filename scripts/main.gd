@@ -601,7 +601,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## The attack-algorithm editor (research 「알고리즘」). Opens on the selected tower, pauses the game.
 func open_code_editor() -> void:
 	if not Progress.has("code"):
-		spawn_text(Vector2(Data.PLAY_W / 2.0, 360), "연구 「알고리즘」이 필요합니다 (6장)", Color("b0bec5"), 16)
+		spawn_text(Vector2(Data.PLAY_W / 2.0, 360), "알고리즘 편집기는 6장부터 열립니다", Color("b0bec5"), 16)
 		return
 	if code_editor == null:
 		code_editor = CodeEditorScript.new()
@@ -744,6 +744,8 @@ func _parse_autotest_args() -> void:
 			Progress.current_stage = a.substr(8)
 		elif a == "--budget":
 			autotest_budget = true
+		elif a == "--no-algo":
+			autotest_no_algo = true
 		elif a.begins_with("--shot="):
 			autotest_shot = a.substr(7)
 		elif a == "--ult":
@@ -764,6 +766,18 @@ func _parse_autotest_args() -> void:
 
 
 func _autotest_start() -> void:
+	# under the chapter-6 curse the bot writes algorithms like a player would (unless --algo= was given)
+	if Data.cursed() and Progress.algo_default.is_empty() and not autotest_no_algo:
+		Progress.research["code"] = true
+		for type in available_towers:
+			if type in ["int", "merge"]:
+				continue
+			var fn := "smart.py"
+			if type == "damp":
+				fn = "damp.py"
+			elif type in ["newton", "bisect"]:
+				fn = "root.py"
+			Progress.algo_default[type] = "res://tests/algos/" + fn
 	print("[autotest] stage %s, towers %s" % [Game.stage_id, str(available_towers)])
 	begin_game()
 	autotest_t0 = Time.get_ticks_msec()
@@ -794,6 +808,7 @@ func _autotest_start() -> void:
 var autotest_probe: float = 0.0
 var autotest_ult: bool = false
 var autotest_shot: String = ""
+var autotest_no_algo: bool = false   # --no-algo: suffer the curse with the default (cursed) targeting
 var autotest_shot_frames: int = 0
 var autotest_pred: int = 0
 

@@ -1037,7 +1037,7 @@ func _type_name(v) -> String:
 		return "list"
 	if v is Dictionary:
 		if v.has("__obj"):
-			return {"enemy": "적", "snap": "적(예측)", "tower": "타워"}.get(v["__obj"], "객체")
+			return {"enemy": "적", "snap": "적(예측)", "tower": "타워", "node": "식"}.get(v["__obj"], "객체")
 		if v.has("__fn") or v.has("__bi") or v.has("__bm"):
 			return "함수"
 	return "값"
@@ -1134,6 +1134,8 @@ func _eq(a, b) -> bool:
 		return _num(a) == _num(b)
 	if typeof(a) != typeof(b):
 		return false
+	if a is Dictionary and a.has("__obj") and b.has("__obj") and a["__obj"] == "node":
+		return b["__obj"] == "node" and a["d"]["text"] == b["d"]["text"]
 	if a is Dictionary and a.has("__obj") and b.has("__obj"):
 		return a.get("node") == b.get("node") and a.get("__obj") == b.get("__obj") and (a["__obj"] != "snap" or a.get("f") == b.get("f"))
 	if a is Array:

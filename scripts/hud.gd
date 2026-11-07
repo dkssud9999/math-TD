@@ -345,8 +345,11 @@ func _refresh_info() -> void:
 	var show_algo: bool = show_up and Progress.has("code")
 	_chg(btn_algo, "visible", show_algo)
 	if show_algo:
-		var a: String = tw.algo if tw.algo != "" else "기본 조준"
-		_chg(btn_algo, "text", ("</> %s  ⚠ 오류" if tw.algo_error != "" else "</> %s  [E]") % a)
+		var a: String = tw.algo if tw.algo != "" else "기본 (맨 앞 적)"
+		var cost := ""
+		if tw.algo != "" and tw.algo_host != null:
+			cost = "  ·  %d단계 +%.2fs" % [tw.algo_host.last_steps, tw.algo_delay]
+		_chg(btn_algo, "text", ("</> %s  ⚠ 오류" if tw.algo_error != "" else "</> %s%s  [E]") % ([a] if tw.algo_error != "" else [a, cost]))
 		_chg(btn_algo, "tooltip_text", tw.algo_error if tw.algo_error != "" else "공격 알고리즘 편집기 열기")
 
 
@@ -396,7 +399,12 @@ func _overlay(title: String, subtitle: String, body: String, buttons: Array, tit
 func show_intro() -> void:
 	var st: Dictionary = Data.STAGES[Game.stage_id]
 	var ch: Dictionary = Data.CHAPTERS[int(st["chapter"])]
-	_overlay(st["name"], "%s   ·   스테이지 %s" % [ch["name"], Game.stage_id], st["desc"],
+	var body: String = st["desc"]
+	if Data.cursed():
+		body += "
+
+" + Data.CURSE_TEXT
+	_overlay(st["name"], "%s   ·   스테이지 %s" % [ch["name"], Game.stage_id], body,
 		[["시작  ▶", func(): main.begin_game()], ["돌아가기", func(): main.to_menu()]], Color("ffd166"), 0.86)
 
 

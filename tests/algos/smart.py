@@ -1,8 +1,14 @@
-# test: fire only where one shot makes progress; nearest to the core first
+# bot: the first enemy (front first) that one shot really improves
+def size(f):
+    return sum(t.degree + 1 for t in f.terms)
+
 def attack(enemies):
-    good = []
     for e in enemies:
+        if e.special != "":
+            continue
         a = e.after()
-        if a.zero or a.ann_degree < e.ann_degree or a.damage < e.damage:
-            good.append(e)
-    return max(good, key=lambda e: e.progress, default=None)
+        if a.zero or a.damage < e.damage or size(a.f) < size(e.f):
+            return e
+        if e.f.kind == "num" and abs(a.value) < abs(e.value):
+            return e
+    return None

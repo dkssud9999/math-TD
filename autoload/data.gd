@@ -84,7 +84,12 @@ x에 대한 연산자로는 이 적의 공간 쪽을 끝낼 수 없습니다. �
 	"swarm_counter": {"flag": "met_swarm", "insight": 40, "need": 10, "count": 120, "interval": 0.1, "sub": "L(f + g) = Lf + Lg",
 		"body": "하나하나는 D와 D² + 1 한 방씩이면 사라집니다. 하지만 수가 너무 많습니다.\n타워는 한 번에 하나의 함수에만 연산을 겁니다.\n\n그런데 모든 연산자는 선형입니다:  L(f + g) = L f + L g.\n같은 소멸자를 가진 함수들은 더해도 소멸자가 늘지 않습니다.\n3 sin x + 3 백 개를 더하면 300 sin x + 300.  소멸자는 여전히 D(D² + 1)입니다.\n\n통찰 +40\n새 장이 열렸습니다:  5장 · 선형대수\n연구 「선형성 Σ」가 가능해졌습니다."},
 	"exp2_counter": {"flag": "met_exp2", "insight": 45, "sub": "D e²ˣ = 2e²ˣ",
-		"body": "D는 2배로 키우고, D − 1은 그대로 두고, D² + 1은 5배로 키웁니다.\n가진 연산자 중 고윳값 2를 빼는 것은 없습니다.\n\n그런데 연산자 사이에 다른 연산자를 끼우면 새 연산자가 생깁니다.\n켤레 공식:  eˣ · D · e⁻ˣ = D − 1.\ne⁻ˣ를 곱하면 모든 고윳값이 1씩 내려갑니다:  e²ˣ → eˣ → 1.\n\n하지만 e⁻ˣ와 D는 교환되지 않습니다:  [D, e⁻ˣ] = −e⁻ˣ.\n이제부터 타워를 놓는 순서가 곧 곱셈의 순서입니다.\n\n통찰 +45\n새 장이 열렸습니다:  6장 · 연산자 대수\n연구 「켤레 공식」이 가능해졌습니다."},
+		"body": "D는 2배로 키우고, D − 1은 그대로 두고, D² + 1은 5배로 키웁니다.\n가진 연산자 중 고윳값 2를 빼는 것은 없습니다.\n\n그런데 연산자 사이에 다른 연산자를 끼우면 새 연산자가 생깁니다.\n켤레 공식:  eˣ · D · e⁻ˣ = D − 1.\ne⁻ˣ를 곱하면 모든 고윳값이 1씩 내려갑니다:  e²ˣ → eˣ → 1.\n\n하지만 e⁻ˣ와 D는 교환되지 않습니다:  [D, e⁻ˣ] = −e⁻ˣ.\n이제부터 타워를 놓는 순서가 곧 곱셈의 순서입니다.\n\n통찰 +45\n새 장이 열렸습니다:  6장 · 연산자 대수\n연구 「켤레 공식」이 가능해졌습니다.
+
+그리고 하나 더. 지금까지 타워는 '쓸모 있는 적'만 골라 쐈습니다.
+그건 연산자가 아니라 신탁(oracle)이었습니다. 연산자는 정의역 전체에 작용합니다.
+6장부터 타워는 그냥 맨 앞의 함수를 때립니다.
+누구를 쏠지는 이제 당신이 정합니다: 타워를 선택하고 [E] — 알고리즘 편집기."},
 	"x_counter": {"flag": "met_x", "extra_flag": "fake_ending", "insight": 25, "sub": "f(x) = x",
 		"body": "빼기는 상수항만 깎습니다. x에는 상수항이 없습니다.\n나누기는 나누어떨어질 때만 작동합니다. x의 계수는 1입니다.\n\n지금까지 당신은 '값'을 다뤘습니다.\n이것은 값이 아니라, 자리에 따라 '변하는 것'입니다.\n\n통찰 +25\n새 장이 열렸습니다:  2장 · 변화율\n연구 「x로 나누기」가 가능해졌습니다. 그 너머에는 「미분」이 있습니다."},
 	"exp_counter": {"flag": "met_exp", "insight": 30, "sub": "D eˣ = eˣ",
@@ -185,9 +190,15 @@ var STAGES: Dictionary = {
 	"5-6": {"chapter": 5, "name": "폭발", "map": 5, "x_end": 5.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.7],
 		"desc": "5장의 마지막 스테이지. 지금까지의 모든 연산자와 Σ. 고윳값은 0, 1, ±i, ±2i. 그것으로 충분할까요?",
 		"mix": [["ex", 1, 1], ["sin", 1, 1], ["n1", 1, 1], ["tex", 1, 4], ["gen_x4", 1, 7], ["pm_ex", 1, 9]], "boss": [["boss_hy", 1]], "counter": "exp2_counter"},
-	"6-1": {"chapter": 6, "name": "켤레", "map": 4, "x_end": 6.0, "flag": "met_exp2", "base": 6, "growth": 0.8, "interval": [1.4, 0.75],
-		"desc": "감쇠장 e⁻ˣ·는 모든 고윳값을 1씩 내립니다. e²ˣ → eˣ → 1. 감쇠장 다음에 D − 1을 두면 e²ˣ가, D를 두면 eˣ가 사라집니다. 순서가 곧 연산입니다.",
-		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["exsin", 1, 4], ["e2c", 1, 7]], "boss": [["boss_e2", 2]]},
+	"6-1": {"chapter": 6, "name": "코딩 입문", "map": 4, "x_end": 6.0, "flag": "met_exp2", "integrity": 150, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
+		"desc": "감쇠장 e⁻ˣ·는 모든 고윳값을 1씩 내립니다: e²ˣ → eˣ → 1. 그런데 저주 때문에 상수에도 걸려 1 → e⁻ˣ로 망칩니다.
+
+따라 해 보세요 (적이 적고 느린 연습 스테이지입니다):
+1. 감쇠장과 D − 1을 짓고, 감쇠장을 선택한 뒤 E.
+2. 편집기 「가이드」의 1–2번을 읽고, 4번 예시를 새 파일로 열기.
+3. 오른쪽 위에서 그 파일을 감쇠장에 붙이고 「테스트 실행」. 콘솔에 쏠 대상이 나옵니다.
+4. Esc로 돌아와 웨이브 시작. 타워 위 </> 표시가 알고리즘이 돌고 있다는 뜻입니다.",
+		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["n1", 1, 1], ["e2c", 1, 7]], "boss": [["boss_e2", 1]]},
 	"6-2": {"chapter": 6, "name": "교환자", "map": 1, "x_end": 6.0, "base": 6, "growth": 0.85, "interval": [1.3, 0.7],
 		"desc": "[D, e⁻ˣ] = −e⁻ˣ. eˣ sin x는 감쇠장을 지나면 sin x가 됩니다. 그 다음에 D² + 1. 반대 순서는 통하지 않습니다.",
 		"mix": [["exsin", 2, 1], ["ex", 1, 1], ["e2x", 1, 3], ["sin", 1, 5]], "boss": [["boss_e2", 2]]},
@@ -197,7 +208,7 @@ var STAGES: Dictionary = {
 	"6-4": {"chapter": 6, "name": "순서", "map": 5, "x_end": 6.0, "base": 6, "growth": 0.9, "interval": [1.2, 0.65],
 		"desc": "xe²ˣ의 소멸자는 (D − 2)². 감쇠장 → (D − 1)² 순서로. 경로 위 타워의 순서가 곧 곱셈의 순서입니다.",
 		"mix": [["e2c", 2, 1], ["exsin", 1, 1], ["xe2x", 1, 4], ["e2x", 1, 1], ["e3x", 1, 9]], "boss": [["boss_e3", 2]]},
-	"6-5": {"chapter": 6, "name": "감쇠 전략", "map": 4, "x_end": 6.0, "base": 10, "growth": 1.1, "interval": [0.8, 0.4],
+	"6-5": {"chapter": 6, "name": "감쇠 전략", "map": 4, "x_end": 6.0, "integrity": 75, "base": 10, "growth": 1.1, "interval": [0.8, 0.4],
 		"desc": "죽이지 않아도 됩니다. 감쇠장을 거듭 지난 함수는 c·e⁻ᵏˣ — 코어에서 0.5보다 작으면 무해합니다. 대신 처치 보상은 없습니다.",
 		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["e2c", 1, 3], ["e3x", 1, 7]], "boss": [["boss_e2", 2]]},
 	"6-6": {"chapter": 6, "name": "시간", "map": 5, "x_end": 6.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.7],
@@ -407,8 +418,6 @@ var RESEARCH: Array = [
 		"desc": "감쇠장 타워 해금. eˣ · D · e⁻ˣ = D − 1: e⁻ˣ를 곱하면 고윳값이 1씩 내려갑니다."},
 	{"id": "damp2", "chapter": 6, "name": "이중 감쇠", "cost": 45, "req": ["damp"], "stage": "6-2",
 		"desc": "감쇠장 3레벨이 e⁻²ˣ·가 됩니다. e³ˣ → eˣ를 한 번에."},
-	{"id": "code", "chapter": 6, "name": "알고리즘", "cost": 20, "req": [], "flag": "met_exp2",
-		"desc": "타워마다 공격 알고리즘(.py 파일)을 직접 짭니다 [E]. 연산자의 정의역을 정하는 일입니다: 예를 들어 감쇠장이 상수 1까지 e⁻ˣ로 바꿔 버리지 않게."},
 	{"id": "dtl", "chapter": 7, "name": "편미분", "cost": 25, "req": [], "flag": "met_time",
 		"desc": "시간 소멸 ∂ₜ − 1 타워 해금. 곱 g(x)·eᵗ를 시간 인수 하나로 지웁니다."},
 	{"id": "dtl2", "chapter": 7, "name": "성장률", "cost": 38, "req": ["dtl"], "stage": "7-1",
@@ -432,67 +441,99 @@ var RESEARCH: Array = [
 ]
 
 # ---------------- attack algorithms (in-game Python) ----------------
-const EXAMPLE_ATTACK := """# 공격 알고리즘
-# 타워가 쏠 준비가 될 때마다 attack(enemies)가 불립니다.
-#   enemies : 사거리 안에 있는 적들의 리스트
-#   적 하나를 돌려주면 그 적을 쏩니다.
-#   리스트를 돌려주면 범위 타워(감쇠장, 필터, Σ)는 그 적들에게만 작용합니다.
-#   None을 돌려주면 이번에는 쏘지 않습니다.
-# 오른쪽 목록에서 적과 타워가 가진 값을 볼 수 있습니다.
+const EXAMPLE_ATTACK := """# 기본 알고리즘 — 6장부터 모든 타워가 쓰는 것과 같습니다.
+# attack(enemies)는 타워가 쏠 준비가 될 때마다 불립니다.
+#   enemies : 사거리 안의 적들. 코어에 가까운(앞선) 적부터 정렬되어 있습니다.
+#   적 하나를 돌려주면 그 적을 쏩니다. None이면 이번엔 쉽니다.
 
 def attack(enemies):
-    good = []
-    for e in enemies:
-        a = e.after()          # 이 타워가 한 번 쏜 뒤의 모습
-        if a.zero or a.ann_degree < e.ann_degree or a.damage < e.damage:
-            good.append(e)
-    if not good:
-        return None
-    # 그중 코어에 가장 가까운 적
-    return max(good, key=lambda e: e.progress)
+    return enemies[0]
 """
 
-const EXAMPLE_DAMP := """# 감쇠장 e⁻ˣ· 전용 예시
-# 성장 모드(고윳값의 실수부 > 0)가 있는 적에게만 작용합니다.
+const EXAMPLE_DAMP := """# 감쇠장(e⁻ˣ·) 예시: 지수함수 항이 있는 적에게만
+# 범위 타워는 리스트를 돌려주면 그 적들에게만 작용합니다.
 # 상수 1에 e⁻ˣ를 곱하면 e⁻ˣ가 되어 D로는 지울 수 없게 되니까요.
 
 def attack(enemies):
-    return [e for e in enemies if e.growing]
+    targets = []
+    for e in enemies:
+        if e.f.has("exp"):
+            targets.append(e)
+    return targets
 """
 
-const ALGO_HELP := """[b]적 e[/b]
-[code]e.f[/code]  식 (문자열)
-[code]e.value[/code]  코어에서의 값
-[code]e.damage[/code]  코어에 닿으면 받는 피해
-[code]e.ann[/code]  소멸자 [[a, b, 중복도], …]  고윳값 a ± bi
-[code]e.ann_degree[/code]  소멸자 차수 = 필요한 타격 수
-[code]e.mult(a, b=0)[/code]  고윳값 a+bi의 중복도 (없으면 0)
-[code]e.has_mode(a, b=0)[/code]
-[code]e.degree[/code]  다항식 부분 차수 (−1: 없음)
-[code]e.armor[/code]  x로 나누어떨어지는 횟수
-[code]e.const[/code]  상수인가
-[code]e.growing[/code]  성장 모드(실수부 > 0)가 있는가
-[code]e.has_t[/code]  t를 포함하는가
-[code]e.freq[/code]  가장 높은 진동수
+const ALGO_LESSONS := [
+	["1. 첫 알고리즘", "기본 타워는 맨 앞의 적을 쏩니다. enemies는 앞선 적부터 정렬되어 있으니 enemies[0]이 맨 앞입니다. 이 파일을 타워에 붙여도 아무것도 달라지지 않습니다. 여기서부터 고쳐 나가면 됩니다.",
+"""def attack(enemies):
+    return enemies[0]
+"""],
+	["2. 고르기", "for로 적을 하나씩 보고, 조건에 맞는 첫 적을 쏩니다. e.f는 적의 식입니다. kind가 \"num\"이면 그냥 숫자(상수)입니다. 아무도 없으면 None으로 쉽니다.",
+"""def attack(enemies):
+    for e in enemies:
+        if e.f.kind != "num":    # 상수는 건너뛴다
+            return e
+    return None
+"""],
+	["3. 식을 항으로 쪼개기", "e.f.terms는 덧셈으로 나뉜 항들입니다. 각 항의 차수(degree)와 계수(coef)를 볼 수 있습니다. print는 아래 콘솔에 찍힙니다. 「테스트 실행」으로 확인해 보세요.",
+"""def attack(enemies):
+    for e in enemies:
+        for term in e.f.terms:
+            print(term, "차수", term.degree, "계수", term.coef)
+    return enemies[0]
+"""],
+	["4. 곱과 합성", "항은 곱으로 다시 나뉩니다: term.factors. sin(2x), exp(2x) 같은 합성함수는 .inner로 안쪽을 꺼냅니다. exp(2x)의 inner는 2x, 그 계수(coef)가 2입니다. 감쇠장은 지수가 양수인 항이 있는 적에게만 쓰면 됩니다.",
+"""def attack(enemies):
+    hit = []
+    for e in enemies:
+        for term in e.f.terms:
+            for fac in term.factors:
+                if fac.kind == "exp" and fac.inner.coef > 0:
+                    hit.append(e)
+    return hit
+"""],
+	["5. 쏴 보기 전에 미리 보기", "e.after()는 이 타워가 한 번 쏜 뒤의 모습입니다. 쏘면 피해가 줄거나 0이 되는 적만 고를 수 있습니다. 대신 비쌉니다: after() 한 번이 40단계입니다.",
+"""def attack(enemies):
+    for e in enemies:
+        a = e.after()
+        if a.zero or a.damage < e.damage:
+            return e
+    return None
+"""],
+	["6. 계산은 공짜가 아니다", "알고리즘이 쓴 단계만큼 타워가 늦게 쏩니다 (1,000단계 = 0.25초). 타워 정보에 지난번 단계 수가 나옵니다. 앞에서 찾으면 바로 return하고, 비싼 after()는 꼭 필요할 때만 부르세요.",
+"""def attack(enemies):
+    for e in enemies:              # 앞에서부터: 찾자마자 끝
+        if e.f.has("sin") or e.f.has("cos"):
+            return e
+    return None
+"""],
+]
+
+const ALGO_HELP := """[b]적 e[/b]  (enemies는 앞선 적부터)
+[code]e.f[/code]  식 (아래 '식' 참고)
+[code]e.value[/code]  코어에서의 값    [code]e.damage[/code]  코어에 닿으면 받는 피해
+[code]e.after()[/code]  이 타워가 한 번 쏜 뒤의 모습 (40단계, 비쌈)
+[code]e.zero[/code]  0이 되었는가 (after()에서)
+[code]e.progress[/code]  진행도 0–1   [code]e.x  e.dist  e.speed[/code]
 [code]e.boss  e.members  e.name  e.special[/code]
-[code]e.progress[/code]  경로 진행도 0–1
-[code]e.x  e.dist  e.speed[/code]
-[code]e.useful[/code]  기본 조준이 쓸모 있다고 보는가
-[code]e.after()[/code]  이 타워가 한 번 쏜 뒤의 모습 (같은 값들을 가짐, 이어서 .after() 가능)
-[code]e.zero[/code]  0이 되었는가 (after()에서 유용)
 
-[b]타워[/b]
-[code]me.op  me.name  me.level  me.param  me.range[/code]
-[code]set_param(v)[/code]  ω 또는 λ를 바꿈 (연구 필요)
+[b]식 f[/b]
+[code]f.kind[/code]  "add" 합 · "mul" 곱 · "pow" 거듭제곱 · "exp" "sin" "cos" · "num" 수 · "x" · "t"
+[code]f.terms[/code]  덧셈으로 나눈 항들      [code]f.factors[/code]  곱으로 나눈 인수들
+[code]f.inner[/code]  exp·sin·cos의 안쪽 (sin(2x) → 2x)
+[code]f.base  f.exponent[/code]  거듭제곱 x^3 → x, 3
+[code]f.coef[/code]  수 계수 (3·x^2 → 3)    [code]f.degree[/code]  x의 차수
+[code]f.value[/code]  수일 때 그 값    [code]f.args[/code]  자식들
+[code]f.has("sin")[/code]  그 종류가 어딘가에 있는가    [code]print(f)[/code]  식 출력
 
+[b]타워[/b]  [code]me.op  me.name  me.level  me.param  me.range[/code]
+[code]set_param(v)[/code]  ω 또는 λ 바꾸기 (연구 필요)
 [b]전역[/b]  [code]wave  rho  integrity[/code]
 
-[b]내장 함수[/b]
-print len range min max abs sorted sum any all int float str round list enumerate zip reversed
-min·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code], sorted는 [code]reverse=[/code]
+[b]내장 함수[/b]  print len range min max abs sorted sum any all int float str round list enumerate zip reversed
+min·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code]
 
-[b]문법[/b]  def, return, if/elif/else, for, while, break, continue, lambda, 리스트 내포, global
-한 번 실행에 20,000단계까지. 오류가 나면 그 타워는 기본 조준으로 돌아갑니다.
+[b]비용[/b]  1단계 = 0.00025초 지연. 한 번 실행에 20,000단계까지.
+오류가 나면 그 타워는 기본(맨 앞 적)으로 돌아갑니다.
 """
 
 
@@ -669,6 +710,17 @@ func _unique(a: Array) -> Array:
 
 
 const ARMOR_KINDS := ["poly", "exp", "trig", "exp2"]
+
+
+const CURSE_CHAPTER := 6
+const CURSE_TEXT := "⚠ 6장의 저주 — 연산자는 상대를 고르지 않습니다.
+타워는 사거리 맨 앞의 함수를, 쓸모가 있든 없든 그냥 때립니다 (범위 타워는 전부). 상수 1에 감쇠장을 걸면 e⁻ˣ가 되고, e²ˣ에 D를 쏘면 2배가 됩니다.
+누구를 쏠지는 직접 정하세요: 타워를 선택하고 [E]. 편집기의 「가이드」가 처음부터 알려 줍니다."
+
+
+## Chapter 6 on: towers lose their built-in oracle and hit every function in range.
+func cursed() -> bool:
+	return STAGES.has(Game.stage_id) and chapter_of(Game.stage_id) >= CURSE_CHAPTER
 
 
 ## Multiplicity armour: from chapter 2 on, later waves and later chapters multiply enemies by xᵐ.

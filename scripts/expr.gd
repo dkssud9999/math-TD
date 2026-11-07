@@ -765,6 +765,37 @@ static func _fmt(m: Array, body: String, starts_with_x: bool) -> String:
 	return "(%d/%d)%s" % [n, d, body]
 
 
+## The real terms of f, in display order: [{num, den, k, a, trig ("", "cos", "sin"), b, j, g}].
+## c·xᵏ·e^{ax}·cos(bx)·tʲ·e^{gt}  — the same split to_text() prints.
+func real_terms() -> Array:
+	var items: Array = []
+	for key: Array in t:
+		var z: Array = t[key]
+		var k := int(key[0])
+		var a := int(key[1])
+		var b := int(key[2])
+		var j := int(key[3])
+		var g := int(key[4])
+		if b < 0:
+			continue
+		if b == 0:
+			var grp := 0 if (a == 0 and k > 0) else (1 if a != 0 else (3 if j == 0 and g == 0 else 2))
+			items.append([[grp, -a, -k, -g, -j], z[0], k, a, "", 0, j, g])
+		else:
+			var cos_c := rscale(z[0], 2)
+			var sin_c := rscale(z[1], -2)
+			if not rz(cos_c):
+				items.append([[2, -a, b, -k, 0, -g, -j], cos_c, k, a, "cos", b, j, g])
+			if not rz(sin_c):
+				items.append([[2, -a, b, -k, 1, -g, -j], sin_c, k, a, "sin", b, j, g])
+	items.sort_custom(func(p, q): return _lex_less(p[0], q[0]))
+	var out: Array = []
+	for it in items:
+		var c: Array = it[1]
+		out.append({"num": int(c[0]), "den": int(c[1]), "k": it[2], "a": it[3], "trig": it[4], "b": it[5], "j": it[6], "g": it[7]})
+	return out
+
+
 func to_text() -> String:
 	if t.is_empty():
 		return "0"

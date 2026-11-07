@@ -1,11 +1,9 @@
-# test: switch ω to whatever the leading enemy needs
+# test: switch ω to whatever the leading trig enemy needs
 def attack(enemies):
-    if not enemies:
-        return None
-    lead = max(enemies, key=lambda e: e.progress)
-    for w in [1, 2]:
-        if lead.has_mode(0, w):
-            set_param(w)
-            return lead
-    hit = [e for e in enemies if e.has_mode(0, me.param)]
-    return hit[0] if hit else None
+    for e in enemies:
+        for term in e.f.terms:
+            for fac in term.factors:
+                if fac.kind in ["sin", "cos"]:
+                    if set_param(fac.inner.coef) or me.param == fac.inner.coef:
+                        return e
+    return None

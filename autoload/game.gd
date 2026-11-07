@@ -34,7 +34,7 @@ func reset() -> void:
 	stage_id = Progress.current_stage
 	x_end = float(Data.STAGES[stage_id]["x_end"])
 	rho = float(Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("rho", Data.START_RHO))
-	integrity = int(Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("integrity", Data.START_INTEGRITY))
+	integrity = int(Data.STAGES[stage_id].get("integrity", Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("integrity", Data.START_INTEGRITY)))
 	start_integrity = integrity
 	ult_left = 2 if int(Data.STAGES[stage_id]["chapter"]) >= 2 else 0
 	changed.emit()

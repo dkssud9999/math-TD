@@ -42,6 +42,8 @@ func _ready() -> void:
 
 
 func has(id: String) -> bool:
+	if id == "code":   # algorithms come with the chapter-6 curse, free
+		return research.has("code") or flag("met_exp2")
 	return id == "" or research.has(id)
 
 
@@ -244,10 +246,11 @@ func reload_scripts() -> void:
 
 
 func ensure_example_scripts() -> void:
-	if not list_scripts().is_empty():
-		return
-	write_script("attack.py", Data.EXAMPLE_ATTACK)
-	write_script("damp.py", Data.EXAMPLE_DAMP)
+	# (re)write the examples when missing or still in the first version's API (e.growing, e.ann_degree …)
+	for pair in [["attack.py", Data.EXAMPLE_ATTACK], ["damp.py", Data.EXAMPLE_DAMP]]:
+		var old := read_script(pair[0])
+		if old == "" or old.contains("e.growing") or old.contains("ann_degree"):
+			write_script(pair[0], pair[1])
 
 
 ## Developer: every chapter met and every stage open (skips the reveals).
