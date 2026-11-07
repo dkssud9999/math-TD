@@ -867,7 +867,7 @@ func make_expr(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
 	var f := _make_base(tpl, rng, wave)
 	# hard, chapter 3 on: a boss is the same puzzle eight times as heavy (÷2 three more times, or log 8× slower)
 	if Game.hard and TEMPLATES[tpl].get("boss", false) and not COUNTERS.has(tpl) and STAGES.has(Game.stage_id) \
-			and chapter_of(Game.stage_id) >= 3:
+			and chapter_of(Game.stage_id) >= 3 and not TEMPLATES[tpl].has("recipe"):
 		f.scale(8, 1)
 	var m := armor_power(tpl, wave)
 	if m > 0:
@@ -877,6 +877,10 @@ func make_expr(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
 
 
 func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
+	# built from its own solution (scripts/recipe.gd): hard plays the longer recipe if there is one
+	var td: Dictionary = TEMPLATES.get(tpl, {})
+	if td.has("recipe"):
+		return load("res://scripts/recipe.gd").build(td["recipe_hard"] if Game.hard and td.has("recipe_hard") else td["recipe"])
 	var w := clampi(wave, 1, WAVES_PER_STAGE)
 	match tpl:
 		"n1":
