@@ -107,6 +107,9 @@ func _ready() -> void:
 	arow.add_theme_constant_override("separation", 6)
 	assign_opt = OptionButton.new()
 	assign_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	assign_opt.fit_to_longest_item = false
+	assign_opt.clip_text = true
+	assign_opt.custom_minimum_size = Vector2(120, 0)
 	assign_opt.item_selected.connect(_on_assign)
 	arow.add_child(assign_opt)
 	btn_all = _button("같은 종류 전부", _assign_all)
@@ -153,7 +156,7 @@ func _ready() -> void:
 func _build_guide() -> Control:
 	var sc := ScrollContainer.new()
 	sc.name = "가이드"
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO   # long code lines scroll instead of widening the panel
 	var vb := VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_theme_constant_override("separation", 6)
@@ -163,7 +166,7 @@ func _build_guide() -> Control:
 		vb.add_child(_label(lesson[0], 14, Color("ffd166")))
 		var body := _label(lesson[1], 12, Color("cfd8dc"))
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		body.custom_minimum_size = Vector2(340, 0)
+		body.custom_minimum_size = Vector2(330, 0)
 		vb.add_child(body)
 		var pre := _label(lesson[2], 12, Color("c3e88d"))
 		vb.add_child(pre)

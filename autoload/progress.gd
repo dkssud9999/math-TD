@@ -167,7 +167,10 @@ func add_insight(n: int) -> void:
 func save_game() -> void:
 	if not persist:
 		return
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	# write a temp file first; the previous save is kept as .bak, so a crash mid-write or a bad save
+	# never loses progress (load_game falls back to the .bak)
+	var tmp := SAVE_PATH + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return
 	f.store_string(JSON.stringify({
@@ -175,17 +178,40 @@ func save_game() -> void:
 		"palette_open": palette_open, "dev_mode": dev_mode, "dev_short": dev_short, "auto_wave": auto_wave,
 		"algo_default": algo_default, "normal_clear": normal_clear, "hard_stars": hard_stars,
 	}))
+	f.close()
+	if typeof(_parse_save(tmp)) != TYPE_DICTIONARY:
+		return   # never replace a good save with a broken one
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return
+	if FileAccess.file_exists(SAVE_PATH) and typeof(_parse_save(SAVE_PATH)) == TYPE_DICTIONARY:
+		dir.copy(SAVE_PATH, SAVE_PATH + ".bak")
+	dir.rename(tmp, SAVE_PATH)
+
+
+func _parse_save(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return null
+	return JSON.parse_string(f.get_as_text())
 
 
 func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(SAVE_PATH) and not FileAccess.file_exists(SAVE_PATH + ".bak"):
 		return
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if f == null:
-		return
-	var d = JSON.parse_string(f.get_as_text())
+	var d = _parse_save(SAVE_PATH)
 	if typeof(d) != TYPE_DICTIONARY:
-		return
+		# damaged save: keep it aside (it is not overwritten later) and use the previous one
+		if FileAccess.file_exists(SAVE_PATH):
+			var dir := DirAccess.open("user://")
+			if dir != null:
+				dir.copy(SAVE_PATH, SAVE_PATH + ".broken")
+		d = _parse_save(SAVE_PATH + ".bak")
+		if typeof(d) != TYPE_DICTIONARY:
+			return
+		push_warning("save was damaged; loaded the backup (%s.bak)" % SAVE_PATH)
 	insight = int(d.get("insight", 0))
 	research = d.get("research", {})
 	flags = d.get("flags", {})
@@ -289,6 +315,8 @@ func reset_save() -> void:
 	insight = 0
 	research = {}
 	stars = {}
+	normal_clear = {}
+	hard_stars = {}
 	flags = {}
 	seen = {}
 	axioms_on = {}
