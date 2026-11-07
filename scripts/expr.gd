@@ -13,6 +13,29 @@ var t: Dictionary = {}   # [k, a, b, j, γ] -> [re, im], each a rational [num, d
 
 # ======================= exact arithmetic =======================
 
+## Exact numbers are 64-bit. Anything past 2⁶² is refused instead of wrapping around: the product is
+## clamped and `overflow` is raised, and whoever started the operation throws its result away.
+const LIMIT := 4611686018427387904          # 2⁶²
+const LIMIT_F := 4611686018427387904.0
+static var overflow: bool = false
+
+
+static func _m(a: int, b: int) -> int:
+	if a == 0 or b == 0:
+		return 0
+	if absf(float(a)) * absf(float(b)) > LIMIT_F:
+		overflow = true
+		return LIMIT if (a < 0) == (b < 0) else -LIMIT
+	return a * b
+
+
+static func _a(a: int, b: int) -> int:
+	if absf(float(a) + float(b)) > LIMIT_F:
+		overflow = true
+		return LIMIT if a + b > 0 else -LIMIT
+	return a + b
+
+
 static func _gcd(a: int, b: int) -> int:
 	while b != 0:
 		var r := a % b
@@ -33,7 +56,7 @@ static func rn(n: int, d: int = 1) -> Array:
 
 
 static func radd(a: Array, b: Array) -> Array:
-	return rn(int(a[0]) * int(b[1]) + int(b[0]) * int(a[1]), int(a[1]) * int(b[1]))
+	return rn(_a(_m(int(a[0]), int(b[1])), _m(int(b[0]), int(a[1]))), _m(int(a[1]), int(b[1])))
 
 
 static func rneg(a: Array) -> Array:
@@ -45,15 +68,15 @@ static func rsub(a: Array, b: Array) -> Array:
 
 
 static func rmul(a: Array, b: Array) -> Array:
-	return rn(int(a[0]) * int(b[0]), int(a[1]) * int(b[1]))
+	return rn(_m(int(a[0]), int(b[0])), _m(int(a[1]), int(b[1])))
 
 
 static func rdiv(a: Array, b: Array) -> Array:
-	return rn(int(a[0]) * int(b[1]), int(a[1]) * int(b[0]))
+	return rn(_m(int(a[0]), int(b[1])), _m(int(a[1]), int(b[0])))
 
 
 static func rscale(a: Array, num: int, den: int = 1) -> Array:
-	return rn(int(a[0]) * num, int(a[1]) * den)
+	return rn(_m(int(a[0]), num), _m(int(a[1]), den))
 
 
 static func rf(a: Array) -> float:

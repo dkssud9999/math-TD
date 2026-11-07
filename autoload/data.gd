@@ -9,7 +9,7 @@ const TOP := 40
 const START_RHO := 150
 const START_INTEGRITY := 100
 const WAVES_PER_STAGE := 15
-const MAX_INTEGRATIONS := 3
+const MAX_INTEGRATIONS := 5
 
 var font: Font = preload("res://assets/math_font.tres")
 
@@ -25,25 +25,25 @@ var MAPS: Array = [
 
 # ---------------- chapters & stages ----------------
 var CHAPTERS: Dictionary = {
-	1: {"name": "1장 · 산술", "sub": "수 방어전", "rho": 150, "integrity": 100,
+	1: {"name": "1장 · 산술", "sub": "수 방어전", "rho": 250, "integrity": 100,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "sqrt", "log2"]},
-	2: {"name": "2장 · 변화율", "sub": "f(x) = x", "rho": 200, "integrity": 40,
+	2: {"name": "2장 · 변화율", "sub": "f(x) = x", "rho": 500, "integrity": 40,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
-	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 320, "integrity": 90,
+	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 700, "integrity": 90,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
-	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 400, "integrity": 120,
+	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 800, "integrity": 120,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "int", "merge"]},
-	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 400, "integrity": 70,
+	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 900, "integrity": 70,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
-	6: {"name": "6장 · 연산자 순서", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 420, "integrity": 100,
+	6: {"name": "6장 · 연산자 순서", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 1000, "integrity": 100,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
-	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 380, "integrity": 100,
+	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 1000, "integrity": 100,
 		"towers": ["zeno", "accel", "spring", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
-	8: {"name": "8장 · 주파수 영역", "sub": "D ⟷ iω", "rho": 380, "integrity": 100,
+	8: {"name": "8장 · 주파수 영역", "sub": "D ⟷ iω", "rho": 1000, "integrity": 100,
 		"towers": ["zeno", "accel", "spring", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "lpf"]},
-	9: {"name": "9장 · 근사", "sub": "εₙ₊₁ ≈ C · εₙ²", "rho": 340, "integrity": 90,
+	9: {"name": "9장 · 근사", "sub": "εₙ₊₁ ≈ C · εₙ²", "rho": 1000, "integrity": 90,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "diff", "dm1", "harm", "merge", "lpf", "newton", "bisect"]},
-	10: {"name": "10장 · 공리", "sub": "LIMIT BREAK", "rho": 440, "integrity": 120,
+	10: {"name": "10장 · 공리", "sub": "LIMIT BREAK", "rho": 1100, "integrity": 120,
 		"towers": ["zeno", "accel", "spring", "sub", "diff", "dm1", "harm", "merge", "damp", "dtl", "lpf", "newton", "bisect"]},
 }
 
@@ -101,42 +101,42 @@ x에 대한 연산자로는 이 적의 공간 쪽을 끝낼 수 없습니다. �
 var STAGES: Dictionary = {
 	"1-1": {"hard": 1.6, "chapter": 1, "name": "자연수", "map": 0, "x_end": 3.0, "base": 9, "growth": 1.3, "interval": [1.0, 0.55],
 		"desc": "적의 체력은 그 숫자 자체입니다. 0으로 만들면 사라집니다. 코어에 닿으면 자릿수만큼 코어 체력을 깎습니다 (7은 1, 100은 3).",
-		"mix": [["n1", 1, 1], ["n2", 1, 6]], "boss": [["n100", 2]]},
+		"mix": [["n1", 1, 1], ["n2", 1, 6]], "boss": [["k256", 2]], "boss_hard": [["k65536", 1]]},
 	"1-2": {"hard": 1.6, "chapter": 1, "name": "짝수와 홀수", "map": 1, "x_end": 3.0, "base": 10, "growth": 1.3, "interval": [0.95, 0.5],
 		"desc": "나누기는 나누어떨어지는 수만 절반으로 만듭니다. 짝수는 나누고, 홀수는 빼세요. 1000 = 2³ · 125.",
-		"mix": [["n1", 1, 1], ["n2", 1, 1], ["even", 1, 4]], "boss": [["k1000", 2]]},
+		"mix": [["n1", 1, 1], ["n2", 1, 1], ["even", 1, 4]], "boss": [["k1000", 2]], "boss_hard": [["k10_6", 1]]},
 	"1-3": {"hard": 1.3, "chapter": 1, "name": "완전제곱수", "map": 2, "x_end": 3.0, "base": 9, "growth": 1.1, "interval": [0.9, 0.5],
 		"desc": "10000 = 100². 제곱근을 연구하면 완전제곱수를 단번에 줄일 수 있습니다. √7은 무리수라 정확히 다룰 수 없습니다.",
-		"mix": [["n2", 1, 1], ["sq", 2, 1], ["even", 1, 6]], "boss": [["k10000", 2]]},
+		"mix": [["n2", 1, 1], ["sq", 2, 1], ["even", 1, 6]], "boss": [["k10000", 2]], "boss_hard": [["k10_8", 1]]},
 	"1-4": {"chapter": 1, "name": "2의 거듭제곱", "map": 3, "x_end": 3.0, "base": 8, "growth": 0.85, "interval": [0.9, 0.5],
 		"desc": "65536 = 2¹⁶. 이진 로그는 2의 거듭제곱에만 정확합니다. 경로가 짧습니다.",
-		"mix": [["p2", 2, 1], ["sq", 1, 3], ["n2", 1, 1]], "boss": [["k65536", 2]]},
+		"mix": [["p2", 2, 1], ["sq", 1, 3], ["n2", 1, 1]], "boss": [["k2_32", 2]], "boss_hard": [["k2_62", 1]]},
 	"1-5": {"chapter": 1, "name": "소수", "map": 4, "x_end": 3.0, "base": 9, "growth": 0.85, "interval": [0.85, 0.45],
 		"desc": "소수는 제곱수도, 2의 거듭제곱도 아닙니다. 빠르고, 지름길이 없습니다.",
-		"mix": [["prime", 2, 1], ["n2", 1, 1], ["sq", 1, 5], ["p2", 1, 8]], "boss": [["bigprime", 3]]},
+		"mix": [["prime", 2, 1], ["n2", 1, 1], ["sq", 1, 5], ["p2", 1, 8]], "boss": [["bigprime", 3]], "boss_hard": [["bp7", 1]]},
 	"1-6": {"chapter": 1, "name": "큰 수", "map": 5, "x_end": 3.0, "base": 9, "growth": 0.9, "interval": [0.85, 0.45],
 		"desc": "지금까지 배운 모든 것. 마지막 스테이지입니다.",
-		"mix": [["n2", 1, 1], ["sq", 1, 1], ["p2", 1, 1], ["prime", 1, 3], ["even", 1, 5], ["big", 1, 4]], "boss": [["k10_6", 1], ["k2_32", 1]]},
+		"mix": [["n2", 1, 1], ["sq", 1, 1], ["p2", 1, 1], ["prime", 1, 3], ["even", 1, 5], ["big", 1, 4]], "boss": [["k10_8", 1], ["k2_40", 1]], "boss_hard": [["k10_18", 0], ["k2_62", 0]]},
 	"2-1": {"hard": 2.2, "chapter": 2, "name": "변수", "map": 0, "x_end": 2.0, "flag": "fake_ending", "base": 8, "growth": 0.9, "interval": [1.0, 0.55],
 		"desc": "f(x) = x. 경로가 곧 x축입니다. 코어는 x = 2(2장이니까)에 있습니다. 적이 닿으면 f(2)의 자릿수만큼 코어 체력이 깎입니다. x ÷ x = 1, 그리고 1 − 1 = 0.",
-		"mix": [["x", 2, 1], ["n1", 1, 1], ["xc", 1, 3], ["lin", 1, 5], ["quad", 1, 9], ["cubic", 1, 12]], "boss": [["boss_x4", 2]]},
+		"mix": [["x", 2, 1], ["n1", 1, 1], ["xc", 1, 3], ["lin", 1, 5], ["quad", 1, 9], ["cubic", 1, 12]], "boss": [["boss_x4", 2]], "boss_hard": [["bx16_7", 1]]},
 	"2-2": {"hard": 2.2, "chapter": 2, "name": "공통인수", "map": 1, "x_end": 2.0, "base": 5, "growth": 0.8, "interval": [1.15, 0.65],
 		"desc": "2x + 4 = 2(x + 2). 나누기 ÷2로 공통인수를 걷어내고, 빼기로 상수를, ÷x로 x를. 미분은 아직 없습니다.",
-		"mix": [["kx", 2, 1], ["xc", 1, 1], ["xbx", 1, 3], ["n1", 1, 1], ["kxx", 1, 6]], "boss": [["boss_alg2", 2]]},
+		"mix": [["kx", 2, 1], ["xc", 1, 1], ["xbx", 1, 3], ["n1", 1, 1], ["kxx", 1, 6]], "boss": [["boss_alg2", 2]], "boss_hard": [["bx16", 1]]},
 	"2-3": {"hard": 2.0, "chapter": 2, "name": "물량", "map": 2, "x_end": 2.0, "base": 5, "growth": 0.6, "interval": [1.15, 0.65],
 		"desc": "많고 다양합니다. 상수는 빼기로, 공통인수는 ÷2로, x는 ÷x로. 어떤 순서로 경로에 늘어놓을지가 전부입니다.",
-		"mix": [["xc", 2, 1], ["n1", 1, 1], ["kx", 1, 2], ["xbx", 1, 5], ["sqp", 1, 9]], "boss": [["boss_alg2", 2]]},
+		"mix": [["xc", 2, 1], ["n1", 1, 1], ["kx", 1, 2], ["xbx", 1, 5], ["sqp", 1, 9]], "boss": [["boss_alg2", 2]], "boss_hard": [["b2x18", 1]]},
 	"2-4": {"hard": 2.0, "chapter": 2, "name": "완전제곱", "map": 2, "x_end": 2.0, "base": 5, "growth": 0.85, "interval": [1.2, 0.65],
 		"desc": "(x + 3)² = x² + 6x + 9. 「완전제곱식」을 연구하면 √가 다항식에도 정확히 작동합니다. 이 스테이지를 깨면 「미분」이 열립니다.",
-		"mix": [["sqp", 2, 1], ["xbx", 1, 1], ["x4", 1, 3], ["sq2", 1, 6], ["kxx", 1, 4]], "boss": [["boss_sq", 2]]},
+		"mix": [["sqp", 2, 1], ["xbx", 1, 1], ["x4", 1, 3], ["sq2", 1, 6], ["kxx", 1, 4]], "boss": [["boss_sq", 2]], "boss_hard": [["bsq18", 1]]},
 	"2-5": {"chapter": 2, "name": "변화율", "map": 4, "x_end": 2.0, "base": 7, "growth": 1.0, "interval": [0.95, 0.5],
 		"desc": "미분: 상수는 한 방에 0, xⁿ은 n+1번. 인수도 완전제곱도 아닌 다항식(x³ + x + 5)은 대수로는 풀리지 않습니다. 그 대신 미분은 비쌉니다.",
-		"mix": [["n1", 2, 1], ["xc", 1, 1], ["quad", 1, 2], ["cubic", 1, 5], ["sqp", 1, 3], ["quart", 1, 9]], "boss": [["boss_x6", 2]]},
+		"mix": [["n1", 2, 1], ["xc", 1, 1], ["quad", 1, 2], ["cubic", 1, 5], ["sqp", 1, 3], ["quart", 1, 9]], "boss": [["boss_x10", 2]], "boss_hard": [["bx20", 2]]},
 	"2-6": {"chapter": 2, "name": "멈추지 않는 것", "map": 5, "x_end": 2.0, "base": 5, "growth": 0.65, "interval": [1.2, 0.7],
 		"desc": "2장의 마지막 스테이지. 모든 다항식은 유한 번 미분하면 0이 됩니다. 모든 함수가 그럴까요?",
 		"mix": [["quad", 1, 1], ["n1", 1, 1], ["cubic", 1, 2], ["quart", 1, 4], ["quint", 1, 6]], "boss": [["boss_x6", 1]], "counter": "exp_counter"},
 	"3-1": {"chapter": 3, "name": "자연로그", "map": 0, "x_end": 3.0, "flag": "met_exp", "base": 6, "growth": 1.0, "interval": [1.1, 0.6],
-		"desc": "로그 타워가 이제 함수에도 작동합니다: log eˣ = x, log e²ˣ = 2x. 그다음은 2장에서 하던 대로 ÷x와 빼기. 계수가 붙은 3eˣ도 되지만 세 배 오래 걸립니다. 먼저 ÷3을 할 수 있다면?",
+		"desc": "로그 타워가 이제 함수에도 작동합니다: log eˣ = x, log e²ˣ = 2x. 그다음은 2장에서 하던 대로 ÷x와 빼기. 다만 지수가 가파를수록 로그 타워가 다시 쏘기까지 오래 걸립니다: e²ˣ는 두 배, e³ˣ는 세 배. 앞의 계수(3eˣ의 3)는 상관없습니다.",
 		"mix": [["ex", 2, 1], ["exs", 1, 1], ["n1", 1, 1], ["e2x", 1, 5], ["exc", 1, 8]], "boss": [["boss_ex1", 2]]},
 	"3-2": {"hard": 2.8, "chapter": 3, "name": "순서", "map": 1, "x_end": 3.0, "base": 5, "growth": 0.9, "interval": [1.0, 0.55],
 		"desc": "eˣ + 4에는 로그가 듣지 않습니다. 상수부터 떼야 합니다. xeˣ도 그대로는 안 됩니다: ÷x가 먼저. 어떤 타워를 앞에 둘지가 곧 풀이 순서입니다.",
@@ -284,97 +284,97 @@ var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "spring", "sqrt", "log2
 
 var TOWERS: Dictionary = {
 	"sub": {
-		"name": "빼기", "glyph": ["−1", "−2", "−3"], "color": Color("eceff1"), "cost": 50, "upgrade": [45, 90],
+		"name": "빼기", "glyph": ["−1", "−2", "−3"], "color": Color("eceff1"), "cost": 30, "upgrade": [25, 55],
 		"range": [120, 130, 145], "rate": [1.5, 1.8, 2.2], "power": [1, 2, 3], "research": "",
 		"desc": "f → f − k. 상수항을 0 쪽으로 k만큼 깎습니다. 0을 지나치지는 않습니다.",
 	},
 	"div": {
-		"name": "나누기", "glyph": ["÷2", "÷2", "÷2"], "color": Color("80deea"), "cost": 70, "upgrade": [60, 110],
+		"name": "나누기", "glyph": ["÷2", "÷2", "÷2"], "color": Color("80deea"), "cost": 50, "upgrade": [45, 80],
 		"range": [125, 135, 150], "rate": [0.8, 1.0, 1.25], "power": [2, 2, 2], "research": "",
 		"desc": "n → n / 2. 나누어떨어질 때만 작동합니다 (정수 나눗셈). 홀수는 빼기로 먼저 짝수를 만드세요: 7 → 6 → 3 → 2 → 1 → 0.",
 	},
 	"sqrt": {
-		"name": "제곱근", "glyph": ["√", "√", "√"], "color": Color("ffd166"), "cost": 90, "upgrade": [80, 130],
+		"name": "제곱근", "glyph": ["√", "√", "√"], "color": Color("ffd166"), "cost": 150, "upgrade": [135, 215],
 		"range": [150, 165, 185], "rate": [1.1, 1.4, 1.8], "power": [1, 1, 1], "research": "sqrt",
 		"desc": "n² → n. 완전제곱수에만 작동합니다 (√7은 무리수라 쏘지 않습니다). 10000 → 100 → 10.",
 	},
 	"accel": {
-		"name": "가속도", "glyph": ["a", "a", "a"], "color": Color("ffcc80"), "cost": 90, "upgrade": [90, 140],
+		"name": "가속도", "glyph": ["a", "a", "a"], "color": Color("ffcc80"), "cost": 400, "upgrade": [400, 620],
 		"range": [95, 110, 125], "rate": [1.0, 1.0, 1.0], "power": [1.3, 1.5, 1.7], "research": "accel",
 		"desc": "a = d²x/dt². 범위 안의 다른 타워가 빨리 쏩니다 (×1.3, 강화하면 ×1.5, ×1.7). 여러 개가 겹치면 가장 강한 하나만 적용됩니다. 스스로는 공격하지 않습니다.",
 	},
 	"spring": {
-		"name": "복원력", "glyph": ["−kx", "−kx", "−kx"], "color": Color("a5d6a7"), "cost": 85, "upgrade": [80, 130],
-		"range": [100, 115, 130], "rate": [0.35, 0.42, 0.5], "power": [0.10, 0.13, 0.16], "research": "spring",
+		"name": "복원력", "glyph": ["−kx", "−kx", "−kx"], "color": Color("a5d6a7"), "cost": 350, "upgrade": [330, 535],
+		"range": [100, 115, 130], "rate": [0.35, 0.42, 0.5], "power": [0.25, 0.32, 0.40], "research": "spring",
 		"desc": "훅의 법칙 F = −kx. 범위 안의 적을 지나온 거리의 k배만큼 되밀어냅니다 (한 번에 최대 60 / 80 / 100). 적은 최근 10초 동안 밀린 횟수만큼 버팁니다: 한 번 밀릴 때마다 다음 밀림 −25%, 네 번째부터는 그냥 직진. 보스는 절반만 밀립니다.",
 	},
 	"zeno": {
-		"name": "제논", "glyph": ["½v", "⅖v", "⅓v"], "color": Color("90caf9"), "cost": 70, "upgrade": [70, 110],
+		"name": "제논", "glyph": ["½v", "⅖v", "⅓v"], "color": Color("90caf9"), "cost": 500, "upgrade": [500, 785],
 		"range": [105, 120, 135], "rate": [1.0, 1.0, 1.0], "power": [0.5, 0.4, 0.33], "research": "zeno",
 		"desc": "아킬레스와 거북이: 범위 안의 적은 속도가 절반으로 떨어집니다 (강화하면 ⅖, ⅓). 식은 건드리지 않습니다. 여러 개가 겹치면 가장 강한 하나만 적용됩니다.",
 	},
 	"log2": {
-		"name": "이진 로그", "glyph": ["log₂", "log₂", "log₂"], "color": Color("ba68c8"), "cost": 100, "upgrade": [90, 140],
+		"name": "이진 로그", "glyph": ["log₂", "log₂", "log₂"], "color": Color("ba68c8"), "cost": 220, "upgrade": [200, 310],
 		"range": [150, 165, 185], "rate": [1.0, 1.3, 1.7], "power": [1, 1, 1], "research": "log2",
 		"desc": "2ⁿ → n. 2의 거듭제곱에만 작동합니다. 65536 → 16 → 4 → 2 → 1 → 0  (log₂ 1 = 0).",
 	},
 	"divx": {
-		"name": "x로 나누기", "glyph": ["÷x", "÷x", "÷x"], "color": Color("80cbc4"), "cost": 75, "upgrade": [65, 110],
+		"name": "x로 나누기", "glyph": ["÷x", "÷x", "÷x"], "color": Color("80cbc4"), "cost": 120, "upgrade": [105, 175],
 		"range": [125, 135, 150], "rate": [0.8, 1.0, 1.25], "power": [1, 1, 1], "research": "divx",
 		"desc": "f → f / x. 모든 항에 x가 있을 때만 나누어떨어집니다 (상수항이 0이어야 함). 빼기로 상수항을 지우고 나누세요: x² + 2x + 5 → x² + 2x → x + 2 → x → 1 → 0.",
 	},
 	"diff": {
-		"name": "미분", "glyph": ["d/dx", "d/dx", "d/dx"], "color": Color("4fc3f7"), "cost": 90, "upgrade": [80, 160],
+		"name": "미분", "glyph": ["d/dx", "d/dx", "d/dx"], "color": Color("4fc3f7"), "cost": 250, "upgrade": [220, 445],
 		"range": [130, 140, 155], "rate": [1.0, 1.3, 1.6], "power": [1, 1, 1], "research": "diff",
 		"desc": "f → f′. 상수는 한 방에 0, xⁿ은 n+1번이면 소멸합니다. 미분할수록 계수가 커져 코어에서의 값이 오히려 늘 수 있습니다.",
 	},
 	"int": {
-		"name": "적분", "glyph": ["∫", "∫", "∫"], "color": Color("81c784"), "cost": 120, "upgrade": [100, 170],
+		"name": "적분", "glyph": ["∫", "∫", "∫"], "color": Color("81c784"), "cost": 300, "upgrade": [250, 425],
 		"range": [130, 140, 155], "rate": [0.45, 0.55, 0.7], "power": [1.0, 1.6, 2.5], "research": "int",
-		"desc": "f → ∫₀ˣ f dt. 적은 한 차수 강해지지만 ∫₀¹ f dx만큼 ρ를 수확합니다. 미적분학의 기본 정리: d/dx 한 방이면 원래 함수로 돌아옵니다. 적 하나당 3회.",
+		"desc": "f → ∫₀ˣ f dt. 적은 한 차수 강해지지만 ∫₀¹ f dx만큼 ρ를 수확합니다. 미적분학의 기본 정리: d/dx 한 방이면 원래 함수로 돌아옵니다. 적 하나당 5회.",
 	},
 	"dm1": {
-		"name": "지수 소멸", "glyph": ["D−1", "D−1", "D−1"], "color": Color("aed581"), "cost": 100, "upgrade": [90, 150],
+		"name": "지수 소멸", "glyph": ["D−1", "D−1", "D−1"], "color": Color("aed581"), "cost": 260, "upgrade": [235, 390],
 		"range": [130, 140, 155], "rate": [1.0, 1.3, 1.6], "power": [1, 1, 1], "research": "dm1",
 		"desc": "f → f′ − f. 핵은 c·eˣ: eˣ는 한 방, xeˣ는 두 방. 다른 모드 e^{μx}에는 (μ − 1)배가 곱해집니다: 상수 5 → −5, e²ˣ → e²ˣ.",
 	},
 	"harm": {
-		"name": "조화 소멸", "glyph": ["D²+1", "D²+1", "D²+1"], "color": Color("b39ddb"), "cost": 120, "upgrade": [100, 170],
+		"name": "조화 소멸", "glyph": ["D²+1", "D²+1", "D²+1"], "color": Color("b39ddb"), "cost": 320, "upgrade": [265, 455],
 		"range": [130, 140, 155], "rate": [0.9, 1.15, 1.4], "power": [1, 1, 1], "research": "harm",
 		"desc": "f → f″ + ω²f. 핵은 sin ωx와 cos ωx. 다른 진동수에는 (ω² − ν²)배: D² + 1은 sin 2x를 −3배로 만듭니다.",
 	},
 	"merge": {
-		"name": "선형결합", "glyph": ["Σ", "Σ", "Σ"], "color": Color("ffb74d"), "cost": 110, "upgrade": [100, 160],
+		"name": "선형결합", "glyph": ["Σ", "Σ", "Σ"], "color": Color("ffb74d"), "cost": 320, "upgrade": [290, 465],
 		"range": [110, 125, 140], "rate": [0.4, 0.5, 0.6], "power": [3, 5, 8], "research": "merge",
 		"desc": "범위 안의 함수 최대 k개를 하나로 더합니다 (k = 3, 5, 8). L(f+g) = Lf + Lg: 같은 소멸자끼리 합치면 한 방에. 부호가 반대면 상쇄됩니다.",
 	},
 	"damp": {
-		"name": "감쇠장", "glyph": ["e⁻ˣ·", "e⁻ˣ·", "e⁻ˣ·"], "color": Color("90a4ae"), "cost": 120, "upgrade": [100, 170],
+		"name": "감쇠장", "glyph": ["e⁻ˣ·", "e⁻ˣ·", "e⁻ˣ·"], "color": Color("90a4ae"), "cost": 380, "upgrade": [315, 540],
 		"range": [125, 140, 155], "rate": [0.5, 0.62, 0.75], "power": [1, 1, 1], "research": "damp",
 		"desc": "범위 안의 자라는 함수에 e⁻ˣ를 곱합니다: 모든 고윳값 μ → μ − 1. e²ˣ → eˣ, eˣ sin x → sin x. 상수는 c·e⁻ˣ가 되어 코어에서 거의 무해해집니다. D와 교환되지 않습니다.",
 	},
 	"dtl": {
-		"name": "시간 소멸", "glyph": ["∂ₜ−1", "∂ₜ−1", "∂ₜ−1"], "color": Color("4dd0e1"), "cost": 120, "upgrade": [100, 160],
+		"name": "시간 소멸", "glyph": ["∂ₜ−1", "∂ₜ−1", "∂ₜ−1"], "color": Color("4dd0e1"), "cost": 380, "upgrade": [315, 505],
 		"range": [130, 140, 155], "rate": [0.9, 1.15, 1.4], "power": [1, 1, 1], "research": "dtl",
 		"desc": "f → ∂ₜf − λf. 핵은 g(x)·e^{λt}: 시간 인수 하나로 곱 전체를 지웁니다. 시간과 무관한 함수에는 −λ배.",
 	},
 	"wave": {
-		"name": "파동 연산자", "glyph": ["□", "□", "□"], "color": Color("ff8a65"), "cost": 200, "upgrade": [160, 240],
+		"name": "파동 연산자", "glyph": ["□", "□", "□"], "color": Color("ff8a65"), "cost": 1200, "upgrade": [960, 1440],
 		"range": [150, 165, 180], "rate": [0.4, 0.5, 0.62], "power": [1, 1, 1], "research": "wave",
 		"desc": "□ = ∂ₜ² − ∂ₓ². 달랑베르: 모든 진행파 g(x − t) + h(x + t)가 핵에 있습니다. 다른 함수에는 ∂ₜ²f − f″.",
 	},
 	"lpf": {
-		"name": "저역 통과", "glyph": ["LPF₃", "LPF₂", "LPF₁"], "color": Color("f48fb1"), "cost": 140, "upgrade": [110, 170],
+		"name": "저역 통과", "glyph": ["LPF₃", "LPF₂", "LPF₁"], "color": Color("f48fb1"), "cost": 360, "upgrade": [285, 435],
 		"range": [130, 145, 160], "rate": [0.6, 0.75, 0.9], "power": [2, 1, 1], "research": "lpf",
 		"desc": "주파수 위의 곱셈 H(ω) = [|ω| ≤ ω꜀]. 범위 안 모든 함수에서 컷오프보다 높은 진동수를 통째로 지웁니다. 컷오프는 2, 강화하면 1.",
 	},
 	"newton": {
-		"name": "뉴턴법", "glyph": ["N", "N", "N"], "color": Color("ffe082"), "cost": 120, "upgrade": [100, 150],
+		"name": "뉴턴법", "glyph": ["N", "N", "N"], "color": Color("ffe082"), "cost": 300, "upgrade": [250, 375],
 		"range": [140, 155, 170], "rate": [0.8, 1.0, 1.25], "power": [1, 1, 1], "research": "newton",
 		"desc": "방정식 적에게: xₙ₊₁ = xₙ − p(xₙ)/p′(xₙ). 근 근처에서 맞는 자릿수가 두 배씩 늘어납니다. 시작점이 나쁘면 순환하거나 튕겨 나갑니다.",
 	},
 	"bisect": {
-		"name": "이분법", "glyph": ["[a,b]", "[a,b]", "[a,b]"], "color": Color("c5e1a5"), "cost": 80, "upgrade": [70, 110],
+		"name": "이분법", "glyph": ["[a,b]", "[a,b]", "[a,b]"], "color": Color("c5e1a5"), "cost": 200, "upgrade": [175, 275],
 		"range": [130, 140, 155], "rate": [1.2, 1.5, 1.8], "power": [1, 1, 1], "research": "bisect",
 		"desc": "방정식 적에게: 부호가 바뀌는 구간 [a, b]를 절반으로. 한 번에 오차가 정확히 절반 — 1장의 ÷2입니다. 느리지만 절대 실패하지 않습니다.",
 	},
@@ -413,17 +413,17 @@ var RESEARCH: Array = [
 	{"id": "int2", "chapter": 2, "name": "정적분", "cost": 45, "req": ["int"], "stage": "2-5",
 		"desc": "적분 수확 ×1.5. 넓이를 더 정확하게 셉니다."},
 	{"id": "ln", "essential": true, "chapter": 3, "name": "자연로그", "cost": 15, "req": [], "flag": "met_exp",
-		"desc": "로그 타워가 함수에도 작동합니다: log(c·eᵃˣ) = ax + ln c. 지수함수 하나짜리에만, 그리고 계수 c가 클수록 c배 오래 걸립니다. 상수항이 붙어 있거나(eˣ + 3) 다른 항과 더해져 있으면(x + eˣ) 먼저 떼어 내야 합니다."},
+		"desc": "로그 타워가 함수에도 작동합니다: log(c·eᵃˣ) = ax + ln c. 지수함수 하나짜리에만 됩니다. 지수의 기울기 a가 클수록 다시 쏘기까지 a배 오래 걸립니다 (e³ˣ면 세 배). 상수항이 붙어 있거나(eˣ + 3) 다른 항과 더해져 있으면(x + eˣ) 먼저 떼어 내야 합니다."},
 	{"id": "sub_range", "upgrade": true, "chapter": 1, "name": "넓은 빼기", "cost": 15, "req": [], "mod": {"kind": "range", "tower": "sub", "mult": 1.2},
 		"desc": "빼기 타워 사거리 +20%."},
 	{"id": "start_rho", "upgrade": true, "chapter": 1, "name": "종잣돈", "cost": 18, "req": [],
-		"desc": "모든 스테이지의 시작 ρ +30."},
+		"desc": "모든 스테이지의 시작 ρ +80."},
 	{"id": "divx_fast", "upgrade": true, "chapter": 2, "name": "인수분해 감각", "cost": 25, "req": [], "mod": {"kind": "rate", "tower": "divx", "mult": 1.3},
 		"desc": "÷x 타워 공격 속도 +30%."},
 	{"id": "diff_range", "upgrade": true, "chapter": 2, "name": "접선의 시야", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "diff", "mult": 1.15},
 		"desc": "미분 타워 사거리 +15%."},
 	{"id": "log_fast", "upgrade": true, "chapter": 3, "name": "로그 법칙", "cost": 30, "req": [],
-		"desc": "log(c·eᵃˣ)의 계수 지연이 절반으로: c배 대신 (1 + c)/2배."},
+		"desc": "log(c·eᵃˣ)의 재장전 지연이 줄어듭니다: a배 대신 (1 + a)/2배."},
 	{"id": "merge_range", "upgrade": true, "chapter": 3, "name": "넓은 결합", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "merge", "mult": 1.2},
 		"desc": "Σ 타워 사거리 +20%."},
 	{"id": "think_cheap", "upgrade": true, "chapter": 4, "name": "컴파일러", "cost": 30, "req": [],
@@ -566,6 +566,18 @@ var TEMPLATES: Dictionary = {
 	"k65536": {"speed": 40, "boss": true, "name": "2¹⁶", "kind": "p2"},
 	"k10_6": {"speed": 28, "boss": true, "name": "10⁶", "kind": "sq"},
 	"k2_32": {"speed": 28, "boss": true, "name": "2³²", "kind": "p2"},
+	"k256": {"speed": 40, "boss": true, "name": "256", "kind": "p2"},
+	"k2_40": {"speed": 28, "boss": true, "name": "2⁴⁰", "kind": "p2"},
+	"k2_62": {"speed": 24, "boss": true, "name": "2⁶²", "kind": "p2"},
+	"k10_8": {"speed": 26, "boss": true, "name": "10⁸", "kind": "sq"},
+	"k10_18": {"speed": 22, "boss": true, "name": "10¹⁸", "kind": "sq"},
+	"bp7": {"speed": 30, "boss": true, "name": "1000003", "kind": "num"},
+	"bx16_7": {"speed": 26, "boss": true, "name": "x¹⁶ + 7", "kind": "poly"},
+	"bx16": {"speed": 26, "boss": true, "name": "x¹⁶", "kind": "poly"},
+	"b2x18": {"speed": 24, "boss": true, "name": "2x¹⁸ + 4x¹⁷", "kind": "poly"},
+	"bsq18": {"speed": 24, "boss": true, "name": "(x⁹ + 2x + 3)²", "kind": "poly"},
+	"bx20": {"speed": 22, "boss": true, "name": "x²⁰ + 3x¹⁰ + 9", "kind": "poly"},
+	"boss_x10": {"speed": 24, "boss": true, "name": "x¹⁰ + 3x² + 9", "kind": "poly"},
 	"x_counter": {"speed": 170, "boss": true, "name": "x", "kind": "poly"},
 	"x": {"speed": 60, "name": "x", "kind": "poly"}, "xc": {"speed": 60, "name": "x + c", "kind": "poly"},
 	"lin": {"speed": 58, "name": "ax + b", "kind": "poly"}, "quad": {"speed": 52, "name": "이차식", "kind": "poly"},
@@ -669,6 +681,7 @@ var ROOTS: Dictionary = {
 var SQUARES: Array = [16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 400, 625, 900]
 var PRIMES: Array = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
 var BIGS: Array = [1000, 1024, 1296, 2048, 3600, 4096, 9801, 10000]
+var HARD_BIGS: Array = [10000, 16384, 65536, 90000, 262144, 1000000, 1048576, 16777216]
 
 
 ## Total Insight cost of a chapter's research (essential + optional, axioms excluded): "the most you could need".
@@ -766,9 +779,9 @@ func stage_waves(sid: String) -> Array:
 				cnt = clampi(1 + int(w / 4.0), 1, 4)   # generators are elites
 			groups.append([tpl, cnt, interval * (2.5 if TEMPLATES[tpl].get("gen", false) else 1.0)])
 		if w == 8 and int(st["chapter"]) == 1:
-			groups.append([st["boss"][0][0], 1, 2.0])   # a preview of the boss mid-stage
+			groups.append([stage_bosses(st)[0][0], 1, 2.0])   # a preview of the boss mid-stage
 		if w == WAVES_PER_STAGE:
-			for b in st["boss"]:
+			for b in stage_bosses(st):
 				groups.append([b[0], int(b[1]) + (1 if Game.hard else 0), 6.0])
 			if st.has("counter"):
 				var ci: Dictionary = COUNTERS[st["counter"]]
@@ -820,8 +833,23 @@ func armor_power(tpl: String, wave: int) -> int:
 
 
 ## The actual function an enemy is made of (base shape × multiplicity armour).
+## The bosses of a stage in the current mode: hard has its own, much bigger bosses where set.
+func stage_bosses(st: Dictionary) -> Array:
+	return st["boss_hard"] if Game.hard and st.has("boss_hard") else st["boss"]
+
+
+## c·xᵏ
+static func _xpow(k: int, c: int) -> Expr:
+	var f := Expr.poly([c])
+	return f.times_x(k)
+
+
 func make_expr(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr:
 	var f := _make_base(tpl, rng, wave)
+	# hard, chapter 3 on: a boss is the same puzzle eight times as heavy (÷2 three more times, or log 8× slower)
+	if Game.hard and TEMPLATES[tpl].get("boss", false) and not COUNTERS.has(tpl) and STAGES.has(Game.stage_id) \
+			and chapter_of(Game.stage_id) >= 3:
+		f.scale(8, 1)
 	var m := armor_power(tpl, wave)
 	if m > 0:
 		var boss: bool = TEMPLATES[tpl].get("boss", false)
@@ -833,20 +861,27 @@ func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr
 	var w := clampi(wave, 1, WAVES_PER_STAGE)
 	match tpl:
 		"n1":
-			return Expr.poly([rng.randi_range(1, 9)])
+			return Expr.poly([rng.randi_range(1, 19 if Game.hard else 9)])
 		"n2":
+			if Game.hard:
+				return Expr.poly([rng.randi_range(10, mini(999, 40 + 60 * w))])
 			return Expr.poly([rng.randi_range(10, mini(99, 25 + 6 * w))])
 		"even":
-			return Expr.poly([2 * rng.randi_range(5, 10 + 8 * w)])
+			return Expr.poly([2 * rng.randi_range(5, (10 + 80 * w) if Game.hard else (10 + 8 * w))])
 		"n100":
 			return Expr.poly([100])
 		"sq":
+			if Game.hard:
+				var r := rng.randi_range(4, 12 + 6 * w)
+				return Expr.poly([r * r])
 			return Expr.poly([SQUARES[rng.randi_range(0, mini(SQUARES.size() - 1, 3 + w))]])
 		"p2":
-			return Expr.poly([1 << rng.randi_range(3, mini(10, 4 + int(w / 2.0)))])
+			return Expr.poly([1 << rng.randi_range(3, mini(16, 4 + w) if Game.hard else mini(10, 4 + int(w / 2.0)))])
 		"prime":
 			return Expr.poly([PRIMES[rng.randi_range(0, PRIMES.size() - 1)]])
 		"big":
+			if Game.hard:
+				return Expr.poly([HARD_BIGS[rng.randi_range(0, mini(HARD_BIGS.size() - 1, 1 + int(w / 2.0)))]])
 			return Expr.poly([BIGS[rng.randi_range(0, mini(BIGS.size() - 1, 1 + int(w / 2.0)))]])
 		"bigprime":
 			return Expr.poly([[997, 991, 983][rng.randi_range(0, 2)]])
@@ -860,6 +895,30 @@ func _make_base(tpl: String, rng: RandomNumberGenerator, wave: int = 15) -> Expr
 			return Expr.poly([1000000])
 		"k2_32":
 			return Expr.poly([4294967296])
+		"k256":
+			return Expr.poly([256])
+		"k2_40":
+			return Expr.poly([1 << 40])
+		"k2_62":
+			return Expr.poly([1 << 62])
+		"k10_8":
+			return Expr.poly([100000000])
+		"k10_18":
+			return Expr.poly([1000000000000000000])
+		"bp7":
+			return Expr.poly([1000003])
+		"bx16_7":
+			return Expr.poly([7]).add_expr(_xpow(16, 1))
+		"bx16":
+			return _xpow(16, 1)
+		"b2x18":
+			return _xpow(18, 2).add_expr(_xpow(17, 4))
+		"bsq18":   # (x⁹ + 2x + 3)² = x¹⁸ + 4x¹⁰ + 6x⁹ + 4x² + 12x + 9
+			return _xpow(18, 1).add_expr(_xpow(10, 4)).add_expr(_xpow(9, 6)).add_expr(Expr.poly([9, 12, 4]))
+		"bx20":
+			return _xpow(20, 1).add_expr(_xpow(10, 3)).add_expr(Expr.poly([9]))
+		"boss_x10":
+			return _xpow(10, 1).add_expr(Expr.poly([9, 0, 3]))
 		"x", "x_counter":
 			return Expr.poly([0, 1])
 		"quart":

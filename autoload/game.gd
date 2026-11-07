@@ -38,8 +38,10 @@ func reset() -> void:
 	integrity = int(Data.STAGES[stage_id].get("integrity", Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("integrity", Data.START_INTEGRITY)))
 	if Progress.has("core_up"):
 		integrity = int(round(integrity * 1.2))
+	if hard:
+		rho *= 1.4   # hard: more enemies, bigger numbers, and a bigger purse to meet them
 	if Progress.has("start_rho"):
-		rho += 30.0
+		rho += 80.0
 	start_integrity = integrity
 	ult_left = 2 if int(Data.STAGES[stage_id]["chapter"]) >= 2 else 0
 	changed.emit()

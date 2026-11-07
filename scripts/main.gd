@@ -130,7 +130,17 @@ func start_wave() -> void:
 	Game.changed.emit()
 
 
+var prof_enemy_max := 0
+var _prof_t0 := 0
+
+
 func _process(delta: float) -> void:
+	if autotest:
+		if _prof_t0 > 0:
+			Algo.prof_frame_us += Time.get_ticks_usec() - _prof_t0
+			Algo.prof_frames += 1
+		_prof_t0 = Time.get_ticks_usec()
+		prof_enemy_max = maxi(prof_enemy_max, enemies_node.get_child_count())
 	if autotest:
 		_autotest_tick()
 	_update_shake(delta)
@@ -184,6 +194,7 @@ func _stars() -> int:
 func _on_won() -> void:
 	var s := _stars()
 	var gain := Progress.record_stage(Game.stage_id, s, Game.wave, Game.hard)
+	cleared_recorded = true
 	if Game.stage_id == "1-6" and not Progress.flag("fake_ending"):
 		_start_credits()
 		return
@@ -271,6 +282,9 @@ func _credits_tick(delta: float) -> void:
 
 
 ## A counterexample reached the core. Returns true once it has reached `need` times and the reveal fires.
+var cleared_recorded: bool = false   # this run's clear is already in the save (counter reveal or win)
+
+
 func counter_reach(tpl: String, count: int = 1) -> bool:
 	counter_hits[tpl] = int(counter_hits.get(tpl, 0)) + count
 	if int(counter_hits[tpl]) >= int(Data.COUNTERS[tpl].get("need", 1)):
@@ -280,7 +294,14 @@ func counter_reach(tpl: String, count: int = 1) -> bool:
 
 
 func on_counterexample(tpl: String) -> void:
-	var info: Dictionary = Data.COUNTERS[tpl]
+	var info: Dictionary = Data.COUNTERS[tpl].duplicate()
+	# meeting the counterexample IS finishing the stage: record the clear (no need to play it again)
+	if not cleared_recorded:
+		cleared_recorded = true
+		var s := maxi(1, _stars())
+		var gain := Progress.record_stage(Game.stage_id, s, Game.wave, Game.hard)
+		info["body"] = String(info["body"]) + "\n\n%s 클리어로 기록했습니다  %s%s" % [Game.stage_id,
+			"★".repeat(s) + "☆".repeat(3 - s), ("   통찰 +%d" % gain) if gain > 0 else ""]
 	map.glitch = 1.0
 	shake(24.0)
 	Sfx.play("lose")
@@ -816,7 +837,7 @@ func _autotest_start() -> void:
 			var c0: Vector2i = pc + off
 			if map.is_buildable(c0) and not autotest_slots.has(c0):
 				autotest_slots.append(c0)
-	for m in Data.STAGES[Game.stage_id]["mix"] + Data.STAGES[Game.stage_id]["boss"]:
+	for m in Data.STAGES[Game.stage_id]["mix"] + Data.stage_bosses(Data.STAGES[Game.stage_id]):
 		var kd: String = Data.TEMPLATES[m[0]]["kind"]
 		if (kd == "exp2" and available_towers.has("damp")) or (kd == "signal" and available_towers.has("lpf")):
 			autotest_order = true
@@ -1104,7 +1125,7 @@ func _autotest_plan() -> Array:
 	var kinds := {}
 	for m in Data.STAGES[Game.stage_id]["mix"]:
 		kinds[Data.TEMPLATES[m[0]]["kind"]] = true
-	for b in Data.STAGES[Game.stage_id]["boss"]:
+	for b in Data.stage_bosses(Data.STAGES[Game.stage_id]):
 		kinds[Data.TEMPLATES[b[0]]["kind"]] = true
 	var plan: Array = []
 	if kinds.has("poly") or kinds.has("exp") or kinds.has("trig"):
@@ -1140,6 +1161,7 @@ func _autotest_finish() -> void:
 		var key: String = tw.glyph()
 		comp[key] = int(comp.get(key, 0)) + 1
 	print("[autotest] towers: ", comp)
+	print("[prof] algo_ms=%d runs=%d steps=%d frames=%d frame_ms=%d enemies_max=%d" % [Algo.prof_us / 1000, Algo.prof_runs, Algo.prof_steps, Algo.prof_frames, Algo.prof_frame_us / 1000, prof_enemy_max])
 	print("[autotest] done: flags=%s stage=%s won=%s wave=%d integrity=%d kills=%d leaked=%d combo=%d towers=%d met_x=%s wall=%.1fs" % [",".join(PackedStringArray(Progress.flags.keys())), Game.stage_id, str(Game.wave >= 15 and Game.integrity > 0), Game.wave, Game.integrity, Game.kills, Game.leaked, Game.max_combo, occupied.size(), str(Progress.flag("met_x")), (Time.get_ticks_msec() - autotest_t0) / 1000.0])
 	autotest = false
 	get_tree().quit()

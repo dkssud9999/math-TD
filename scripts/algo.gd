@@ -14,6 +14,11 @@ const CONSOLE_MAX := 120
 const STEP_TIME := 0.00025      # seconds of extra cooldown per interpreter step
 const AFTER_COST := 40          # e.after() simulates the operator: expensive on purpose
 
+static var prof_us: int = 0
+static var prof_runs: int = 0
+static var prof_steps: int = 0
+static var prof_frames: int = 0
+static var prof_frame_us: int = 0
 static var console: Array = []          # [text, is_error] — shown in the editor
 static var console_serial: int = 0      # bumps on every new line so the editor knows to redraw
 
@@ -478,7 +483,12 @@ func py_call(obj: Dictionary, name: String, args: Array, _kwargs: Dictionary, vm
 			return null
 		if name == "derivative":
 			var g: Expr = (fx as Expr).clone()
+			Expr.overflow = false
 			g.derive()
+			if Expr.overflow:
+				Expr.overflow = false
+				vm_.fail("수가 너무 커서 미분할 수 없습니다 (2⁶²를 넘음)")
+				return null
 			return _tree(g, vm_, 1)
 		if name == "at":
 			if args.size() != 1 or not PyVM._is_num(args[0]):
@@ -527,6 +537,16 @@ func _expr_of_node(obj: Dictionary, vm_: PyVM):
 func py_binop(op: String, a, b, vm_: PyVM):
 	if not (_is_node(a) or _is_node(b)):
 		return PyVM.NOT_MINE
+	Expr.overflow = false
+	var res = _py_binop(op, a, b, vm_)
+	if Expr.overflow:
+		Expr.overflow = false
+		vm_.fail("수가 너무 커서 계산할 수 없습니다 (2⁶²를 넘음)")
+		return null
+	return res
+
+
+func _py_binop(op: String, a, b, vm_: PyVM):
 	var fa = _operand(a, op, vm_)
 	if vm_.err != "":
 		return null

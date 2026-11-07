@@ -309,7 +309,7 @@ func _process(delta: float) -> void:
 		if cooldown <= 0.0:
 			var hit := 0
 			for e in in_range(range_px()):
-				var cap: float = [60.0, 80.0, 100.0][level - 1]
+				var cap: float = [180.0, 240.0, 300.0][level - 1]
 				if e.knockback(minf(cap, float(power()) * e.progress)) > 0.0:
 					hit += 1
 			if hit > 0:
@@ -330,7 +330,11 @@ func _process(delta: float) -> void:
 			return
 		if algo_host == null:
 			algo_host = Algo.new(self)
+		var _pt := Time.get_ticks_usec()
 		var res: Dictionary = algo_host.run(near)
+		Algo.prof_us += Time.get_ticks_usec() - _pt
+		Algo.prof_runs += 1
+		Algo.prof_steps += algo_host.last_steps
 		algo_error = res["error"]
 		algo_delay = float(res["delay"])
 		if res["ok"]:
@@ -367,11 +371,11 @@ func _process(delta: float) -> void:
 	var tg = cands[0] if scripted else pick_target(cands)
 	aim = (tg.global_position - global_position).normalized()
 	if type in ["sqrt", "log2", "newton", "bisect"]:
-		if type == "log2":   # a bigger coefficient takes longer: log(c·e^{ax}) costs c× the time
+		if type == "log2":   # a steeper exponent takes longer: log(c·e^{bx}) = bx + ln c costs b× the reload
 			var se: Array = tg.f.single_exp()
 			if not se.is_empty():
-				var c: float = clampf(Expr.rf(se[0]), 1.0, 9.0)
-				cooldown *= (1.0 + c) / 2.0 if Progress.has("log_fast") else c
+				var b: float = clampf(absf(float(se[1])), 1.0, 9.0)
+				cooldown *= (1.0 + b) / 2.0 if Progress.has("log_fast") else b
 		main.spawn_zap(global_position, tg.global_position, data["color"])
 		main.spawn_text(tg.global_position + Vector2(0, -32), glyph(), data["color"], 13)
 		tg.apply_op(type, op_params())

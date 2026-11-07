@@ -18,6 +18,8 @@ var progress: float = 0.0
 var integrations: int = 0
 var threat: int = 1
 var reward: int = 1
+var push_v: float = 0.0             # px/s backwards along the path (복원력), slowing down at PUSH_DECEL
+const PUSH_DECEL := 700.0
 var spawn_degree: int = 0
 var label: String = ""
 var sublabel: String = ""
@@ -212,9 +214,14 @@ func apply_op(op: String, params: Dictionary) -> void:
 		_root_step(op)
 		return
 	var old_label := label
+	var snapshot := f.clone()
+	Expr.overflow = false
 	if op != "int":
 		var before := f.clone()
 		if not main.TowerScript.transform(op, f, params):
+			if Expr.overflow:
+				_overflowed(snapshot)
+				return
 			if op in ["diff", "dm1", "harm", "dtl", "wave"] and f.equals(before):
 				var sym: String = {"diff": "D", "dm1": "(D−1)", "harm": "(D²+%d)" % (int(params.get("w", 1)) ** 2),
 					"dtl": "(∂ₜ−%d)" % int(params.get("lam", 1)), "wave": "□"}[op]
@@ -238,6 +245,9 @@ func apply_op(op: String, params: Dictionary) -> void:
 			if integrations >= Data.MAX_INTEGRATIONS:
 				return
 			f.integrate()
+			if Expr.overflow:
+				_overflowed(snapshot)
+				return
 			integrations += 1
 			var g := maxi(1, int(round(absf(f.value_at(1.0, tt)) * float(params["mult"]))))
 			Game.add_rho(g)
@@ -245,6 +255,9 @@ func apply_op(op: String, params: Dictionary) -> void:
 			main.spawn_text(global_position + Vector2(0, -34), "∫₀¹ → +%dρ" % g, Color("81c784"), 13)
 			Sfx.play("int")
 			Sfx.play("coin")
+	if Expr.overflow:
+		_overflowed(snapshot)
+		return
 	flash = 0.12
 	if f.is_zero():
 		_die()
@@ -308,10 +321,22 @@ func _root_step(op: String) -> void:
 
 
 ## Σ: o's function is added into this one (linearity). Opposite functions cancel.
+## An operation whose exact result would not fit in 64 bits is cancelled: the enemy stays as it was.
+func _overflowed(snapshot: Expr) -> void:
+	f.t = snapshot.t
+	Expr.overflow = false
+	main.spawn_text(global_position + Vector2(0, -32), "한계 초과 (2⁶² 넘음)", Color("ef9a9a"), 13)
+
+
 func absorb(o) -> void:
 	if not alive or not o.alive or o == self or special != "" or o.special != "":
 		return
+	var snapshot := f.clone()
+	Expr.overflow = false
 	f.add_expr(o.f)
+	if Expr.overflow:
+		_overflowed(snapshot)
+		return
 	if Data.COUNTERS.has(o.template) and not Data.COUNTERS.has(template):
 		template = o.template   # a counterexample swallowed by Σ is still the counterexample
 	reward += o.reward
@@ -388,7 +413,9 @@ func _process(delta: float) -> void:
 	tt += delta * T_RATE
 	popup_t = maxf(0.0, popup_t - delta)
 	flash = maxf(0.0, flash - delta)
-	progress += speed() * delta
+	progress = maxf(0.0, progress + (speed() - push_v) * delta)
+	if push_v > 0.0:
+		push_v = maxf(0.0, push_v - PUSH_DECEL * delta)
 	if special == "" and f.has_t():
 		t_refresh -= delta
 		if t_refresh <= 0.0:
@@ -429,14 +456,24 @@ func push_resist() -> float:
 	return minf(1.0, pushes.size() * PUSH_RESIST_STEP)
 
 
+## Mass = max(1, ln|f(here)|): 7 flies back, 65536 barely moves, 2⁶² does not budge.
+func mass() -> float:
+	var v := absf(f.value_at(x_now(), tt))
+	if is_nan(v) or is_inf(v):
+		return 50.0
+	return maxf(1.0, log(maxf(v, 1.0)))
+
+
+## A push of `px` (before mass and resistance) starts a slide back along the path: initial speed v₀,
+## constant deceleration PUSH_DECEL, so it travels d = v₀² / 2a and stops. Returns the distance.
 func knockback(px: float) -> float:
 	if not alive:
 		return 0.0
-	var d := px * (1.0 - push_resist()) * (0.5 if boss else 1.0)
+	var d := px * (1.0 - push_resist()) * (0.5 if boss else 1.0) / mass()
 	if d <= 0.5:
 		return 0.0
 	pushes.append(t)
-	progress = maxf(0.0, progress - d)
+	push_v = maxf(push_v, sqrt(2.0 * PUSH_DECEL * d))
 	flash = 0.15
 	return d
 
