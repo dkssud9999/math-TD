@@ -13,26 +13,29 @@ var t: Dictionary = {}   # [k, a, b, j, γ] -> [re, im], each a rational [num, d
 
 # ======================= exact arithmetic =======================
 
-## Exact numbers are 64-bit. Anything past 2⁶² is refused instead of wrapping around: the product is
-## clamped and `overflow` is raised, and whoever started the operation throws its result away.
+## Exact numbers are 64-bit. A result past 2⁶² is refused instead of wrapping around: it is clamped,
+## `overflow` is raised, and whoever started the operation throws its result away. The checks are exact
+## integer arithmetic (no floats), and fractions are reduced before multiplying (radd/rmul), so only
+## results that really do not fit are refused.
 const LIMIT := 4611686018427387904          # 2⁶²
-const LIMIT_F := 4611686018427387904.0
 static var overflow: bool = false
 
 
+@warning_ignore("integer_division")
 static func _m(a: int, b: int) -> int:
 	if a == 0 or b == 0:
 		return 0
-	if absf(float(a)) * absf(float(b)) > LIMIT_F:
+	if absi(a) > LIMIT / absi(b):
 		overflow = true
 		return LIMIT if (a < 0) == (b < 0) else -LIMIT
 	return a * b
 
 
 static func _a(a: int, b: int) -> int:
-	if absf(float(a) + float(b)) > LIMIT_F:
+	# a, b are within ±2⁶², so LIMIT − b and −LIMIT − b cannot wrap on the side that is evaluated
+	if (b > 0 and a > LIMIT - b) or (b < 0 and a < -LIMIT - b):
 		overflow = true
-		return LIMIT if a + b > 0 else -LIMIT
+		return LIMIT if b > 0 else -LIMIT
 	return a + b
 
 
@@ -55,8 +58,13 @@ static func rn(n: int, d: int = 1) -> Array:
 	return [n / g, d / g]
 
 
+## a/b + c/d over the least common denominator (keeps the intermediate numbers small).
+@warning_ignore("integer_division")
 static func radd(a: Array, b: Array) -> Array:
-	return rn(_a(_m(int(a[0]), int(b[1])), _m(int(b[0]), int(a[1]))), _m(int(a[1]), int(b[1])))
+	var ad := int(a[1])
+	var bd := int(b[1])
+	var g := _gcd(ad, bd)
+	return rn(_a(_m(int(a[0]), bd / g), _m(int(b[0]), ad / g)), _m(ad, bd / g))
 
 
 static func rneg(a: Array) -> Array:
@@ -67,16 +75,28 @@ static func rsub(a: Array, b: Array) -> Array:
 	return radd(a, rneg(b))
 
 
+## (p/q)(r/s) with cross-cancelling first, so a product that fits is never refused.
+@warning_ignore("integer_division")
 static func rmul(a: Array, b: Array) -> Array:
-	return rn(_m(int(a[0]), int(b[0])), _m(int(a[1]), int(b[1])))
+	var p := int(a[0])
+	var q := int(a[1])
+	var r := int(b[0])
+	var s := int(b[1])
+	if p == 0 or r == 0:
+		return [0, 1]
+	var g1 := _gcd(absi(p), absi(s))
+	var g2 := _gcd(absi(r), absi(q))
+	return rn(_m(p / g1, r / g2), _m(q / g2, s / g1))
 
 
 static func rdiv(a: Array, b: Array) -> Array:
-	return rn(_m(int(a[0]), int(b[1])), _m(int(a[1]), int(b[0])))
+	if int(b[0]) == 0:
+		return [0, 1]
+	return rmul(a, rn(int(b[1]), int(b[0])))
 
 
 static func rscale(a: Array, num: int, den: int = 1) -> Array:
-	return rn(_m(int(a[0]), num), _m(int(a[1]), den))
+	return rmul(a, rn(num, den))
 
 
 static func rf(a: Array) -> float:
@@ -196,6 +216,13 @@ func add_expr(g: Expr) -> Expr:
 	for key: Array in g.t:
 		_add(key, g.t[key])
 	return self
+
+
+## Which terms the function has, without their coefficients: eˣ and 3eˣ share a shape, eˣ and xeˣ do not.
+func shape_key() -> String:
+	var ks: Array = t.keys()
+	ks.sort()
+	return str(ks)
 
 
 func clone() -> Expr:
@@ -581,7 +608,19 @@ func times_x(m: int) -> Expr:
 
 ## Indices of a linearly dependent subset of fs (Σ cᵢfᵢ = 0 with every listed cᵢ ≠ 0), or [] if independent.
 ## Exact Gaussian elimination over ℚ(i), one function at a time.
+## Indices of a linearly dependent subset, or [] — also [] when the exact elimination hit the 64-bit
+## limit (then dependence is not proven, and nothing may be removed because of it).
 static func dependent_set(fs: Array) -> Array:
+	var was := overflow
+	overflow = false
+	var out := _dependent_set(fs)
+	if overflow:
+		out = []
+	overflow = was
+	return out
+
+
+static func _dependent_set(fs: Array) -> Array:
 	var rows: Array = []   # {piv, vec, combo}
 	for i in fs.size():
 		var vec: Dictionary = (fs[i] as Expr).t.duplicate(true)

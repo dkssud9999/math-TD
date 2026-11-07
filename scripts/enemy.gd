@@ -441,7 +441,23 @@ func _process(delta: float) -> void:
 		_reach_core()
 		return
 	position = main.map.point_at(progress)
-	queue_redraw()
+	_redraw_if_changed(delta)
+
+
+var _draw_sig: Array = []
+var _anim_t: float = 0.0
+
+
+## Redraw only when what the enemy shows changes; bosses (pulse), f(x, t) and generators animate at 20 fps.
+## Moving needs no redraw: the node's position moves the drawing.
+func _redraw_if_changed(delta: float) -> void:
+	_anim_t += delta
+	var animated: bool = boss or gen or trail.size() > 1 or (not numeric and f.has_t()) or main.map.spectrum
+	var sig := [label, flash > 0.0, popup_t > 0.0, mini(4, pushes.size()), members, integrations, threat, special, sublabel]
+	if flash > 0.0 or sig != _draw_sig or (animated and _anim_t >= 0.05):
+		_draw_sig = sig
+		_anim_t = 0.0
+		queue_redraw()
 
 
 ## 복원력: pushed back along the path. Each push in the last 10 s makes the next one 25% weaker;
@@ -472,8 +488,11 @@ func knockback(px: float) -> float:
 	var d := px * (1.0 - push_resist()) * (0.5 if boss else 1.0) / mass()
 	if d <= 0.5:
 		return 0.0
+	var v := sqrt(2.0 * PUSH_DECEL * d)
+	if v <= push_v:   # already sliding back faster: this hit changes nothing, so it neither counts
+		return 0.0    # towards push resistance nor starts the tower's cooldown
 	pushes.append(t)
-	push_v = maxf(push_v, sqrt(2.0 * PUSH_DECEL * d))
+	push_v = v
 	flash = 0.15
 	return d
 

@@ -304,7 +304,7 @@ func _process(delta: float) -> void:
 	t += delta
 	flash = maxf(0.0, flash - delta)
 	cooldown -= delta
-	queue_redraw()
+	_redraw_if_changed()
 	if type == "spring":
 		if cooldown <= 0.0:
 			var hit := 0
@@ -356,7 +356,7 @@ func _process(delta: float) -> void:
 	if cands.is_empty():
 		return
 	if type == "merge":
-		if not _do_merge(cands):
+		if not _do_merge(cands, scripted):
 			return
 		cooldown = 1.0 / rate() + (algo_delay if scripted else 0.0)
 		return
@@ -386,11 +386,15 @@ func _process(delta: float) -> void:
 
 ## Σ: add up to k functions in range into the leader (the one furthest along).
 ## With 「기저 정리」 it first looks for a linearly dependent subset and cancels it to 0.
-func _do_merge(cands: Array) -> bool:
+func _do_merge(cands: Array, scripted: bool = false) -> bool:
 	if cands.size() < 2:
 		return false
 	var k := int(power())
 	cands.sort_custom(func(a, b): return a.progress > b.progress)
+	if not scripted and not Data.cursed():
+		cands = _like_group(cands)   # before the curse Σ only adds like terms: eˣ + 3eˣ, never eˣ + xeˣ
+		if cands.size() < 2:
+			return false
 	var pool: Array = cands.slice(0, k)
 	if Progress.has("merge2"):
 		var fs: Array = []
@@ -418,6 +422,24 @@ func _do_merge(cands: Array) -> bool:
 	Sfx.play("pulse", 1.3)
 	flash = 0.2
 	return true
+
+
+## The front-most group of enemies with the same shape (the same terms; coefficients may differ).
+func _like_group(cands: Array) -> Array:
+	var groups: Dictionary = {}
+	var order: Array = []
+	for e in cands:
+		if e.special != "":
+			continue
+		var key: String = e.f.shape_key()
+		if not groups.has(key):
+			groups[key] = []
+			order.append(key)
+		groups[key].append(e)
+	for key in order:
+		if groups[key].size() >= 2:
+			return groups[key]
+	return []
 
 
 func describe() -> String:
@@ -478,6 +500,19 @@ func _exit_tree() -> void:
 	if algo_host != null:
 		algo_host.dispose()
 		algo_host = null
+
+
+## Drawing is the costliest part of a frame: redraw only when something the tower shows has changed
+## (selection, the firing flash, aim, level, its algorithm's state).
+var _draw_sig: Array = []
+
+
+func _redraw_if_changed() -> void:
+	var sig := [main.selected_tower == self, flash > 0.0, aim, level, glyph(), range_px(), algo, algo_error != "",
+		algo_idle >= IDLE_WARN, Progress.has("code")]
+	if flash > 0.0 or sig != _draw_sig:
+		_draw_sig = sig
+		queue_redraw()
 
 
 func _draw() -> void:

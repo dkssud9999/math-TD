@@ -92,9 +92,35 @@ func core_position() -> Vector2:
 	return points[points.size() - 1]
 
 
+var _draw_sig: Array = []
+var _anim_t: float = 0.0
+var core_fx: Node2D = null
+
+
+## The graph paper, path and axes do not change: redraw them only when something shown changes,
+## or at 20 fps for the slowly moving chapter backdrops. The core animates every frame in its own node.
 func _process(delta: float) -> void:
 	t += delta
-	queue_redraw()
+	_anim_t += delta
+	if core_fx == null:
+		core_fx = CoreFx.new()
+		core_fx.map = self
+		add_child(core_fx)
+	core_fx.queue_redraw()
+	var sig := [show_hover, hover_cell, hover_valid, hover_range, complex_view, spacetime, spectrum, Game.x_end,
+		numeric, points.size()]
+	var animated := complex_view or spacetime or spectrum
+	if sig != _draw_sig or (animated and _anim_t >= 0.05):
+		_draw_sig = sig
+		_anim_t = 0.0
+		queue_redraw()
+
+
+class CoreFx extends Node2D:
+	var map
+
+	func _draw() -> void:
+		map.draw_core(self)
 
 
 func _draw() -> void:
@@ -133,28 +159,34 @@ func _draw() -> void:
 		_draw_spacetime()
 	if spectrum:
 		_draw_frequency_axes()
-	# Axiom Core
-	var cp := core_position()
-	var pulse := 0.5 + 0.5 * sin(t * 2.5)
-	draw_circle(cp, 30, Color(1.0, 0.82, 0.4, 0.06 + 0.06 * pulse))
-	draw_circle(cp, 22, Color("0d1b2a"))
-	var core_col := Color("ffd166").lerp(Color("ef5350"), clampf(glitch, 0.0, 1.0))
-	var jitter := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * glitch * 6.0
-	draw_arc(cp + jitter, 22, 0, TAU, 48, core_col, 2.5, true)
-	draw_arc(cp, 27 + pulse * 3, t, t + PI * 1.4, 32, Color(core_col, 0.5), 1.5, true)
-	if glitch > 0.0:
-		for k in 5:
-			var a0 := randf() * TAU
-			draw_line(cp + Vector2.RIGHT.rotated(a0) * 8, cp + Vector2.RIGHT.rotated(a0 + randf_range(-0.4, 0.4)) * (26 + glitch * 30), Color("ef5350"), 1.5)
-	Data.draw_text_centered(self, "코어" if numeric else "f(%s)" % Data.x_label(xe), cp + jitter, 13, core_col)
-	Data.draw_text_centered(self, "CORE" if numeric else "x = " + Data.x_label(xe), cp + Vector2(0, 42), 11, Color(core_col, 0.7))
-	# hover preview
+	# hover preview (the core itself is drawn by CoreFx, every frame)
 	if show_hover and hover_cell.x >= 0 and hover_cell.x < Data.COLS and hover_cell.y >= 1:
 		var cc := Data.cell_center(hover_cell)
 		var col := Color(0.4, 1.0, 0.6) if hover_valid else Color(1.0, 0.35, 0.35)
 		draw_circle(cc, hover_range, Color(col, 0.05))
 		draw_arc(cc, hover_range, 0, TAU, 64, Color(col, 0.6), 1.5, true)
 		draw_rect(Rect2(cc - Vector2(20, 20), Vector2(40, 40)), Color(col, 0.25))
+
+
+## The Axiom Core: pulse, glitch and labels (drawn on the CoreFx child every frame).
+func draw_core(ci: CanvasItem) -> void:
+	if points.is_empty():
+		return
+	var xe := Game.x_end
+	var cp := core_position()
+	var pulse := 0.5 + 0.5 * sin(t * 2.5)
+	ci.draw_circle(cp, 30, Color(1.0, 0.82, 0.4, 0.06 + 0.06 * pulse))
+	ci.draw_circle(cp, 22, Color("0d1b2a"))
+	var core_col := Color("ffd166").lerp(Color("ef5350"), clampf(glitch, 0.0, 1.0))
+	var jitter := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * glitch * 6.0
+	ci.draw_arc(cp + jitter, 22, 0, TAU, 48, core_col, 2.5, true)
+	ci.draw_arc(cp, 27 + pulse * 3, t, t + PI * 1.4, 32, Color(core_col, 0.5), 1.5, true)
+	if glitch > 0.0:
+		for k in 5:
+			var a0 := randf() * TAU
+			ci.draw_line(cp + Vector2.RIGHT.rotated(a0) * 8, cp + Vector2.RIGHT.rotated(a0 + randf_range(-0.4, 0.4)) * (26 + glitch * 30), Color("ef5350"), 1.5)
+	Data.draw_text_centered(ci, "코어" if numeric else "f(%s)" % Data.x_label(xe), cp + jitter, 13, core_col)
+	Data.draw_text_centered(ci, "CORE" if numeric else "x = " + Data.x_label(xe), cp + Vector2(0, 42), 11, Color(core_col, 0.7))
 
 
 ## Chapter 4+: the hidden imaginary axis behind the battlefield.

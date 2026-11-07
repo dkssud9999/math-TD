@@ -44,6 +44,8 @@ var autotest_slots: Array = []
 var autotest_n: int = 0
 var autotest_ts: float = 4.0
 var autotest_plan: Array = []
+var autotest_spend_t: float = 0.0
+var autotest_linger: float = 0.0   # seconds the bot has waited on stragglers after a wave finished spawning
 var autotest_t0: int = 0
 var autotest_order: bool = false   # stage needs "pre-processor first, then the rest"
 var autotest_pre: String = "damp"
@@ -435,7 +437,14 @@ func predict(e) -> Dictionary:
 			if g.is_zero() or not tw.useful_f(g):
 				break
 			var before := g.to_text()
+			var keep := g.clone()
+			Expr.overflow = false
 			TowerScript.transform(tw.type, g, tw.op_params())
+			if Expr.overflow:   # the real shot is refused ("한계 초과"): so is the predicted one
+				Expr.overflow = false
+				g = keep
+				steps.append([tw.glyph(), "한계 초과"])
+				break
 			if g.to_text() != before:
 				steps.append([tw.glyph(), g.to_text()])
 		if g.is_zero():
@@ -791,6 +800,10 @@ func _parse_autotest_args() -> void:
 			autotest_no_algo = true
 		elif a.begins_with("--shot="):
 			autotest_shot = a.substr(7)
+		elif a.begins_with("--shot-field="):
+			autotest_shot_field = a.substr(13)
+		elif a.begins_with("--shot-wave="):
+			autotest_shot_wave = int(a.substr(12))
 		elif a == "--ult":
 			autotest_ult = true
 		elif a.begins_with("--ts="):
@@ -857,12 +870,18 @@ func _autotest_start() -> void:
 var autotest_probe: float = 0.0
 var autotest_ult: bool = false
 var autotest_shot: String = ""
+var autotest_shot_field: String = ""
+var autotest_shot_wave: int = 5
 var autotest_no_algo: bool = false   # --no-algo: suffer the curse with the default (cursed) targeting
 var autotest_shot_frames: int = 0
 var autotest_pred: int = 0
 
 
 func _autotest_tick() -> void:
+	if autotest_shot_field != "" and Game.wave >= autotest_shot_wave and state == "wave" and alive_enemy_count() >= 3:
+		get_viewport().get_texture().get_image().save_png(autotest_shot_field)   # --shot-field=path.png: the battlefield
+		print("[autotest] field screenshot " + autotest_shot_field)
+		autotest_shot_field = ""
 	if autotest_shot != "":   # --shot=path.png: open the algorithm editor mid-stage and save a screenshot
 		if code_editor != null and code_editor.visible:
 			autotest_shot_frames += 1
@@ -889,6 +908,20 @@ func _autotest_tick() -> void:
 				break
 		if autotest_ult and Game.wave >= 8 and Game.ult_left > 0:
 			use_ultimate()
+	# like a player: once a wave has finished spawning, do not wait forever for one straggler that
+	# slows and pushes keep alive; after 20 s of stragglers, call the next wave
+	if state == "wave" and autotest_budget:   # a player builds during waves too
+		autotest_spend_t -= get_process_delta_time()
+		if autotest_spend_t <= 0.0:
+			autotest_spend_t = 0.5
+			_autotest_spend()
+	if state == "wave" and can_call_early():
+		autotest_linger += get_process_delta_time()
+		if autotest_linger >= 20.0:
+			autotest_linger = 0.0
+			start_wave()
+	else:
+		autotest_linger = 0.0
 	if state == "build":
 		if autotest_budget:
 			_autotest_spend()
