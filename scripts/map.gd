@@ -49,7 +49,7 @@ func _ready() -> void:
 	numeric = Data.is_numeric_stage(Game.stage_id)
 	chapter = Data.chapter_of(Game.stage_id)
 	complex_view = chapter >= 4 and chapter != 8
-	spacetime = chapter == 7 or chapter == 10
+	spacetime = chapter == 5 or chapter == 10
 	spectrum = chapter == 8
 	for wp in waypoints:
 		points.append(Data.cell_center(wp))
