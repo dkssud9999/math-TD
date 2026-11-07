@@ -35,6 +35,25 @@ func expect_err(src: String, needle: String, name: String) -> void:
 		print("FAIL: %s\n  want error containing: %s\n  got: %s" % [name, needle, got])
 
 
+## A VM whose `import name` reads mods[name] (stands in for the player's script folder).
+func out_mods(src: String, mods: Dictionary) -> String:
+	var vm := PyVM.new()
+	vm.module_sources = mods
+	vm.load_source(src)
+	if vm.err != "":
+		return "ERR " + vm.error_text()
+	return "\n".join(vm.output)
+
+
+func expect_mods(src: String, mods: Dictionary, want: String, name: String) -> void:
+	checks += 1
+	var got := out_mods(src, mods)
+	var ok := got == want if not want.begins_with("ERR~") else (got.begins_with("ERR") and got.contains(want.substr(4)))
+	if not ok:
+		fails += 1
+		print("FAIL: %s\n  want: %s\n  got:  %s" % [name, want.replace("\n", " | "), got.replace("\n", " | ")])
+
+
 func _init() -> void:
 	expect("print(1 + 2 * 3, 7 // 2, -7 // 2, 7 % 3, -7 % 3, 2 ** 10)", "7 3 -4 1 2 1024", "arithmetic")
 	expect("print(7 / 2, 6 / 3)", "3.5 2.0", "true division")
@@ -69,6 +88,32 @@ func _init() -> void:
 	expect_err("x = 1\n  y = 2", "줄 2", "bad indent")
 	expect_err("print([1][5])", "범위", "index error")
 	expect_err("print(1 < 'a')", "비교", "type compare")
+	# ---- issue #13: class / dict / import (expected values are what CPython prints) ----
+	expect("class P:\n    def __init__(self, x, y=2):\n        self.x = x\n        self.y = y\n    def total(self):\n        return self.x + self.y\n    def double(self):\n        return self.total() * 2\np = P(3)\np.y += 4\nprint(p.x, p.y, p.total(), p.double())", "3 6 9 18", "class: init, attrs, methods calling methods")
+	expect("class C:\n    n = 0\n    def inc(self):\n        C.n += 1\n        return C.n\na = C()\nb = C()\na.inc()\nprint(b.inc(), C.n, a.n)", "2 2 2", "class attribute shared")
+	expect("class A:\n    def hi(self):\n        return 'A' + self.name()\n    def name(self):\n        return 'a'\nclass B(A):\n    def name(self):\n        return 'b'\nx = B()\nprint(x.hi(), isinstance(x, A), isinstance(x, B), isinstance(A(), B))", "Ab True True False", "inheritance + isinstance")
+	expect("class V:\n    def __init__(self, k):\n        self.k = k\n    def __str__(self):\n        return 'V' + str(self.k)\nprint(V(4), [V(1)] == [V(1)])", "V4 False", "__str__ and identity equality")
+	expect("class Q:\n    def __init__(self):\n        self.items = []\n    def add(self, v):\n        self.items.append(v)\nq = Q()\nf = q.add\nf(1)\nf(2)\nprint(q.items, len(q.items))", "[1, 2] 2", "bound method stored and called")
+	expect_err("class Z:\n    pass\nz = Z()\nprint(z.nope)", "nope", "missing attribute")
+	expect_err("class Z:\n    pass\nZ(1)", "인자", "no __init__ but args")
+	expect("d = {'a': 1, 'b': [1, 2]}\nd['c'] = 3\nd['a'] += 10\nprint(d, len(d), 'b' in d, 'z' in d, d.get('z'), d.get('z', 0))", "{'a': 11, 'b': [1, 2], 'c': 3} 3 True False None 0", "dict basics")
+	expect("d = {}\nfor w in ['x', 'y', 'x']:\n    d[w] = d.get(w, 0) + 1\nprint(d, list(d.keys()), list(d.values()), sorted(d))", "{'x': 2, 'y': 1} ['x', 'y'] [2, 1] ['x', 'y']", "dict counting")
+	expect("d = {1: 'a', 2: 'b'}\nfor k, v in d.items():\n    print(k, v)\nprint(d.pop(1), d, d.pop(9, 'none'))", "1 a\n2 b\na {2: 'b'} none", "dict items/pop")
+	expect("d = dict(a=1)\nd.update({'b': 2})\ne = d.copy()\ne['a'] = 5\nprint(d, e, d == {'b': 2, 'a': 1}, {} or 'empty')", "{'a': 1, 'b': 2} {'a': 5, 'b': 2} True empty", "dict update/copy/eq/truthiness")
+	expect_err("d = {}\nprint(d['x'])", "키", "missing key")
+	expect_err("d = {[1]: 2}\nd[{}] = 1", "키", "unhashable key")
+	expect_mods("import helpers\nprint(helpers.twice(4), helpers.K)", {"helpers": "K = 7\ndef twice(x):\n    return 2 * x\n"}, "8 7", "import module")
+	expect_mods("import helpers as h\nfrom helpers import twice as t, K\nprint(h.twice(1), t(5), K)", {"helpers": "K = 7\ndef twice(x):\n    return 2 * x\n"}, "2 10 7", "import as / from import")
+	expect_mods("from shapes import Box\nb = Box(3)\nprint(b.area())", {"shapes": "class Box:\n    def __init__(self, s):\n        self.s = s\n    def area(self):\n        return sq(self.s)\ndef sq(v):\n    return v * v\n"}, "9", "class from a module uses its module's names")
+	expect_mods("import counter\ncounter.bump()\ncounter.bump()\nprint(counter.n)", {"counter": "n = 0\ndef bump():\n    global n\n    n += 1\n"}, "2", "global inside a module writes the module")
+	expect_mods("import a", {"a": "import b\n", "b": "import a\n"}, "ERR~순환", "circular import")
+	expect_mods("import nothere", {}, "ERR~없습니다", "missing module")
+	expect_mods("import os", {}, "ERR~os", "refused module")
+	expect_mods("import bad", {"bad": "def f(:\n"}, "ERR~bad.py", "syntax error inside module")
+	expect_mods("import boom\n", {"boom": "x = 1\ny = [][3]\n"}, "ERR~boom.py 줄 2", "runtime error inside module names file and line")
+	expect_mods("import math\nfrom math import sqrt\nprint(sqrt(16), math.floor(2.7), round(math.pi, 3))", {}, "4.0 2 3.142", "math module")
+	expect_err("import a.b", "점", "dotted module name")
+	expect_err("from a import *", "import *", "star import")
 	var vm := run("def attack(es):\n    return [e * 2 for e in es]")
 	checks += 1
 	var r = vm.run_fn("attack", [[1, 2]])

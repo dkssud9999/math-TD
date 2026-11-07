@@ -134,7 +134,7 @@ const PAGES := [
 	"body": "[code]me.op  me.name  me.level  me.param  me.range[/code]\n[code]set_param(v)[/code]  λ·ω 바꾸기 (연구 필요)\n[code]attack(e)   attack([a, b])[/code]  치고 끝\n[code]wave  rho  integrity[/code]  웨이브·자원·코어 체력"},
 
 	{"id": "ref_python", "sec": "사전", "from": "4-1", "title": "쓸 수 있는 파이썬",
-	"body": "[code]if / elif / else   for   while   def   return   break   continue   lambda[/code]\n리스트, 리스트 컴프리헨션 [code][e for e in enemies if e.boss][/code]\n[code]print len range min max abs sorted sum any all int float str round list enumerate zip reversed[/code]\nmin·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code]"},
+	"body": "[code]if / elif / else   for   while   def   return   break   continue   lambda   global[/code]\n리스트, 리스트 컴프리헨션 [code][e for e in enemies if e.boss][/code]\n딕셔너리 [code]d = {\"a\": 1}[/code]  [code]d[\"b\"] = 2   d.get(k, 0)   d.items()   k in d[/code]\n[code]class 이름:[/code]  [code]__init__(self, …)[/code], 메서드, [code]class B(A):[/code] 상속, [code]__str__[/code], [code]isinstance(x, A)[/code]\n[code]import helpers[/code]  [code]from helpers import f[/code]  같은 폴더의 내 파일 helpers.py를 씁니다. 모듈은 타워마다 따로이고, 파일을 고치면 다시 읽습니다. 내장 모듈은 [code]math[/code]만 됩니다.\n[code]print len range min max abs sorted sum any all int float str round list dict enumerate zip reversed bool[/code]\nmin·max·sorted는 [code]key=[/code], min·max는 [code]default=[/code]\n아직 없는 것: try/except, 문자열 포매팅(f\"…\"), 집합(set)"},
 ]
 
 

@@ -274,7 +274,7 @@ func _highlighter() -> CodeHighlighter:
 	h.function_color = Color("82aaff")
 	h.member_variable_color = Color("c3e88d")
 	for kw in ["def", "return", "if", "elif", "else", "for", "while", "in", "not", "and", "or", "is",
-			"break", "continue", "pass", "lambda", "global"]:
+			"break", "continue", "pass", "lambda", "global", "class", "import", "from", "as"]:
 		h.add_keyword_color(kw, Color("c792ea"))
 	for kw in ["True", "False", "None", "me", "set_param"]:
 		h.add_keyword_color(kw, Color("ffcb6b"))

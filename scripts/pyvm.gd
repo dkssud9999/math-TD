@@ -3,7 +3,12 @@ extends RefCounted
 ## A small Python interpreter for the towers' attack algorithms (attack.py).
 ## Supports: def / lambda / return, if-elif-else, for, while, break, continue, pass, global,
 ## list comprehensions (also inside calls: any(e.boss for e in es)), ternary, chained comparisons,
-## int / float / str / bool / None / list (tuples are lists), slicing, and common builtins.
+## int / float / str / bool / None / list (tuples are lists) / dict, slicing, common builtins,
+## class (with __init__, methods, single inheritance, __str__) and import of the player's own files.
+##
+## Modules: `import helpers` / `from helpers import f` load helpers.py through host.py_module_source(name)
+## (only the player's script files; `math` is built in; os, sys … are refused). Each VM (= each tower)
+## keeps its own modules: module state lasts across runs until the file changes, then it is reloaded.
 ## Every run has a step budget, so an infinite loop is an error instead of a frozen game.
 ##
 ## Values: Python objects are plain Variants. Host objects (enemies, the tower) are Dictionaries
@@ -12,7 +17,9 @@ extends RefCounted
 ##     host.py_call(obj, name, args, kwargs, vm) -> Variant
 
 const KEYWORDS := ["def", "return", "if", "elif", "else", "for", "while", "in", "not", "and", "or", "is",
-	"break", "continue", "pass", "lambda", "True", "False", "None", "global"]
+	"break", "continue", "pass", "lambda", "True", "False", "None", "global", "class", "import", "from", "as"]
+const REFUSED_MODULES := ["os", "sys", "subprocess", "socket", "shutil", "pathlib", "io", "importlib", "builtins",
+	"ctypes", "threading", "multiprocessing", "http", "urllib", "requests", "pickle", "time", "random"]
 const MAX_DEPTH := 60
 const MAX_OUTPUT := 200
 
@@ -23,6 +30,10 @@ var step_limit: int = 20000
 var host = null
 var globals_env: Dictionary = {"vars": {}, "parent": null, "globals": {}}
 var output: PackedStringArray = []
+var host_globals: Dictionary = {}     # the game's names (enemies, attack …): visible from modules too
+var module_sources: Dictionary = {}   # name -> source, when there is no host (tests)
+var _modules: Dictionary = {}         # name -> {"src", "mod"}
+var _loading: Dictionary = {}         # modules being imported right now (circular imports)
 
 const HALT := "__halt__"     # attack() ends the run like reaching EOF; not an error
 const NOT_MINE := "__not_mine__"   # host.py_binop: "these are not my objects"
@@ -69,6 +80,7 @@ func compile(src: String) -> bool:
 func exec_program(globals: Dictionary) -> void:
 	dispose()
 	globals_env = {"vars": globals.duplicate(), "parent": null, "globals": {}}
+	host_globals = globals
 	err = ""
 	err_line = 0
 	steps = 0
@@ -103,9 +115,13 @@ func dispose() -> void:
 	globals_env["vars"].clear()
 
 
-## dispose() and forget the host too (the VM is being thrown away).
+## dispose() and forget the host and the modules too (the VM is being thrown away).
 func release() -> void:
 	dispose()
+	for name in _modules:
+		_modules[name]["mod"]["env"]["vars"].clear()
+	_modules.clear()
+	host_globals = {}
 	host = null
 
 
@@ -338,6 +354,16 @@ func _block() -> Array:
 
 func _statement() -> Dictionary:
 	var l: int = _peek()["l"]
+	if _is_kw("class"):
+		_next()
+		var cname := _expect_name()
+		var base = null
+		if _is_op("("):
+			_next()
+			if not _is_op(")"):
+				base = _test()
+			_expect_op(")")
+		return {"k": "class", "l": l, "name": cname, "base": base, "body": _block()}
 	if _is_kw("def"):
 		_next()
 		var name := _expect_name()
@@ -427,6 +453,47 @@ func _simple_statement() -> Dictionary:
 	if _is_kw("continue"):
 		_next()
 		return {"k": "continue", "l": l}
+	if _is_kw("import"):
+		_next()
+		var items: Array = []
+		while err == "":
+			var mod := _module_name()
+			var alias := mod
+			if _is_kw("as"):
+				_next()
+				alias = _expect_name()
+			items.append([mod, alias])
+			if not _is_op(","):
+				break
+			_next()
+		return {"k": "import", "l": l, "items": items}
+	if _is_kw("from"):
+		_next()
+		var mod := _module_name()
+		if not _is_kw("import"):
+			_syntax("'from 모듈 import 이름' 모양이어야 합니다")
+			return {}
+		_next()
+		if _is_op("*"):
+			_syntax("import *는 지원하지 않습니다. 쓸 이름을 적어 주세요")
+			return {}
+		var paren := _is_op("(")
+		if paren:
+			_next()
+		var items: Array = []
+		while err == "":
+			var nm := _expect_name()
+			var alias := nm
+			if _is_kw("as"):
+				_next()
+				alias = _expect_name()
+			items.append([nm, alias])
+			if not _is_op(","):
+				break
+			_next()
+		if paren:
+			_expect_op(")")
+		return {"k": "from", "l": l, "mod": mod, "items": items}
 	if _is_kw("global"):
 		_next()
 		var names: Array = [_expect_name()]
@@ -457,8 +524,15 @@ func _simple_statement() -> Dictionary:
 	return {"k": "expr", "l": l, "v": e}
 
 
+func _module_name() -> String:
+	var nm := _expect_name()
+	if _is_op("."):
+		_syntax("점(.)이 든 모듈 이름은 쓸 수 없습니다. 같은 폴더의 파일 이름만 됩니다")
+	return nm
+
+
 func _assignable(e: Dictionary) -> bool:
-	if e["k"] == "name" or e["k"] == "index":
+	if e["k"] == "name" or e["k"] == "index" or e["k"] == "attr":
 		return true
 	if e["k"] == "tuple":
 		for x in e["items"]:
@@ -726,8 +800,18 @@ func _atom() -> Dictionary:
 		_expect_op("]")
 		return {"k": "list", "l": l, "items": items}
 	if _is_op("{"):
-		_syntax("딕셔너리 {}는 지원하지 않습니다 — 리스트를 쓰세요")
-		return {"k": "const", "l": l, "v": null}
+		_next()
+		var pairs: Array = []
+		while not _is_op("}") and err == "":
+			var key := _test()
+			_expect_op(":")
+			pairs.append([key, _test()])
+			if _is_op(","):
+				_next()
+			elif not _is_op("}"):
+				_syntax("',' 또는 '}'가 필요합니다")
+		_expect_op("}")
+		return {"k": "dict", "l": l, "pairs": pairs}
 	_syntax("식이 필요합니다")
 	_next()
 	return {"k": "const", "l": l, "v": null}
@@ -816,6 +900,24 @@ func _exec(st: Dictionary, env: Dictionary) -> int:
 		"global":
 			for n in st["names"]:
 				env["globals"][n] = true
+		"class":
+			_exec_class(st, env)
+		"import":
+			for it in st["items"]:
+				var mod = _import(it[0])
+				if err != "":
+					return C_ERROR
+				_set_var(it[1], mod, env)
+		"from":
+			var mod = _import(st["mod"])
+			if err != "":
+				return C_ERROR
+			for it in st["items"]:
+				var mv: Dictionary = mod["env"]["vars"] if mod.has("env") else mod["vars"]
+				if not mv.has(it[0]):
+					fail("모듈 %s에 '%s'가 없습니다" % [st["mod"], it[0]])
+					return C_ERROR
+				_set_var(it[1], mv[it[0]], env)
 		"def":
 			var defaults: Array = []
 			for d in st["defaults"]:
@@ -838,7 +940,10 @@ func _bind_targets(names: Array, item, env: Dictionary) -> void:
 
 func _set_var(name: String, v, env: Dictionary) -> void:
 	if env["globals"].has(name):
-		globals_env["vars"][name] = v
+		var root: Dictionary = env   # the module (or main file) this function belongs to
+		while root["parent"] != null:
+			root = root["parent"]
+		root["vars"][name] = v
 	else:
 		env["vars"][name] = v
 
@@ -857,12 +962,29 @@ func _assign(tg: Dictionary, v, env: Dictionary) -> void:
 			var idx = _eval(tg["i"], env)
 			if err != "":
 				return
+			if _is_dict(obj):
+				if not _hashable(idx):
+					return
+				obj["d"][idx] = v
+				return
 			if not obj is Array:
-				fail("리스트에만 [ ]로 대입할 수 있습니다")
+				fail("리스트나 딕셔너리에만 [ ]로 대입할 수 있습니다")
 				return
 			var i := _norm_index(obj, idx)
 			if err == "":
 				obj[i] = v
+		"attr":
+			var obj = _eval(tg["a"], env)
+			if err != "":
+				return
+			if obj is Dictionary and (obj.has("__inst") or obj.has("__class")):
+				obj["attrs"][tg["name"]] = v
+			elif obj is Dictionary and obj.has("__module"):
+				obj["env"]["vars"][tg["name"]] = v
+			elif obj is Dictionary and obj.has("__obj"):
+				fail("게임 객체(%s)의 .%s 는 바꿀 수 없습니다" % [_type_name(obj), tg["name"]])
+			else:
+				fail("'%s'에는 .%s 를 대입할 수 없습니다" % [_type_name(obj), tg["name"]])
 
 
 func _lookup(name: String, env: Dictionary):
@@ -871,6 +993,8 @@ func _lookup(name: String, env: Dictionary):
 		if e["vars"].has(name):
 			return e["vars"][name]
 		e = e["parent"]
+	if host_globals.has(name):   # modules see the game's names like builtins
+		return host_globals[name]
 	if name in BUILTINS:
 		return {"__bi": name}
 	fail("이름 '%s'가 정의되지 않았습니다" % name)
@@ -878,7 +1002,116 @@ func _lookup(name: String, env: Dictionary):
 
 
 const BUILTINS := ["print", "len", "range", "min", "max", "abs", "sorted", "sum", "any", "all", "int", "float",
-	"str", "round", "list", "enumerate", "zip", "reversed", "bool"]
+	"str", "round", "list", "enumerate", "zip", "reversed", "bool", "dict", "isinstance"]
+
+
+# ======================= classes, dicts, modules =======================
+
+## class X(Base): body. Methods keep the module scope (not the class body) as their scope, as in Python,
+## which also keeps class bodies from holding themselves in a reference cycle.
+func _exec_class(st: Dictionary, env: Dictionary) -> void:
+	var base = null
+	if st["base"] != null:
+		base = _eval(st["base"], env)
+		if err != "":
+			return
+		if not (base is Dictionary and base.has("__class")):
+			fail("class %s(…)의 괄호 안에는 클래스가 와야 합니다" % st["name"])
+			return
+	var cenv := {"vars": {}, "parent": env, "globals": {}}
+	var c := _exec_block(st["body"], cenv)
+	if c == C_ERROR or err != "":
+		cenv["vars"].clear()
+		return
+	for k in cenv["vars"]:
+		var v = cenv["vars"][k]
+		if v is Dictionary and v.has("__fn") and is_same(v["env"], cenv):
+			v["env"] = env
+	_set_var(st["name"], {"__class": true, "name": st["name"], "base": base, "attrs": cenv["vars"]}, env)
+
+
+## Class attribute lookup along the base chain, or the not-found marker.
+func _class_lookup(cls: Dictionary, name: String):
+	var c = cls
+	while c != null:
+		if c["attrs"].has(name):
+			return c["attrs"][name]
+		c = c["base"]
+	return NOT_MINE
+
+
+func _instantiate(cls: Dictionary, args: Array, kwargs: Dictionary):
+	var inst := {"__inst": true, "cls": cls, "attrs": {}}
+	var init = _class_lookup(cls, "__init__")
+	if init is Dictionary and init.has("__fn"):
+		_call_user(init, [inst] + args, kwargs)
+	elif not args.is_empty() or not kwargs.is_empty():
+		fail("%s()는 인자를 받지 않습니다 (__init__이 없음)" % cls["name"])
+	return null if err != "" else inst
+
+
+static func _is_dict(v) -> bool:
+	return v is Dictionary and v.has("__dict")
+
+
+func _hashable(k) -> bool:
+	if k == null or k is bool or k is int or k is float or k is String:
+		return true
+	if k is Array:
+		for x in k:
+			if not _hashable(x):
+				return false
+		return true
+	fail("'%s'는 딕셔너리 키로 쓸 수 없습니다" % _type_name(k))
+	return false
+
+
+func _import(name: String):
+	if name == "math":
+		return {"__module": true, "name": "math", "env": {"vars": {
+			"pi": PI, "e": exp(1.0), "inf": INF, "sqrt": {"__bi": "math.sqrt"}, "exp": {"__bi": "math.exp"},
+			"log": {"__bi": "math.log"}, "sin": {"__bi": "math.sin"}, "cos": {"__bi": "math.cos"},
+			"floor": {"__bi": "math.floor"}, "ceil": {"__bi": "math.ceil"}, "isclose": {"__bi": "math.isclose"}}}}
+	if name in REFUSED_MODULES:
+		fail("게임 안에서는 %s 모듈을 쓸 수 없습니다. import는 내 스크립트 파일(같은 폴더의 .py)과 math만 됩니다" % name)
+		return null
+	var src = null
+	if host != null and host.has_method("py_module_source"):
+		src = host.py_module_source(name)
+	else:
+		src = module_sources.get(name, null)
+	if src is Dictionary:
+		fail(src.get("error", "모듈 %s를 읽을 수 없습니다" % name))
+		return null
+	if src == null:
+		fail("모듈 '%s'이 없습니다. 같은 폴더에 %s.py 파일을 만드세요" % [name, name])
+		return null
+	if _modules.has(name) and _modules[name]["src"] == src:
+		return _modules[name]["mod"]
+	if _loading.has(name):
+		fail("순환 import: %s가 자기를 다시 import합니다" % name)
+		return null
+	var parser := PyVM.new()
+	if not parser.compile(src):
+		fail("%s.py %s" % [name, parser.error_text()])
+		return null
+	if _modules.has(name):   # the file changed: drop the old module (breaks its function/scope cycle)
+		_modules[name]["mod"]["env"]["vars"].clear()
+		_modules.erase(name)
+	var menv := {"vars": {"__name__": name}, "parent": null, "globals": {}}
+	var mod := {"__module": true, "name": name, "env": menv}
+	var line := _line
+	_loading[name] = true
+	_exec_block(parser.program, menv)
+	_loading.erase(name)
+	if err != "" and err != HALT:
+		err = "%s.py 줄 %d: %s" % [name, err_line, err]
+		err_line = line
+		menv["vars"].clear()
+		return null
+	_line = line
+	_modules[name] = {"src": src, "mod": mod}
+	return mod
 
 
 func _eval(e: Dictionary, env: Dictionary):
@@ -896,6 +1129,15 @@ func _eval(e: Dictionary, env: Dictionary):
 				if err != "":
 					return null
 			return out
+		"dict":
+			var d := {}
+			for pr in e["pairs"]:
+				var k = _eval(pr[0], env)
+				var v = _eval(pr[1], env)
+				if err != "" or not _hashable(k):
+					return null
+				d[k] = v
+			return {"__dict": true, "d": d}
 		"bin":
 			var a = _eval(e["a"], env)
 			var b = _eval(e["b"], env)
@@ -969,7 +1211,14 @@ func _eval(e: Dictionary, env: Dictionary):
 			if obj is Array or obj is String:
 				var i := _norm_index(obj, idx)
 				return null if err != "" else obj[i]
-			fail("[ ]는 리스트와 문자열에만 쓸 수 있습니다")
+			if _is_dict(obj):
+				if not _hashable(idx):
+					return null
+				if not obj["d"].has(idx):
+					fail("딕셔너리에 키 %s가 없습니다 (없을 수도 있으면 .get(키) )" % _str(idx, true))
+					return null
+				return obj["d"][idx]
+			fail("[ ]는 리스트, 문자열, 딕셔너리에만 쓸 수 있습니다")
 			return null
 		"slice":
 			var obj = _eval(e["a"], env)
@@ -1037,7 +1286,31 @@ func _norm_index(obj, idx) -> int:
 
 
 func _get_attr(obj, name: String):
-	if obj is Array:
+	if obj is Dictionary and obj.has("__inst"):
+		if obj["attrs"].has(name):
+			return obj["attrs"][name]
+		var cv = _class_lookup(obj["cls"], name)
+		if not (cv is String and cv == NOT_MINE):
+			if cv is Dictionary and cv.has("__fn"):
+				return {"__bound": true, "fn": cv, "self": obj}
+			return cv
+		fail("%s 객체에는 .%s 가 없습니다" % [obj["cls"]["name"], name])
+		return null
+	if obj is Dictionary and obj.has("__class"):
+		var cv2 = _class_lookup(obj, name)
+		if not (cv2 is String and cv2 == NOT_MINE):
+			return cv2
+		fail("클래스 %s에는 .%s 가 없습니다" % [obj["name"], name])
+		return null
+	if obj is Dictionary and obj.has("__module"):
+		if obj["env"]["vars"].has(name):
+			return obj["env"]["vars"][name]
+		fail("모듈 %s에는 %s가 없습니다" % [obj["name"], name])
+		return null
+	if _is_dict(obj):
+		if name in ["keys", "values", "items", "get", "pop", "update", "copy", "setdefault"]:
+			return {"__bm": name, "self": obj}
+	elif obj is Array:
 		if name in ["append", "pop", "index", "count", "sort", "insert", "remove", "extend", "reverse", "copy"]:
 			return {"__bm": name, "self": obj}
 	elif obj is String:
@@ -1058,6 +1331,8 @@ static func _is_num(v) -> bool:
 static func _truthy(v) -> bool:
 	if v == null:
 		return false
+	if _is_dict(v):
+		return not v["d"].is_empty()
 	if v is bool:
 		return v
 	if v is int or v is float:
@@ -1083,6 +1358,16 @@ func _type_name(v) -> String:
 	if v is Array:
 		return "list"
 	if v is Dictionary:
+		if v.has("__dict"):
+			return "dict"
+		if v.has("__inst"):
+			return v["cls"]["name"]
+		if v.has("__class"):
+			return "클래스"
+		if v.has("__module"):
+			return "모듈"
+		if v.has("__bound"):
+			return "메서드"
 		if v.has("__obj"):
 			return {"enemy": "적", "snap": "적(예측)", "tower": "타워", "node": "식"}.get(v["__obj"], "객체")
 		if v.has("__fn") or v.has("__bi") or v.has("__bm"):
@@ -1093,6 +1378,8 @@ func _type_name(v) -> String:
 func _iterable(v) -> Array:
 	if v is Array:
 		return v
+	if _is_dict(v):
+		return v["d"].keys()
 	if v is String:
 		var out: Array = []
 		for ch in v:
@@ -1199,6 +1486,15 @@ func _eq(a, b) -> bool:
 		return false
 	if typeof(a) != typeof(b):
 		return false
+	if a is Dictionary and (a.has("__inst") or a.has("__class") or a.has("__module")):
+		return is_same(a, b)
+	if _is_dict(a):
+		if not _is_dict(b) or a["d"].size() != b["d"].size():
+			return false
+		for k in a["d"]:
+			if not b["d"].has(k) or not _eq(a["d"][k], b["d"][k]):
+				return false
+		return true
 	if a is Dictionary and a.has("__obj") and b.has("__obj") and a["__obj"] == "node":
 		return b["__obj"] == "node" and a["d"]["text"] == b["d"]["text"]
 	if a is Dictionary and a.has("__obj") and b.has("__obj"):
@@ -1226,6 +1522,8 @@ func _compare(op: String, a, b) -> bool:
 					if _eq(a, x):
 						found = true
 						break
+			elif _is_dict(b):
+				found = b["d"].has(a)
 			elif b is String and a is String:
 				found = b.contains(a)
 			else:
@@ -1267,6 +1565,24 @@ func _str(v, repr: bool = false) -> String:
 			parts.append(_str(x, true))
 		return "[" + ", ".join(parts) + "]"
 	if v is Dictionary:
+		if _is_dict(v):
+			var parts2 := PackedStringArray()
+			for k in v["d"]:
+				parts2.append("%s: %s" % [_str(k, true), _str(v["d"][k], true)])
+			return "{" + ", ".join(parts2) + "}"
+		if v.has("__inst"):
+			var sm = _class_lookup(v["cls"], "__str__")
+			if sm is Dictionary and sm.has("__fn") and err == "":
+				var r = _call_user(sm, [v], {})
+				if r is String:
+					return r
+			return "<%s 객체>" % v["cls"]["name"]
+		if v.has("__class"):
+			return "<클래스 %s>" % v["name"]
+		if v.has("__module"):
+			return "<모듈 %s>" % v["name"]
+		if v.has("__bound"):
+			return "<메서드 %s>" % v["fn"]["name"]
 		if v.has("__obj") and host != null:
 			return host.py_repr(v)
 		if v.has("__fn"):
@@ -1286,6 +1602,10 @@ func _call_value(fv, args: Array, kwargs: Dictionary):
 		return null
 	if fv.has("__fn"):
 		return _call_user(fv, args, kwargs)
+	if fv.has("__bound"):
+		return _call_user(fv["fn"], [fv["self"]] + args, kwargs)
+	if fv.has("__class"):
+		return _instantiate(fv, args, kwargs)
 	if fv.has("__bi"):
 		return _builtin(fv["__bi"], args, kwargs)
 	if fv.has("__bm"):
@@ -1351,6 +1671,8 @@ func _builtin(name: String, args: Array, kwargs: Dictionary):
 		"len":
 			if args.size() == 1 and (args[0] is Array):
 				return (args[0] as Array).size()
+			if args.size() == 1 and _is_dict(args[0]):
+				return args[0]["d"].size()
 			if args.size() == 1 and args[0] is String:
 				return (args[0] as String).length()
 			fail("len()에는 리스트나 문자열 하나가 필요합니다")
@@ -1382,7 +1704,7 @@ func _builtin(name: String, args: Array, kwargs: Dictionary):
 					return null
 			return out
 		"min", "max":
-			var items: Array = args[0] if (args.size() == 1 and args[0] is Array) else args
+			var items: Array = args[0] if (args.size() == 1 and args[0] is Array) else (_iterable(args[0]) if (args.size() == 1 and _is_dict(args[0])) else args)
 			if items.is_empty():
 				if kwargs.has("default"):
 					return kwargs["default"]
@@ -1403,6 +1725,8 @@ func _builtin(name: String, args: Array, kwargs: Dictionary):
 				return absi(args[0]) if args[0] is int else absf(args[0])
 			fail("abs()에는 숫자가 필요합니다")
 		"sorted":
+			if args.size() == 1 and (_is_dict(args[0]) or args[0] is String):
+				args = [_iterable(args[0])]
 			if args.size() != 1 or not args[0] is Array:
 				fail("sorted()에는 리스트가 필요합니다")
 				return null
@@ -1440,6 +1764,59 @@ func _builtin(name: String, args: Array, kwargs: Dictionary):
 			return _str(args[0]) if not args.is_empty() else ""
 		"bool":
 			return _truthy(args[0]) if not args.is_empty() else false
+		"dict":
+			var d := {}
+			if not args.is_empty():
+				if _is_dict(args[0]):
+					d = args[0]["d"].duplicate()
+				else:
+					for pr in _iterable(args[0]):
+						if not (pr is Array and pr.size() == 2) or not _hashable(pr[0]):
+							fail("dict()에는 [키, 값] 쌍의 리스트가 필요합니다")
+							return null
+						d[pr[0]] = pr[1]
+			for k in kwargs:
+				d[k] = kwargs[k]
+			return {"__dict": true, "d": d}
+		"isinstance":
+			if args.size() != 2 or not (args[1] is Dictionary and args[1].has("__class")):
+				fail("isinstance(값, 클래스) 모양으로 써 주세요")
+				return null
+			if not (args[0] is Dictionary and args[0].has("__inst")):
+				return false
+			var c = args[0]["cls"]
+			while c != null:
+				if is_same(c, args[1]):
+					return true
+				c = c["base"]
+			return false
+		"math.sqrt", "math.exp", "math.log", "math.sin", "math.cos", "math.floor", "math.ceil", "math.isclose":
+			if args.is_empty() or not _is_num(args[0]):
+				fail("%s()에는 숫자가 필요합니다" % name)
+				return null
+			var x := float(args[0])
+			match name:
+				"math.sqrt":
+					if x < 0:
+						fail("음수의 제곱근은 없습니다")
+						return null
+					return sqrt(x)
+				"math.exp":
+					return exp(x)
+				"math.log":
+					if x <= 0:
+						fail("0 이하의 로그는 없습니다")
+						return null
+					return log(x) / (log(float(args[1])) if args.size() > 1 else 1.0)
+				"math.sin":
+					return sin(x)
+				"math.cos":
+					return cos(x)
+				"math.floor":
+					return int(floor(x))
+				"math.ceil":
+					return int(ceil(x))
+			return args.size() > 1 and _is_num(args[1]) and absf(x - float(args[1])) <= 1e-9 * maxf(1.0, maxf(absf(x), absf(float(args[1]))))
 		"round":
 			if args.is_empty() or not _is_num(args[0]):
 				fail("round()에는 숫자가 필요합니다")
@@ -1502,6 +1879,47 @@ func _sorted(items: Array, kwargs: Dictionary) -> Array:
 
 
 func _method(obj, name: String, args: Array, kwargs: Dictionary):
+	if _is_dict(obj):
+		var d: Dictionary = obj["d"]
+		match name:
+			"keys":
+				return d.keys()
+			"values":
+				return d.values()
+			"items":
+				var out: Array = []
+				for k in d:
+					out.append([k, d[k]])
+				return out
+			"get":
+				if args.is_empty() or not _hashable(args[0]):
+					return null
+				return d.get(args[0], args[1] if args.size() > 1 else null)
+			"pop":
+				if args.is_empty() or not _hashable(args[0]):
+					return null
+				if d.has(args[0]):
+					var v = d[args[0]]
+					d.erase(args[0])
+					return v
+				if args.size() > 1:
+					return args[1]
+				fail("딕셔너리에 키 %s가 없습니다" % _str(args[0], true))
+				return null
+			"setdefault":
+				if args.is_empty() or not _hashable(args[0]):
+					return null
+				if not d.has(args[0]):
+					d[args[0]] = args[1] if args.size() > 1 else null
+				return d[args[0]]
+			"update":
+				if not args.is_empty() and _is_dict(args[0]):
+					d.merge(args[0]["d"], true)
+				for k in kwargs:
+					d[k] = kwargs[k]
+				return null
+			"copy":
+				return {"__dict": true, "d": d.duplicate()}
 	if obj is Array:
 		var a: Array = obj
 		match name:

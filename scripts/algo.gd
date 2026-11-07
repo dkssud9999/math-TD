@@ -597,6 +597,16 @@ static func _ratio(v) -> Array:
 	return [int(roundf(x * den)), den]
 
 
+## import helpers → the player's helpers.py (only files in their scripts folder; a file cannot import itself).
+func py_module_source(name: String):
+	var fn := name + ".py"
+	if tower != null and fn == String(tower.algo):
+		return {"error": "자기 자신(%s)은 import할 수 없습니다" % fn}
+	if not name.is_valid_identifier() or not Progress.list_scripts().has(fn):
+		return null
+	return Progress.read_script(fn)
+
+
 func py_repr(obj: Dictionary) -> String:
 	match obj["__obj"]:
 		"node":
