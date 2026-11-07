@@ -91,6 +91,8 @@ Godot_v4.7.2-stable_win64.exe --path .
 
 ### 테스트
 
+다른 컴퓨터에서 밸런스 테스트를 돌리는 방법(준비, Godot 경로, 결과 읽는 법): [tests/BALANCE_TEST.md](tests/BALANCE_TEST.md)
+
 ```
 # 수학 계산 검증 (실제 항등식 약 2,880개)
 godot --headless --path . --script res://tests/test_expr.gd
