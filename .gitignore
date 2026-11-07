@@ -3,3 +3,4 @@
 *.tmp
 export_presets.cfg
 build/
+tools/

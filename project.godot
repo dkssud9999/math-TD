@@ -2,9 +2,12 @@
 config_version=5
 
 [application]
+; config/name decides the save folder (%APPDATA%/Godot/app_userdata/<name>). Never rename it, or players lose their saves.
 config/name="Limit Break"
 config/description="An advanced-math tower defence."
 run/main_scene="res://scenes/menu.tscn"
+config/icon="res://assets/icon/icon.png"
+config/windows_native_icon="res://assets/icon/icon.ico"
 config/features=PackedStringArray("4.7")
 
 [autoload]
