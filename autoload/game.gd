@@ -38,8 +38,9 @@ func reset() -> void:
 	integrity = int(Data.STAGES[stage_id].get("integrity", Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("integrity", Data.START_INTEGRITY)))
 	if Progress.has("core_up"):
 		integrity = int(round(integrity * 1.2))
+	_income_k = _tune("--hard-income=", HARD_INCOME) if hard else 1.0
 	if hard:
-		rho *= 1.4   # hard: more enemies, bigger numbers, and a bigger purse to meet them
+		rho *= _tune("--hard-rho=", HARD_RHO)   # hard: more enemies, bigger numbers, and a bigger purse to meet them
 	if Progress.has("start_rho"):
 		rho += 80.0
 	start_integrity = integrity
@@ -53,6 +54,25 @@ func c1() -> int:
 
 func c2() -> int:
 	return 1 << c2_level
+
+
+const HARD_RHO := 1.4      # starting ρ on hard
+const HARD_INCOME := 1.0   # passive income on hard
+
+
+## A balance constant, or its --name=value override (autotest tuning only).
+func _tune(flag: String, v: float) -> float:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(flag):
+			return float(a.substr(flag.length()))
+	return v
+
+
+var _income_k: float = 1.0
+
+
+func income_mult() -> float:
+	return _income_k
 
 
 func rho_rate() -> int:

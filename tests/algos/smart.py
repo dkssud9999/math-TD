@@ -10,3 +10,5 @@ for e in enemies:
         attack(e)
     if e.f.kind == "num" and abs(a.value) < abs(e.value):
         attack(e)
+    if me.op == "neg" and all(t.coef < 0 for t in e.f.terms) and e.f.has("exp") and not e.f.has("sin") and not e.f.has("cos"):
+        attack(e)               # −c·eᵃˣ → c·eᵃˣ, so log can take it

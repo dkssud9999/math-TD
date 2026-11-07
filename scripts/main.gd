@@ -49,6 +49,10 @@ var autotest_linger: float = 0.0   # seconds the bot has waited on stragglers af
 var autotest_t0: int = 0
 var autotest_order: bool = false   # stage needs "pre-processor first, then the rest"
 var autotest_pre: String = "damp"
+var bot = null                      # scripts/bot.gd: the solving bot (--oldbot: the old rules of thumb)
+var autotest_oldbot: bool = false
+var autotest_perfect: bool = false   # --perfect: a flawless run or nothing; stop at the first core damage
+var autotest_verbose: bool = false   # --botlog: print what the bot thinks each wave needs
 
 
 func _ready() -> void:
@@ -164,7 +168,7 @@ func _process(delta: float) -> void:
 			auto_timer = -1.0
 			start_wave()
 	if state == "wave":
-		Game.add_rho(Game.rho_rate() * delta)
+		Game.add_rho(Game.rho_rate() * Game.income_mult() * delta)
 		if wave_manager.finished() and alive_enemy_count() == 0:
 			_on_wave_cleared()
 
@@ -798,6 +802,12 @@ func _parse_autotest_args() -> void:
 			Game.hard = true
 		elif a == "--no-algo":
 			autotest_no_algo = true
+		elif a == "--oldbot":
+			autotest_oldbot = true
+		elif a == "--botlog":
+			autotest_verbose = true
+		elif a == "--perfect":
+			autotest_perfect = true
 		elif a.begins_with("--shot="):
 			autotest_shot = a.substr(7)
 		elif a.begins_with("--shot-field="):
@@ -855,8 +865,10 @@ func _autotest_start() -> void:
 		if (kd == "exp2" and available_towers.has("damp")) or (kd == "signal" and available_towers.has("lpf")):
 			autotest_order = true
 			autotest_pre = "lpf" if kd == "signal" else "damp"
-	if autotest_order:
+	if autotest_order or not autotest_oldbot:
 		autotest_slots.sort_custom(func(a, b): return _slot_progress(a) < _slot_progress(b))
+	if not autotest_oldbot:
+		bot = load("res://scripts/bot.gd").new(self)
 	if not autotest_budget:
 		Game.rho = 100000
 		for i in 26:
@@ -878,6 +890,10 @@ var autotest_pred: int = 0
 
 
 func _autotest_tick() -> void:
+	if autotest_perfect and Game.integrity < Game.start_integrity and state in ["build", "wave"]:
+		print("[autotest] perfect broken at wave %d (integrity %d/%d)" % [Game.wave, Game.integrity, Game.start_integrity])
+		_autotest_finish()
+		return
 	if autotest_shot_field != "" and Game.wave >= autotest_shot_wave and state == "wave" and alive_enemy_count() >= 3:
 		get_viewport().get_texture().get_image().save_png(autotest_shot_field)   # --shot-field=path.png: the battlefield
 		print("[autotest] field screenshot " + autotest_shot_field)
@@ -914,17 +930,25 @@ func _autotest_tick() -> void:
 		autotest_spend_t -= get_process_delta_time()
 		if autotest_spend_t <= 0.0:
 			autotest_spend_t = 0.5
-			_autotest_spend()
+			_autotest_spend_any()
 	if state == "wave" and can_call_early():
 		autotest_linger += get_process_delta_time()
 		if autotest_linger >= 20.0:
 			autotest_linger = 0.0
 			start_wave()
+	elif state == "wave" and wave_manager.finished() and Game.wave >= waves.size():
+		# the last wave: nothing to call. Report whoever keeps the stage from ending (a stuck straggler)
+		autotest_linger += get_process_delta_time()
+		if autotest_linger >= 60.0:
+			autotest_linger = 0.0
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if e.alive:
+					print("[autotest] straggler: %s  progress=%.0f/%.0f speed=%.1f push_v=%.1f" % [e.label, e.progress, map.total_length, e.speed(), e.push_v])
 	else:
 		autotest_linger = 0.0
 	if state == "build":
 		if autotest_budget:
-			_autotest_spend()
+			_autotest_spend_any()
 		start_wave()
 	elif state == "result":
 		_autotest_finish()
@@ -932,6 +956,13 @@ func _autotest_tick() -> void:
 		_autotest_finish()      # the true ending
 	elif state == "credits" and not x_spawned:
 		credits_timer = 100.0   # skip ahead to the counterexample
+
+
+func _autotest_spend_any() -> void:
+	if bot != null:
+		bot.spend()
+	else:
+		_autotest_spend()
 
 
 func _autotest_spend() -> void:
@@ -1194,6 +1225,8 @@ func _autotest_finish() -> void:
 		var key: String = tw.glyph()
 		comp[key] = int(comp.get(key, 0)) + 1
 	print("[autotest] towers: ", comp)
+	if bot != null:
+		print("[bot] evaluations %d, %d ms" % [bot.eval_n, bot.eval_us / 1000])
 	print("[prof] algo_ms=%d runs=%d steps=%d frames=%d frame_ms=%d enemies_max=%d" % [Algo.prof_us / 1000, Algo.prof_runs, Algo.prof_steps, Algo.prof_frames, Algo.prof_frame_us / 1000, prof_enemy_max])
 	print("[autotest] done: flags=%s stage=%s won=%s wave=%d integrity=%d kills=%d leaked=%d combo=%d towers=%d met_x=%s wall=%.1fs" % [",".join(PackedStringArray(Progress.flags.keys())), Game.stage_id, str(Game.wave >= 15 and Game.integrity > 0), Game.wave, Game.integrity, Game.kills, Game.leaked, Game.max_combo, occupied.size(), str(Progress.flag("met_x")), (Time.get_ticks_msec() - autotest_t0) / 1000.0])
 	autotest = false

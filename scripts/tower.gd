@@ -176,6 +176,11 @@ static func transform(op: String, f: Expr, params: Dictionary) -> bool:
 		"damp":
 			f.shift(-int(params["k"]))
 			return true
+		"neg":
+			if f.is_zero():
+				return false
+			f.scale(-1, 1)
+			return true
 		"lpf":
 			return f.lowpass(int(params["k"]))
 		"diff", "dm1", "harm", "dtl", "wave":
@@ -250,6 +255,12 @@ static func op_useful(type: String, f: Expr, k: int = 1) -> bool:
 			return f.has_mode(0, 1)
 		"damp":
 			return f.has_growing()
+		"neg":   # only where the sign is what stands in the way: −c·e^{ax} (log takes c·e^{ax})
+			if f.is_zero() or not f.single_exp().is_empty():
+				return false
+			var g := f.clone()
+			g.scale(-1, 1)
+			return not g.single_exp().is_empty()
 		"dtl":
 			return f.has_t_mode(maxi(1, k))
 		"wave":
@@ -481,6 +492,8 @@ func describe() -> String:
 			lines.append("연산: f → e⁻%sˣ · f  (μ → μ − %d)" % ["" if int(power()) == 1 else "²", int(power())])
 		"dtl":
 			lines.append("연산: f → (∂ₜ − %d) f" % lam)
+		"neg":
+			lines.append("연산: f → −f")
 		"wave":
 			lines.append("연산: f → ∂ₜ²f − ∂ₓ²f")
 		"lpf":

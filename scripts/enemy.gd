@@ -91,12 +91,13 @@ func setup(p_template: String, p_main, p_f: Expr, start_progress: float) -> void
 
 
 ## Every chapter: an enemy damages the core by the number of digits of |f(X_END, t)| (⌊log₁₀|f|⌋ + 1).
-## The core sits at x = chapter number, so 3x²eˣ in chapter 3 is 543 → 3. Below 0.5 is harmless.
+## The core sits at x = chapter number, so 3x²eˣ in chapter 3 is 543 → 3. Anything that is not exactly 0
+## costs at least 1 (|f| rounded up): fading an enemy (e⁻ˣ, e⁻²ˣ …) shrinks it but never makes it harmless.
 static func harm(v: float) -> int:
 	var a := absf(v)
 	if is_nan(a) or is_inf(a):
 		return 99
-	if a < 0.5:
+	if a == 0.0:
 		return 0
 	if a < 10.0:
 		return 1
@@ -230,8 +231,8 @@ func apply_op(op: String, params: Dictionary) -> void:
 		match op:
 			"sub":
 				Sfx.play("sub", 1.0 + 0.05 * f.degree())
-			"div", "divx":
-				Sfx.play("mod", 0.8 if op == "divx" else 1.0)
+			"div", "divx", "neg":
+				Sfx.play("mod", 0.8 if op == "divx" else (1.2 if op == "neg" else 1.0))
 			"sqrt", "log2":
 				Sfx.play("eval", 0.8 if op == "log2" else 1.0)
 			"diff":
@@ -393,6 +394,10 @@ func _reach_core() -> void:
 		return
 	if main.autotest and OS.get_cmdline_user_args().has("--leaks"):
 		print("[leak] w%d %s (%s)" % [Game.wave, f.to_text(), template])
+	if main.autotest and main.bot != null:
+		main.bot.on_leak(self)
+	if main.autotest and main.autotest_perfect and Data.COUNTERS.has(template):
+		Game.start_integrity -= leak_damage(threat)   # the counterexample reaching the core is the stage's point, not a flaw
 	var msg := ("−%d" % leak_damage(threat)) if (numeric or special != "") else ("f(%s) ≈ %s  →  −%d" % [_xe(), _compact(f.value_at(Game.x_end, tt)), leak_damage(threat)])
 	main.spawn_text(main.map.core_position() + Vector2(0, -40), msg, Color("ef5350"), 18)
 	Sfx.play("leak")

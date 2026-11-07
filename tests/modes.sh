@@ -1,29 +1,24 @@
 #!/usr/bin/env bash
 # Difficulty check per mode. For every stage:
 #   N  = normal mode, research a normal-only player can afford      → should win
-#   HF = hard mode, (almost) every research of the chapter            → should win, tight
-#   HN = hard mode, only the normal-affordable research               → should mostly lose
+#   HF = hard mode, research of a player who also clears hard        → should win, tight
+#   HN = hard mode, research of a normal-only player                  → should mostly lose
+# BOT_ARGS="--oldbot" bash tests/modes.sh  plays with the old rule-of-thumb bot
 # Usage: STAGES="1-1 1-2" bash tests/modes.sh [JOBS]
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-/c/Users/jihye/AppData/Local/Microsoft/WinGet/Packages/GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe/Godot_v4.7.2-stable_win64_console.exe}"
 JOBS="${1:-12}"
-N1="zeno,sqrt,log2,mult,sub_range,start_rho"
-F1="$N1,accel,spring,drill,div3"
-N2="$N1,divx,psqrt,diff,int,d2,divx_fast"
-F2="$F1,divx,psqrt,diff,int,int2,d2,d3,divx_fast,diff_range"
-N3="$N2,ln,merge,log_fast"
-F3="$F2,ln,merge,log_fast,merge_range"
-N4="$N3,think_cheap,diff_fast"
-F4="$F3,think_cheap,diff_fast,merge_fast"
-N5="$N4,dtl,wave,dtl_fast"
-F5="$F4,dtl,dtl2,wave,dtl_fast,wave_fast"
-N6="$N5,damp,damp_range,core_up"
-F6="$F5,damp,damp2,damp_range,core_up"
+TS="${TS:-2}"   # game speed (TS=8 bash tests/modes.sh: faster, check it matches 2 first)
+# Research per stage = what a real player owns when the stage starts (tests/sim_insight.gd walks the
+# Insight economy: normal-only player for N/HN, a player who also clears hard for HF).
+SIM_N=$("$GODOT" --headless --path . -s res://tests/sim_insight.gd -- --quiet 2>/dev/null | grep '^RS ' | tr -d '\r')
+SIM_H=$("$GODOT" --headless --path . -s res://tests/sim_insight.gd -- --hard --quiet 2>/dev/null | grep '^RSH ' | tr -d '\r')
+if [ -z "$SIM_N" ] || [ -z "$SIM_H" ]; then echo "sim_insight.gd failed"; exit 1; fi
 STAGES="${STAGES:-1-1 1-2 1-3 1-4 1-5 1-6 2-1 2-2 2-3 2-4 2-5 2-6 3-1 3-2 3-3 3-4 3-5 3-6 4-1 4-2 4-3 4-4 4-5 4-6 5-1 5-2 5-3 5-4 5-5 5-6 6-1 6-2 6-3 6-4 6-5 6-6}"
 CASES=()
 for st in $STAGES; do
-  ch="${st%%-*}"
-  eval "n=\$N$ch"; eval "f=\$F$ch"
+  n=$(echo "$SIM_N" | awk -v s="$st" '$2==s {print $3}')
+  f=$(echo "$SIM_H" | awk -v s="$st" '$2==s {print $3}')
   CASES+=("$st N $n" "$st HF $f" "$st HN $n")
 done
 run_case() {
@@ -32,13 +27,13 @@ run_case() {
   [ "$mode" != "N" ] && hard="--hard"
   local out
   out=$(timeout 900 "$GODOT" --headless --fixed-fps 60 --path . res://scenes/main.tscn -- \
-        --autotest --stage="$st" --tag="$RUN_TAG" --budget --research="$rs" --ts=2 $hard 2>&1)
+        --autotest --stage="$st" --tag="$RUN_TAG" --budget --research="$rs" --ts=$TS $hard $BOT_ARGS 2>&1)
   local line
   line=$(echo "$out" | grep "\[autotest\] done" | grep -o 'won=[a-z]* wave=[0-9]* integrity=[0-9]*')
   printf "%-5s %-3s %s\n" "$st" "$mode" "${line:-NO RESULT}"
 }
 export -f run_case
-export GODOT
+export GODOT BOT_ARGS TS
 # Stopping the script (Ctrl+C, closed shell, killed task) must also stop every Godot it started:
 # the run is a child process group; on exit its whole Windows process tree is killed.
 export RUN_TAG="lbt$$x$RANDOM"   # every Godot this run starts carries --tag=$RUN_TAG

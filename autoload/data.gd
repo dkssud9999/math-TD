@@ -32,11 +32,11 @@ var CHAPTERS: Dictionary = {
 	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 700, "integrity": 90,
 		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
 	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 800, "integrity": 120,
-		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "int", "merge"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "neg", "diff", "int", "merge"]},
 	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 900, "integrity": 70,
-		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "neg", "diff", "merge", "dtl", "wave"]},
 	6: {"name": "6장 · 연산자 순서", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 1000, "integrity": 100,
-		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
+		"towers": ["zeno", "accel", "spring", "sub", "div", "divx", "log2", "neg", "diff", "merge", "dtl", "damp"]},
 	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 1000, "integrity": 100,
 		"towers": ["zeno", "accel", "spring", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
 	8: {"name": "8장 · 주파수 영역", "sub": "D ⟷ iω", "rho": 1000, "integrity": 100,
@@ -199,10 +199,10 @@ var STAGES: Dictionary = {
 		"desc": "e³ˣ와 xe²ˣ. 로그로 끌어내릴 수도, 감쇠장으로 눌러 내릴 수도 있습니다. 로그는 계수만큼 느리고, 감쇠장은 범위 전체에 걸립니다.",
 		"mix": [["e2x", 2, 1], ["e3x", 1, 3], ["ex", 1, 1], ["xe2x", 1, 7]], "boss": [["boss_e3", 2]]},
 	"6-4": {"hard": 1.7, "chapter": 6, "name": "순서", "map": 5, "x_end": 6.0, "base": 5, "growth": 0.75, "interval": [1.2, 0.65],
-		"desc": "e²ˣ + eˣ + c. 덧셈 때문에 로그가 안 됩니다. 감쇠장을 두 번 지나면 1 + e⁻ˣ + ce⁻²ˣ: 코어(x = 6)에서는 e⁻ˣ 쪽이 거의 0입니다.",
+		"desc": "e²ˣ + eˣ + c. 덧셈 때문에 로그가 안 됩니다. 상수를 먼저 떼고 감쇠장: e²ˣ + eˣ → eˣ + 1, 다시 빼기로 eˣ, 그다음은 로그. 감쇠장을 먼저 두 번 지나면 1 + e⁻ˣ + ce⁻²ˣ: 작지만 0이 아니라서 결국 코어를 깎습니다.",
 		"mix": [["e2c", 2, 1], ["exsin", 1, 1], ["xe2x", 1, 4], ["e2x", 1, 1], ["e3x", 1, 9]], "boss": [["boss_e3", 2]]},
-	"6-5": {"hard": 1.7, "chapter": 6, "name": "감쇠 전략", "map": 4, "x_end": 6.0, "base": 8, "growth": 1.0, "interval": [0.9, 0.45],
-		"desc": "죽이지 않아도 됩니다. 감쇠장을 거듭 지난 함수는 c·e⁻ᵏˣ — 코어에서 0.5보다 작으면 무해합니다. 대신 처치 보상은 없습니다.",
+	"6-5": {"hard": 1.7, "chapter": 6, "name": "과감쇠", "map": 4, "x_end": 6.0, "base": 8, "growth": 1.0, "interval": [0.9, 0.45],
+		"desc": "감쇠장은 함수를 작게 만들 뿐 0으로 만들지는 못합니다. 코어에서 아무리 작아도 0이 아니면 1을 깎습니다 (절댓값 올림). e³ˣ는 감쇠장 두 번이면 eˣ, 그다음은 로그로. 한 번 더 지나면 e⁻ˣ: 이제는 아무도 잡을 수 없습니다. 몇 번 감쇠할지가 전부입니다.",
 		"mix": [["e2x", 2, 1], ["ex", 1, 1], ["e2c", 1, 3], ["e3x", 1, 7]], "boss": [["boss_e2", 2]]},
 	"6-6": {"hard": 1.7, "chapter": 6, "name": "신호", "map": 5, "x_end": 6.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.7],
 		"desc": "6장의 마지막 스테이지.",
@@ -280,7 +280,7 @@ var STAGES: Dictionary = {
 }
 
 # ---------------- towers ----------------
-var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "spring", "sqrt", "log2", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
+var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "spring", "sqrt", "log2", "neg", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
 
 var TOWERS: Dictionary = {
 	"sub": {
@@ -318,6 +318,11 @@ var TOWERS: Dictionary = {
 		"range": [150, 165, 185], "rate": [1.0, 1.3, 1.7], "power": [1, 1, 1], "research": "log2",
 		"desc": "2ⁿ → n. 2의 거듭제곱에만 작동합니다. 65536 → 16 → 4 → 2 → 1 → 0  (log₂ 1 = 0).",
 	},
+	"neg": {
+		"name": "반전", "glyph": ["−f", "−f", "−f"], "color": Color("ef9a9a"), "cost": 60, "upgrade": [50, 90],
+		"range": [125, 135, 150], "rate": [1.0, 1.3, 1.6], "power": [1, 1, 1], "research": "",
+		"desc": "f → −f. 부호만 바꿉니다. 로그는 −eˣ를 받지 못하지만 반전 한 번이면 eˣ, 그다음은 로그로. 저주 없이 혼자 고를 때는 음수 지수(−c·eᵃˣ)만 쏩니다.",
+	},
 	"divx": {
 		"name": "x로 나누기", "glyph": ["÷x", "÷x", "÷x"], "color": Color("80cbc4"), "cost": 120, "upgrade": [105, 175],
 		"range": [125, 135, 150], "rate": [0.8, 1.0, 1.25], "power": [1, 1, 1], "research": "divx",
@@ -351,7 +356,7 @@ var TOWERS: Dictionary = {
 	"damp": {
 		"name": "감쇠장", "glyph": ["e⁻ˣ·", "e⁻ˣ·", "e⁻ˣ·"], "color": Color("90a4ae"), "cost": 380, "upgrade": [315, 540],
 		"range": [125, 140, 155], "rate": [0.5, 0.62, 0.75], "power": [1, 1, 1], "research": "damp",
-		"desc": "범위 안의 자라는 함수에 e⁻ˣ를 곱합니다: 모든 고윳값 μ → μ − 1. e²ˣ → eˣ, eˣ sin x → sin x. 상수는 c·e⁻ˣ가 되어 코어에서 거의 무해해집니다. D와 교환되지 않습니다.",
+		"desc": "범위 안의 자라는 함수에 e⁻ˣ를 곱합니다: 모든 고윳값 μ → μ − 1. e²ˣ → eˣ, eˣ sin x → sin x. 상수는 c·e⁻ˣ로 작아지지만 0은 아닙니다 (코어 피해는 0이 아니면 최소 1). D와 교환되지 않습니다.",
 	},
 	"dtl": {
 		"name": "시간 소멸", "glyph": ["∂ₜ−1", "∂ₜ−1", "∂ₜ−1"], "color": Color("4dd0e1"), "cost": 380, "upgrade": [315, 505],
@@ -771,7 +776,7 @@ func stage_waves(sid: String) -> Array:
 		# a tower-defence curve: a gentle start, then the count keeps accelerating to the boss wave
 		var total := int(float(st["base"]) * 0.5 + float(st["growth"]) * 1.6 * (w - 1) * (0.8 + 0.09 * (w - 1)))
 		if Game.hard:   # measured per chapter: hard should need most of the optional upgrades
-			total = int(total * float(st.get("hard", {1: 1.0, 2: 1.4, 3: 2.0, 4: 2.0, 5: 1.35}.get(int(st["chapter"]), 1.4))))   # a stage may override
+			total = int(total * float(st.get("hard", {1: 1.0, 2: 1.4, 3: 2.0, 4: 2.0, 5: 1.35}.get(int(st["chapter"]), 1.4))) * hard_scale(int(st["chapter"])))   # a stage may override
 		var iv: Array = st["interval"]
 		var interval := lerpf(float(iv[0]), float(iv[1]), (w - 1) / float(WAVES_PER_STAGE - 1)) * (0.9 if Game.hard else 1.0)
 		var groups: Array = []
@@ -790,6 +795,18 @@ func stage_waves(sid: String) -> Array:
 				groups.append([st["counter"], int(ci.get("count", 1)), float(ci.get("interval", 3.0))])
 		waves.append(groups)
 	return waves
+
+
+## Hard, per chapter, on top of each stage's own factor: tuned with the test bot so that a player with
+## the research of normal-only play wins about half the time, and one who also played hard always wins.
+const HARD_SCALE := {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0}
+
+
+func hard_scale(ch: int) -> float:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--hard-scale="):   # balance tuning only (autotest)
+			return float(a.substr(13))
+	return float(HARD_SCALE.get(ch, 1.0))
 
 
 func _unique(a: Array) -> Array:

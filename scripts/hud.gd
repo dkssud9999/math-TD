@@ -29,7 +29,7 @@ var group_button: Button = null
 var btn_ult: Button
 var tip: Label = null
 var tip_poll: float = 0.0
-const GROUP_ARITH := ["sub", "div", "sqrt", "log2"]
+const GROUP_ARITH := ["sub", "div", "sqrt", "log2", "neg"]
 var credits: Label = null
 var poll: float = 0.0
 
