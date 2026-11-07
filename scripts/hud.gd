@@ -207,7 +207,7 @@ func refresh() -> void:
 	if lbl_rho == null or main == null:
 		return
 	var st: Dictionary = Data.STAGES[Game.stage_id]
-	lbl_stage.text = "%s %s" % [Game.stage_id, st["name"]]
+	lbl_stage.text = "%s %s%s" % [Game.stage_id, st["name"], "  · 하드" if Game.hard else ""]
 	lbl_rho.text = "ρ %d" % int(Game.rho)
 	lbl_rate.text = "+%d/s" % Game.rho_rate()
 	lbl_life.text = "무결성 %d" % Game.integrity
@@ -342,7 +342,7 @@ func _refresh_info() -> void:
 	_chg(btn_upgrade, "visible", show_up)
 	_chg(btn_sell, "visible", show_up)
 	_chg(btn_target, "visible", show_target)
-	var show_algo: bool = show_up and Progress.has("code")
+	var show_algo: bool = show_up and Progress.has("code") and tw.type not in ["zeno", "accel"]
 	_chg(btn_algo, "visible", show_algo)
 	if show_algo:
 		var a: String = tw.algo if tw.algo != "" else "기본 (맨 앞 적)"

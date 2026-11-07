@@ -18,6 +18,7 @@ var leaked: int = 0
 var max_combo: int = 0
 var start_integrity: int = 100
 var ult_left: int = 0
+var hard: bool = false   # chosen on the stage button; kept across reset()
 
 
 func reset() -> void:
@@ -35,6 +36,10 @@ func reset() -> void:
 	x_end = float(Data.STAGES[stage_id]["x_end"])
 	rho = float(Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("rho", Data.START_RHO))
 	integrity = int(Data.STAGES[stage_id].get("integrity", Data.CHAPTERS[int(Data.STAGES[stage_id]["chapter"])].get("integrity", Data.START_INTEGRITY)))
+	if Progress.has("core_up"):
+		integrity = int(round(integrity * 1.2))
+	if Progress.has("start_rho"):
+		rho += 30.0
 	start_integrity = integrity
 	ult_left = 2 if int(Data.STAGES[stage_id]["chapter"]) >= 2 else 0
 	changed.emit()

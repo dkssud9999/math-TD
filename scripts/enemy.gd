@@ -50,7 +50,7 @@ func setup(p_template: String, p_main, p_f: Expr, start_progress: float) -> void
 	main = p_main
 	f = p_f
 	var meta: Dictionary = Data.TEMPLATES[template]
-	base_speed = float(meta["speed"]) * (1.0 + 0.012 * (Game.wave - 1))
+	base_speed = float(meta["speed"]) * (1.0 + 0.035 * (Game.wave - 1)) * (1.1 if Game.hard else 1.0)   # later waves walk faster
 	var armor := 0   # xᵐ armour makes the slope steep; heavy enemies walk slower instead of faster
 	var probe := f.clone()
 	while armor < 8 and probe.divisible_by_x() and not probe.is_constant():
@@ -190,10 +190,11 @@ func x_now() -> float:
 
 ## Movement follows the math: speed grows with the slope |∂f/∂x|.
 func speed() -> float:
+	var slow: float = main.slow_at(global_position)   # 제논: the strongest field in range
 	if special != "":
-		return base_speed
+		return base_speed * slow
 	var slope := absf(fprime.value_at(x_now(), tt))
-	return base_speed * minf(2.5, 1.0 + 0.3 * log(1.0 + minf(slope, 1e6)))
+	return base_speed * slow * minf(2.5, 1.0 + 0.3 * log(1.0 + minf(slope, 1e6)))
 
 
 func apply_op(op: String, params: Dictionary) -> void:
@@ -360,8 +361,11 @@ func _reach_core() -> void:
 	var msg := ("−%d" % threat) if (numeric or special != "") else ("f(%s) ≈ %s  →  −%d" % [_xe(), _compact(f.value_at(Game.x_end, tt)), threat])
 	main.spawn_text(main.map.core_position() + Vector2(0, -40), msg, Color("ef5350"), 18)
 	Sfx.play("leak")
-	main.shake(6.0 + minf(14.0, threat * 0.2))
-	Game.damage(threat)
+	var dmg := threat
+	if boss and not Data.COUNTERS.has(template):
+		dmg += 12 if Game.hard else 8   # a boss at the gate is a disaster (genre convention)
+	main.shake(6.0 + minf(14.0, dmg * 0.2))
+	Game.damage(dmg)
 	queue_free()
 
 

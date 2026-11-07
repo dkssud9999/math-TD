@@ -105,7 +105,7 @@ func run(cands: Array, dry: bool = false) -> Dictionary:
 		var node = it["node"]
 		if is_instance_valid(node) and node.alive and node in cands and not node in targets:
 			targets.append(node)
-	return {"ok": true, "targets": targets, "error": "", "delay": last_steps * STEP_TIME}
+	return {"ok": true, "targets": targets, "error": "", "delay": last_steps * STEP_TIME * (0.5 if Progress.has("think_cheap") else 1.0)}
 
 
 func _set_dynamic() -> void:

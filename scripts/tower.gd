@@ -83,14 +83,14 @@ func glyph() -> String:
 
 
 func range_px() -> float:
-	return stat("range")
+	return (stat("range")) * Data.research_mult("range", type)
 
 
 func rate() -> float:
 	var r := stat("rate")
 	if type == "sub" and Progress.has("drill"):
 		r *= 1.3
-	return r
+	return r * main.haste_at(self) * Data.research_mult("rate", type)
 
 
 func upgrade_cost() -> int:
@@ -102,7 +102,7 @@ func sell_value() -> int:
 
 
 func uses_targeting() -> bool:
-	return type not in ["merge", "damp", "lpf"]
+	return type not in ["merge", "damp", "lpf", "zeno", "accel"]
 
 
 ## The second parameter some towers expose: ω for the harmonic tower, λ for the time tower.
@@ -303,6 +303,8 @@ func _process(delta: float) -> void:
 	flash = maxf(0.0, flash - delta)
 	cooldown -= delta
 	queue_redraw()
+	if type == "zeno" or type == "accel":
+		return   # a field, not a shooter: enemies ask main.slow_at() while walking
 	if cooldown > 0.0:
 		return
 	var cands: Array = []
@@ -345,7 +347,8 @@ func _process(delta: float) -> void:
 		if type == "log2":   # a bigger coefficient takes longer: log(c·e^{ax}) costs c× the time
 			var se: Array = tg.f.single_exp()
 			if not se.is_empty():
-				cooldown *= clampf(Expr.rf(se[0]), 1.0, 9.0)
+				var c: float = clampf(Expr.rf(se[0]), 1.0, 9.0)
+				cooldown *= (1.0 + c) / 2.0 if Progress.has("log_fast") else c
 		main.spawn_zap(global_position, tg.global_position, data["color"])
 		main.spawn_text(tg.global_position + Vector2(0, -32), glyph(), data["color"], 13)
 		tg.apply_op(type, op_params())
@@ -392,6 +395,14 @@ func _do_merge(cands: Array) -> bool:
 
 func describe() -> String:
 	var lines: Array = [data["desc"], ""]
+	if type == "zeno":
+		lines.append("효과: 범위 안의 적 속도 × %s" % ["½", "⅖", "⅓"][level - 1])
+		return "
+".join(lines)
+	if type == "accel":
+		lines.append("효과: 범위 안의 타워 공격 속도 × %.1f" % float(power()))
+		return "
+".join(lines)
 	if Data.cursed() and (algo == "" or not Progress.has("code")):
 		lines.append("⚠ 저주: 사거리 안의 모든 함수를 때립니다" + ("  ·  [E] 알고리즘" if Progress.has("code") else ""))
 	match type:
@@ -444,6 +455,8 @@ func _draw() -> void:
 	if main.selected_tower == self:
 		draw_circle(Vector2.ZERO, r, Color(c, 0.07))
 		draw_arc(Vector2.ZERO, r, 0, TAU, 72, Color(c, 0.55), 1.5, true)
+	if (type == "zeno" or type == "accel") and main.selected_tower != self:
+		draw_arc(Vector2.ZERO, r, 0, TAU, 64, Color(c, 0.22), 1.0, true)   # the field is always visible
 	var s := 17.0
 	draw_rect(Rect2(-s, -s, 2 * s, 2 * s), Color("0d1b2a"))
 	draw_rect(Rect2(-s, -s, 2 * s, 2 * s), c.lerp(Color.WHITE, minf(1.0, flash * 2.0)), false, 2.0 + flash * 6.0)

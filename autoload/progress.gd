@@ -17,6 +17,8 @@ var palette_open: bool = false  # chapter 2+: arithmetic towers folded into one 
 var dev_mode: bool = false      # developer tools visible in the menu, F9 = instant clear
 var dev_short: bool = false     # developer: stages play 5 of their 15 waves
 var auto_wave: bool = false     # start the next wave by itself after a short breather
+var normal_clear: Dictionary = {}   # stage id -> true once cleared on normal (its Insight is paid once)
+var hard_stars: Dictionary = {}     # stage id -> best stars on hard
 var algo_default: Dictionary = {}   # tower type -> .py file new towers of that type run
 const SCRIPT_DIR := "user://scripts"
 var _script_cache: Dictionary = {}
@@ -84,7 +86,20 @@ func research_state(node: Dictionary) -> String:
 		return "locked"
 	if node.has("stage") and int(stars.get(node["stage"], 0)) == 0:
 		return "locked"
+	if not missing_essentials(node).is_empty():
+		return "locked"
 	return "available"
+
+
+## Optional upgrades open only after every essential research of their chapter.
+func missing_essentials(node: Dictionary) -> Array:
+	var out: Array = []
+	if node.get("essential", false) or node.get("axiom", false):
+		return out
+	for id in Data.essentials_of(int(node["chapter"])):
+		if not has(id):
+			out.append(id)
+	return out
 
 
 func buy_research(node: Dictionary) -> bool:
@@ -119,16 +134,18 @@ func chapter_visible(ch: int) -> bool:
 ## Records a result; returns the Insight earned.
 ## Insight is scarce on purpose: a first clear pays 8, each new star 3 (once), a loss a small consolation
 ## (1 per 5 waves survived, at most 3). Replaying a cleared stage pays nothing new.
-func record_stage(sid: String, earned_stars: int, waves_cleared: int) -> int:
+## Insight is paid once per stage per mode: normal ¾, hard 3/2 of the chapter budget ÷ stages.
+func record_stage(sid: String, earned_stars: int, _waves_cleared: int, hard: bool = false) -> int:
 	var gain := 0
-	var prev: int = stars.get(sid, 0)
-	if earned_stars > 0 and prev == 0:
-		gain += 8
-	if earned_stars > prev:
-		gain += (earned_stars - prev) * 3
-		stars[sid] = earned_stars
-	if earned_stars == 0:
-		gain += mini(3, int(waves_cleared / 5.0))
+	if earned_stars > 0:
+		if hard:
+			if not hard_stars.has(sid):
+				gain += Data.stage_insight(sid, true)
+			hard_stars[sid] = maxi(int(hard_stars.get(sid, 0)), earned_stars)
+		elif not normal_clear.has(sid):
+			gain += Data.stage_insight(sid, false)
+			normal_clear[sid] = true
+		stars[sid] = maxi(int(stars.get(sid, 0)), earned_stars)
 	insight += gain
 	save_game()
 	return gain
@@ -139,7 +156,6 @@ func see(template: String) -> bool:
 	if seen.has(template):
 		return false
 	seen[template] = true
-	insight += 1
 	return true
 
 
@@ -157,7 +173,7 @@ func save_game() -> void:
 	f.store_string(JSON.stringify({
 		"insight": insight, "research": research, "stars": stars, "flags": flags, "seen": seen, "axioms": axioms_on,
 		"palette_open": palette_open, "dev_mode": dev_mode, "dev_short": dev_short, "auto_wave": auto_wave,
-		"algo_default": algo_default,
+		"algo_default": algo_default, "normal_clear": normal_clear, "hard_stars": hard_stars,
 	}))
 
 
@@ -180,10 +196,17 @@ func load_game() -> void:
 	dev_short = d.get("dev_short", false)
 	auto_wave = d.get("auto_wave", false)
 	algo_default = d.get("algo_default", {})
+	normal_clear = d.get("normal_clear", {})
+	hard_stars = {}
+	var hs: Dictionary = d.get("hard_stars", {})
+	for k in hs:
+		hard_stars[k] = int(hs[k])
 	stars = {}
 	var raw: Dictionary = d.get("stars", {})
 	for k in raw:
 		stars[k] = int(raw[k])
+		if stars[k] > 0 and not d.has("normal_clear"):
+			normal_clear[k] = true   # clears from before the modes existed count as normal
 
 
 # ---------- attack algorithms: real .py files in user://scripts ----------

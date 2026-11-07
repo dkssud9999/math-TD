@@ -183,7 +183,7 @@ func _stars() -> int:
 
 func _on_won() -> void:
 	var s := _stars()
-	var gain := Progress.record_stage(Game.stage_id, s, Game.wave)
+	var gain := Progress.record_stage(Game.stage_id, s, Game.wave, Game.hard)
 	if Game.stage_id == "1-6" and not Progress.flag("fake_ending"):
 		_start_credits()
 		return
@@ -210,7 +210,7 @@ func _on_lost() -> void:
 		return
 	state = "result"
 	_freeze_world()
-	var gain := Progress.record_stage(Game.stage_id, 0, maxi(0, Game.wave - 1))
+	var gain := Progress.record_stage(Game.stage_id, 0, maxi(0, Game.wave - 1), Game.hard)
 	Sfx.play("lose")
 	hud.refresh()
 	hud.show_result(false, 0, gain)
@@ -598,6 +598,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			select_build(available_towers[kc - KEY_1])
 
 
+## 제논 towers: the strongest slow factor covering this point (1.0 = no field).
+func slow_at(p: Vector2) -> float:
+	var f := 1.0
+	if state == "credits":
+		return f
+	for tw in occupied.values():
+		if tw.type == "zeno" and tw.global_position.distance_to(p) <= tw.range_px():
+			f = minf(f, float(tw.power()))
+	return f
+
+
+## 가속도 towers: the strongest rate boost covering this tower (1.0 = none; never boosts itself).
+func haste_at(tw) -> float:
+	var f := 1.0
+	for a in occupied.values():
+		if a.type == "accel" and a != tw and a.global_position.distance_to(tw.global_position) <= a.range_px():
+			f = maxf(f, float(a.power()))
+	return f
+
+
 ## The attack-algorithm editor (research 「알고리즘」). Opens on the selected tower, pauses the game.
 func open_code_editor() -> void:
 	if not Progress.has("code"):
@@ -744,6 +764,8 @@ func _parse_autotest_args() -> void:
 			Progress.current_stage = a.substr(8)
 		elif a == "--budget":
 			autotest_budget = true
+		elif a == "--hard":
+			Game.hard = true
 		elif a == "--no-algo":
 			autotest_no_algo = true
 		elif a.begins_with("--shot="):
@@ -1065,6 +1087,11 @@ func _autotest_best_tower() -> String:
 				best = "div"
 			elif nd < 5 or nm < 3:
 				best = "diff" if nd <= nm * 2 else "merge"
+	# a few 제논 fields once the basics stand (about one in six towers)
+	if available_towers.has("zeno") and occupied.size() >= 4 and int(owned.get("zeno", 0)) * 6 < occupied.size():
+		best = "zeno"
+	elif available_towers.has("accel") and occupied.size() >= 8 and int(owned.get("accel", 0)) * 8 < occupied.size():
+		best = "accel"
 	if available_towers.has("int") and not Data.cursed() and int(owned.get("int", 0)) < 2 and occupied.size() >= 6 and occupied.size() % 5 == 0:
 		best = "int"
 	return best

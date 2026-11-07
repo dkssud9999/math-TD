@@ -26,25 +26,25 @@ var MAPS: Array = [
 # ---------------- chapters & stages ----------------
 var CHAPTERS: Dictionary = {
 	1: {"name": "1장 · 산술", "sub": "수 방어전", "rho": 150, "integrity": 100,
-		"towers": ["sub", "div", "sqrt", "log2"]},
+		"towers": ["zeno", "accel", "sub", "div", "sqrt", "log2"]},
 	2: {"name": "2장 · 변화율", "sub": "f(x) = x", "rho": 200, "integrity": 40,
-		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
+		"towers": ["zeno", "accel", "sub", "div", "divx", "sqrt", "log2", "diff", "int"]},
 	3: {"name": "3장 · 로그", "sub": "log eˣ = x", "rho": 320, "integrity": 90,
-		"towers": ["sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
+		"towers": ["zeno", "accel", "sub", "div", "divx", "sqrt", "log2", "diff", "int", "merge"]},
 	4: {"name": "4장 · 프로그래밍", "sub": "attack(enemies[0])", "rho": 400, "integrity": 120,
-		"towers": ["sub", "div", "divx", "log2", "diff", "int", "merge"]},
-	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 400, "integrity": 100,
-		"towers": ["sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
+		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "int", "merge"]},
+	5: {"name": "5장 · 시공간", "sub": "f(x, t)", "rho": 400, "integrity": 70,
+		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "wave"]},
 	6: {"name": "6장 · 연산자 순서", "sub": "eˣ · D · e⁻ˣ = D − 1", "rho": 420, "integrity": 100,
-		"towers": ["sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
+		"towers": ["zeno", "accel", "sub", "div", "divx", "log2", "diff", "merge", "dtl", "damp"]},
 	7: {"name": "7장 · 시공간", "sub": "□ = ∂ₜ² − ∂ₓ²", "rho": 380, "integrity": 100,
-		"towers": ["sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
+		"towers": ["zeno", "accel", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave"]},
 	8: {"name": "8장 · 주파수 영역", "sub": "D ⟷ iω", "rho": 380, "integrity": 100,
-		"towers": ["sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "lpf"]},
+		"towers": ["zeno", "accel", "sub", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "lpf"]},
 	9: {"name": "9장 · 근사", "sub": "εₙ₊₁ ≈ C · εₙ²", "rho": 340, "integrity": 90,
-		"towers": ["sub", "div", "divx", "diff", "dm1", "harm", "merge", "lpf", "newton", "bisect"]},
+		"towers": ["zeno", "accel", "sub", "div", "divx", "diff", "dm1", "harm", "merge", "lpf", "newton", "bisect"]},
 	10: {"name": "10장 · 공리", "sub": "LIMIT BREAK", "rho": 440, "integrity": 120,
-		"towers": ["sub", "diff", "dm1", "harm", "merge", "damp", "dtl", "lpf", "newton", "bisect"]},
+		"towers": ["zeno", "accel", "sub", "diff", "dm1", "harm", "merge", "damp", "dtl", "lpf", "newton", "bisect"]},
 }
 
 var STAGE_ORDER: Array = [
@@ -99,22 +99,22 @@ x에 대한 연산자로는 이 적의 공간 쪽을 끝낼 수 없습니다. �
 
 # mix entries: [template, weight, first_wave]
 var STAGES: Dictionary = {
-	"1-1": {"chapter": 1, "name": "자연수", "map": 0, "x_end": 3.0, "base": 8, "growth": 0.9, "interval": [1.0, 0.55],
+	"1-1": {"chapter": 1, "name": "자연수", "map": 0, "x_end": 3.0, "base": 9, "growth": 1.3, "interval": [1.0, 0.55],
 		"desc": "적의 체력은 그 숫자 자체입니다. 0으로 만들면 사라집니다. 코어에 닿으면 자릿수만큼 무결성을 깎습니다 (7은 1, 100은 3).",
 		"mix": [["n1", 1, 1], ["n2", 1, 6]], "boss": [["n100", 2]]},
-	"1-2": {"chapter": 1, "name": "짝수와 홀수", "map": 1, "x_end": 3.0, "base": 9, "growth": 1.0, "interval": [0.95, 0.5],
+	"1-2": {"chapter": 1, "name": "짝수와 홀수", "map": 1, "x_end": 3.0, "base": 10, "growth": 1.3, "interval": [0.95, 0.5],
 		"desc": "나누기는 나누어떨어지는 수만 절반으로 만듭니다. 짝수는 나누고, 홀수는 빼세요. 1000 = 2³ · 125.",
 		"mix": [["n1", 1, 1], ["n2", 1, 1], ["even", 1, 4]], "boss": [["k1000", 2]]},
-	"1-3": {"chapter": 1, "name": "완전제곱수", "map": 2, "x_end": 3.0, "base": 9, "growth": 1.0, "interval": [0.9, 0.5],
+	"1-3": {"chapter": 1, "name": "완전제곱수", "map": 2, "x_end": 3.0, "base": 9, "growth": 1.1, "interval": [0.9, 0.5],
 		"desc": "10000 = 100². 제곱근을 연구하면 완전제곱수를 단번에 줄일 수 있습니다. √7은 무리수라 정확히 다룰 수 없습니다.",
 		"mix": [["n2", 1, 1], ["sq", 2, 1], ["even", 1, 6]], "boss": [["k10000", 2]]},
-	"1-4": {"chapter": 1, "name": "2의 거듭제곱", "map": 3, "x_end": 3.0, "base": 8, "growth": 1.0, "interval": [0.9, 0.5],
+	"1-4": {"chapter": 1, "name": "2의 거듭제곱", "map": 3, "x_end": 3.0, "base": 8, "growth": 0.85, "interval": [0.9, 0.5],
 		"desc": "65536 = 2¹⁶. 이진 로그는 2의 거듭제곱에만 정확합니다. 경로가 짧습니다.",
 		"mix": [["p2", 2, 1], ["sq", 1, 3], ["n2", 1, 1]], "boss": [["k65536", 2]]},
-	"1-5": {"chapter": 1, "name": "소수", "map": 4, "x_end": 3.0, "base": 9, "growth": 1.0, "interval": [0.85, 0.45],
+	"1-5": {"chapter": 1, "name": "소수", "map": 4, "x_end": 3.0, "base": 9, "growth": 0.85, "interval": [0.85, 0.45],
 		"desc": "소수는 제곱수도, 2의 거듭제곱도 아닙니다. 빠르고, 지름길이 없습니다.",
 		"mix": [["prime", 2, 1], ["n2", 1, 1], ["sq", 1, 5], ["p2", 1, 8]], "boss": [["bigprime", 3]]},
-	"1-6": {"chapter": 1, "name": "큰 수", "map": 5, "x_end": 3.0, "base": 9, "growth": 1.05, "interval": [0.85, 0.45],
+	"1-6": {"chapter": 1, "name": "큰 수", "map": 5, "x_end": 3.0, "base": 9, "growth": 0.9, "interval": [0.85, 0.45],
 		"desc": "지금까지 배운 모든 것. 마지막 스테이지입니다.",
 		"mix": [["n2", 1, 1], ["sq", 1, 1], ["p2", 1, 1], ["prime", 1, 3], ["even", 1, 5], ["big", 1, 4]], "boss": [["k10_6", 1], ["k2_32", 1]]},
 	"2-1": {"chapter": 2, "name": "변수", "map": 0, "x_end": 2.0, "flag": "fake_ending", "base": 8, "growth": 0.9, "interval": [1.0, 0.55],
@@ -123,7 +123,7 @@ var STAGES: Dictionary = {
 	"2-2": {"chapter": 2, "name": "공통인수", "map": 1, "x_end": 2.0, "base": 5, "growth": 0.8, "interval": [1.15, 0.65],
 		"desc": "2x + 4 = 2(x + 2). 나누기 ÷2로 공통인수를 걷어내고, 빼기로 상수를, ÷x로 x를. 미분은 아직 없습니다.",
 		"mix": [["kx", 2, 1], ["xc", 1, 1], ["xbx", 1, 3], ["n1", 1, 1], ["kxx", 1, 6]], "boss": [["boss_alg2", 2]]},
-	"2-3": {"chapter": 2, "name": "물량", "map": 2, "x_end": 2.0, "base": 6, "growth": 0.75, "interval": [1.15, 0.65],
+	"2-3": {"chapter": 2, "name": "물량", "map": 2, "x_end": 2.0, "base": 5, "growth": 0.6, "interval": [1.15, 0.65],
 		"desc": "많고 다양합니다. 상수는 빼기로, 공통인수는 ÷2로, x는 ÷x로. 어떤 순서로 경로에 늘어놓을지가 전부입니다.",
 		"mix": [["xc", 2, 1], ["n1", 1, 1], ["kx", 1, 2], ["xbx", 1, 5], ["sqp", 1, 9]], "boss": [["boss_alg2", 2]]},
 	"2-4": {"chapter": 2, "name": "완전제곱", "map": 2, "x_end": 2.0, "base": 5, "growth": 0.85, "interval": [1.2, 0.65],
@@ -134,20 +134,20 @@ var STAGES: Dictionary = {
 		"mix": [["n1", 2, 1], ["xc", 1, 1], ["quad", 1, 2], ["cubic", 1, 5], ["sqp", 1, 3], ["quart", 1, 9]], "boss": [["boss_x6", 2]]},
 	"2-6": {"chapter": 2, "name": "멈추지 않는 것", "map": 5, "x_end": 2.0, "base": 5, "growth": 0.65, "interval": [1.2, 0.7],
 		"desc": "2장의 마지막 스테이지. 모든 다항식은 유한 번 미분하면 0이 됩니다. 모든 함수가 그럴까요?",
-		"mix": [["quad", 1, 1], ["n1", 1, 1], ["cubic", 1, 3], ["quart", 1, 6], ["quint", 1, 10]], "boss": [["boss_x6", 1]], "counter": "exp_counter"},
-	"3-1": {"chapter": 3, "name": "자연로그", "map": 0, "x_end": 3.0, "flag": "met_exp", "base": 5, "growth": 0.85, "interval": [1.1, 0.6],
+		"mix": [["quad", 1, 1], ["n1", 1, 1], ["cubic", 1, 2], ["quart", 1, 4], ["quint", 1, 6]], "boss": [["boss_x6", 1]], "counter": "exp_counter"},
+	"3-1": {"chapter": 3, "name": "자연로그", "map": 0, "x_end": 3.0, "flag": "met_exp", "base": 6, "growth": 1.0, "interval": [1.1, 0.6],
 		"desc": "로그 타워가 이제 함수에도 작동합니다: log eˣ = x, log e²ˣ = 2x. 그다음은 2장에서 하던 대로 ÷x와 빼기. 계수가 붙은 3eˣ도 되지만 세 배 오래 걸립니다. 먼저 ÷3을 할 수 있다면?",
 		"mix": [["ex", 2, 1], ["exs", 1, 1], ["n1", 1, 1], ["e2x", 1, 5], ["exc", 1, 8]], "boss": [["boss_ex1", 2]]},
 	"3-2": {"chapter": 3, "name": "순서", "map": 1, "x_end": 3.0, "base": 5, "growth": 0.9, "interval": [1.0, 0.55],
 		"desc": "eˣ + 4에는 로그가 듣지 않습니다. 상수부터 떼야 합니다. xeˣ도 그대로는 안 됩니다: ÷x가 먼저. 어떤 타워를 앞에 둘지가 곧 풀이 순서입니다.",
 		"mix": [["exc", 2, 1], ["xex", 1, 1], ["ex", 1, 1], ["lin", 1, 4], ["e2x", 1, 7]], "boss": [["boss_chain", 2]]},
-	"3-3": {"chapter": 3, "name": "섞인 몸", "map": 2, "x_end": 3.0, "base": 5, "growth": 0.9, "interval": [1.0, 0.6],
+	"3-3": {"chapter": 3, "name": "섞인 몸", "map": 2, "x_end": 3.0, "base": 6, "growth": 1.05, "interval": [1.0, 0.6],
 		"desc": "x + eˣ는 로그도 ÷x도 안 됩니다. D를 두 번 쏘면 다항식 쪽이 먼저 사라집니다: x + eˣ → 1 + eˣ → eˣ.",
 		"mix": [["xpe", 2, 1], ["pex", 1, 1], ["exc", 1, 3], ["quad", 1, 5], ["xex", 1, 9]], "boss": [["mix3b", 2]]},
 	"3-4": {"chapter": 3, "name": "선형결합", "map": 4, "x_end": 3.0, "base": 7, "growth": 0.9, "interval": [0.7, 0.35],
 		"desc": "Σ 타워는 범위 안의 함수들을 하나로 더합니다. eˣ 여섯이 6eˣ 하나가 되고, ÷2 ÷3이면 다시 eˣ. 3eˣ와 −3eˣ는 더하는 순간 0입니다.",
 		"mix": [["ex", 3, 1], ["pm_ex", 1, 1], ["exs", 1, 3], ["n1", 1, 1], ["xex", 1, 8]], "boss": [["boss_ex1", 2]]},
-	"3-5": {"chapter": 3, "name": "대군", "map": 3, "x_end": 3.0, "base": 6, "growth": 0.85, "interval": [0.85, 0.45],
+	"3-5": {"chapter": 3, "name": "대군", "map": 3, "x_end": 3.0, "base": 5, "growth": 0.7, "interval": [0.85, 0.45],
 		"desc": "많고 빠릅니다. 하나씩 풀면 늦습니다. 합칠 것인가, 나눠 풀 것인가.",
 		"mix": [["ex", 3, 1], ["exc", 1, 1], ["pm_ex", 1, 3], ["xpe", 1, 5], ["e2x", 1, 9]], "boss": [["boss_chain", 2]]},
 	"3-6": {"chapter": 3, "name": "순환", "map": 5, "x_end": 3.0, "base": 7, "growth": 1.0, "interval": [0.9, 0.45],
@@ -156,10 +156,10 @@ var STAGES: Dictionary = {
 	"4-1": {"chapter": 4, "name": "코딩 입문", "map": 0, "x_end": 4.0, "flag": "met_sin", "integrity": 150, "base": 4, "growth": 0.6, "interval": [1.8, 1.0],
 		"desc": "sin x는 D를 두 번 맞으면 −sin x가 됩니다. sin x와 −sin x를 Σ로 더하면 0. 혼자서는 못 하고, 타워 둘이 손을 맞춰야 합니다.\n\n따라 해 보세요 (적이 적고 느린 연습 스테이지입니다):\n1. D 타워 하나와 Σ 타워 하나를 짓고, D 타워를 선택한 뒤 E.\n2. 편집기 「가이드」를 1번부터 읽고, 5번 예시(D용)를 새 파일로 열어 D 타워에 붙이기.\n3. 6번 예시(Σ용)를 Σ 타워에 붙이기. 「테스트 실행」으로 확인.\n4. Esc로 돌아와 웨이브 시작. 타워 위 </> 표시가 알고리즘이 돌고 있다는 뜻입니다.",
 		"mix": [["s1", 2, 1], ["n1", 1, 1], ["ex", 1, 3]], "boss": [["boss_sc", 2]]},
-	"4-2": {"chapter": 4, "name": "위상", "map": 1, "x_end": 4.0, "base": 5, "growth": 0.8, "interval": [1.2, 0.65],
+	"4-2": {"chapter": 4, "name": "위상", "map": 1, "x_end": 4.0, "base": 5, "growth": 0.95, "interval": [1.2, 0.65],
 		"desc": "cos x에 D를 한 번 쏘면 −sin x. 옆에 sin x가 있다면 그걸로 충분합니다. 누가 누구의 짝인지 읽는 코드가 필요합니다.",
 		"mix": [["s1", 2, 1], ["c1", 2, 1], ["s1c", 1, 4], ["exc", 1, 7]], "boss": [["boss_sc", 2]]},
-	"4-3": {"chapter": 4, "name": "생성", "map": 2, "x_end": 4.0, "base": 5, "growth": 0.8, "interval": [1.2, 0.65],
+	"4-3": {"chapter": 4, "name": "생성", "map": 2, "x_end": 4.0, "base": 5, "growth": 0.9, "interval": [1.2, 0.65],
 		"desc": "생성하는 적은 몇 초마다 자기 도함수를 낳습니다: sin → cos → −sin → … 부모와 자손이 서로의 짝입니다.",
 		"mix": [["gen_sin", 1, 1], ["s1", 2, 1], ["c1", 1, 3], ["xpe", 1, 6]], "boss": [["boss_sc", 2]]},
 	"4-4": {"chapter": 4, "name": "진동수", "map": 3, "x_end": 4.0, "integrity": 220, "base": 4, "growth": 0.7, "interval": [1.4, 0.8],
@@ -171,34 +171,34 @@ var STAGES: Dictionary = {
 	"4-6": {"chapter": 4, "name": "시간", "map": 5, "x_end": 4.0, "base": 6, "growth": 0.9, "interval": [1.0, 0.5],
 		"desc": "4장의 마지막 스테이지. 경로의 변수는 x입니다. 다른 변수는 없을까요?",
 		"mix": [["s1", 2, 1], ["c1", 1, 1], ["tse", 1, 4], ["xpe", 1, 8]], "boss": [["boss_sc", 2]], "counter": "tx_counter"},
-	"5-1": {"chapter": 5, "name": "곱 분리", "map": 0, "x_end": 5.0, "flag": "met_time", "base": 6, "growth": 0.8, "interval": [1.2, 0.65],
+	"5-1": {"chapter": 5, "name": "곱 분리", "map": 0, "x_end": 5.0, "flag": "met_time", "base": 8, "growth": 1.0, "interval": [1.2, 0.65],
 		"desc": "이제 적에는 시간 t가 있습니다: 필드에 오래 머물수록 eᵗ배로 커집니다. 시간 소멸 ∂ₜ − 1은 g(x)·eᵗ를 x 쪽이 무엇이든 통째로 0으로 보냅니다. 대신 t가 없는 적에 쏘면 부호만 뒤집힙니다 (저주 주의).",
 		"mix": [["sep1", 2, 1], ["tsin", 1, 1], ["sepx", 1, 3], ["ex", 1, 6]], "boss": [["boss_sep", 2]]},
-	"5-2": {"chapter": 5, "name": "성장률", "map": 1, "x_end": 5.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.65],
+	"5-2": {"chapter": 5, "name": "성장률", "map": 1, "x_end": 5.0, "base": 8, "growth": 1.1, "interval": [1.2, 0.65],
 		"desc": "e²ᵗ는 ∂ₜ − 1로는 안 죽고 −1배만 됩니다. λ를 2로 맞춰야 합니다 [W] 또는 코드의 set_param(2). 적마다 다른 λ를 고르는 코드를 짜 보세요.",
 		"mix": [["sep2", 2, 1], ["sep1", 1, 1], ["tsin", 1, 4], ["sepx", 1, 6]], "boss": [["boss_sep2", 2]]},
-	"5-3": {"chapter": 5, "name": "변수 분리", "map": 2, "x_end": 5.0, "base": 5, "growth": 0.7, "interval": [1.35, 0.8],
+	"5-3": {"chapter": 5, "name": "변수 분리", "map": 2, "x_end": 5.0, "base": 5, "growth": 0.85, "interval": [1.35, 0.8],
 		"desc": "x² + x·eᵗ: 시간 쪽 항과 공간 쪽 항이 더해져 있습니다. ∂ₜ − 1과 D를 어떤 순서로 쏘느냐에 따라 남는 것이 다릅니다.",
 		"mix": [["tsum", 2, 1], ["sep1", 1, 1], ["tsum2", 1, 4], ["sep2", 1, 8]], "boss": [["boss_sep", 2]]},
-	"5-4": {"chapter": 5, "name": "진행파", "map": 3, "x_end": 5.0, "base": 5, "growth": 0.8, "interval": [1.3, 0.7],
+	"5-4": {"chapter": 5, "name": "진행파", "map": 3, "x_end": 5.0, "base": 7, "growth": 1.05, "interval": [1.3, 0.7],
 		"desc": "(x − t)²는 시간이 흐르면 모양 그대로 움직이는 파동입니다. ∂ₜ로도 D로도 끝이 안 납니다. 연구 「달랑베르 해」: □ = ∂ₜ² − ∂ₓ²는 모든 진행파를 한 방에.",
 		"mix": [["wave2", 2, 1], ["wave3", 1, 3], ["wave_e", 1, 5], ["sep1", 1, 1]], "boss": [["boss_wave", 2]]},
-	"5-5": {"chapter": 5, "name": "반대 방향", "map": 4, "x_end": 5.0, "base": 6, "growth": 0.85, "interval": [1.2, 0.65],
+	"5-5": {"chapter": 5, "name": "반대 방향", "map": 4, "x_end": 5.0, "base": 7, "growth": 1.0, "interval": [1.2, 0.65],
 		"desc": "(x + t)²는 반대로 가는 파동. □는 양쪽 다 지웁니다. 하지만 □는 비싸고 느립니다: 정말 파동인 적에게만 쓰도록.",
 		"mix": [["wave_l", 2, 1], ["wave2", 1, 1], ["wave_mix", 1, 4], ["sep2", 1, 7]], "boss": [["boss_wave", 2]]},
-	"5-6": {"chapter": 5, "name": "얽힘", "map": 5, "x_end": 5.0, "base": 6, "growth": 0.8, "interval": [1.2, 0.65],
+	"5-6": {"chapter": 5, "name": "얽힘", "map": 5, "x_end": 5.0, "base": 8, "growth": 1.0, "interval": [1.2, 0.65],
 		"desc": "5장의 마지막 스테이지. 시간을 떼어 내면 남는 건 x의 함수입니다. 그 x의 함수를 늘 지울 수 있을까요?",
 		"mix": [["sep1", 1, 1], ["tsin", 1, 1], ["wave2", 1, 4], ["sep2", 1, 7]], "boss": [["boss_sep", 1]], "counter": "exsin_counter"},
 	"6-1": {"chapter": 6, "name": "켤레", "map": 4, "x_end": 6.0, "flag": "met_exp2", "base": 6, "growth": 0.8, "interval": [1.4, 0.75],
 		"desc": "감쇠장 e⁻ˣ·는 모든 함수에 e⁻ˣ를 곱합니다: eˣ sin x → sin x. 그러면 4장의 D + Σ로 끝낼 수 있습니다. 하지만 저주 아래의 감쇠장은 상수 1도 e⁻ˣ로 바꿉니다. 누구에게 걸지 코드로 정하세요.",
 		"mix": [["exsin", 2, 1], ["ex", 1, 1], ["s1", 2, 3], ["e2x", 1, 6]], "boss": [["boss_e2", 2]]},
-	"6-2": {"chapter": 6, "name": "교환자", "map": 1, "x_end": 6.0, "base": 6, "growth": 0.85, "interval": [1.3, 0.7],
+	"6-2": {"chapter": 6, "name": "교환자", "map": 1, "x_end": 6.0, "base": 5, "growth": 0.7, "interval": [1.3, 0.7],
 		"desc": "감쇠장 다음에 D를 쏘는 것과 D 다음에 감쇠장을 쏘는 것은 다릅니다: [D, e⁻ˣ] = −e⁻ˣ. eˣ sin x에 D를 먼저 쏘면 eˣ(sin x + cos x) — 짝 맞추기가 어려워집니다.",
 		"mix": [["exsin", 2, 1], ["ex", 1, 1], ["e2x", 1, 3], ["s1", 2, 5]], "boss": [["boss_e2", 2]]},
-	"6-3": {"chapter": 6, "name": "이중 감쇠", "map": 2, "x_end": 6.0, "base": 6, "growth": 0.85, "interval": [1.3, 0.7],
+	"6-3": {"chapter": 6, "name": "이중 감쇠", "map": 2, "x_end": 6.0, "base": 8, "growth": 1.05, "interval": [1.3, 0.7],
 		"desc": "e³ˣ와 xe²ˣ. 로그로 끌어내릴 수도, 감쇠장으로 눌러 내릴 수도 있습니다. 로그는 계수만큼 느리고, 감쇠장은 범위 전체에 걸립니다.",
 		"mix": [["e2x", 2, 1], ["e3x", 1, 3], ["ex", 1, 1], ["xe2x", 1, 7]], "boss": [["boss_e3", 2]]},
-	"6-4": {"chapter": 6, "name": "순서", "map": 5, "x_end": 6.0, "base": 6, "growth": 0.9, "interval": [1.2, 0.65],
+	"6-4": {"chapter": 6, "name": "순서", "map": 5, "x_end": 6.0, "base": 5, "growth": 0.75, "interval": [1.2, 0.65],
 		"desc": "e²ˣ + eˣ + c. 덧셈 때문에 로그가 안 됩니다. 감쇠장을 두 번 지나면 1 + e⁻ˣ + ce⁻²ˣ: 코어(x = 6)에서는 e⁻ˣ 쪽이 거의 0입니다.",
 		"mix": [["e2c", 2, 1], ["exsin", 1, 1], ["xe2x", 1, 4], ["e2x", 1, 1], ["e3x", 1, 9]], "boss": [["boss_e3", 2]]},
 	"6-5": {"chapter": 6, "name": "감쇠 전략", "map": 4, "x_end": 6.0, "base": 8, "growth": 1.0, "interval": [0.9, 0.45],
@@ -280,7 +280,7 @@ var STAGES: Dictionary = {
 }
 
 # ---------------- towers ----------------
-var TOWER_ORDER: Array = ["sub", "div", "sqrt", "log2", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
+var TOWER_ORDER: Array = ["sub", "div", "zeno", "accel", "sqrt", "log2", "divx", "diff", "int", "dm1", "harm", "merge", "damp", "dtl", "wave", "lpf", "newton", "bisect"]
 
 var TOWERS: Dictionary = {
 	"sub": {
@@ -297,6 +297,16 @@ var TOWERS: Dictionary = {
 		"name": "제곱근", "glyph": ["√", "√", "√"], "color": Color("ffd166"), "cost": 90, "upgrade": [80, 130],
 		"range": [150, 165, 185], "rate": [1.1, 1.4, 1.8], "power": [1, 1, 1], "research": "sqrt",
 		"desc": "n² → n. 완전제곱수에만 작동합니다 (√7은 무리수라 쏘지 않습니다). 10000 → 100 → 10.",
+	},
+	"accel": {
+		"name": "가속도", "glyph": ["a", "a", "a"], "color": Color("ffcc80"), "cost": 90, "upgrade": [90, 140],
+		"range": [95, 110, 125], "rate": [1.0, 1.0, 1.0], "power": [1.3, 1.5, 1.7], "research": "accel",
+		"desc": "a = d²x/dt². 범위 안의 다른 타워가 빨리 쏩니다 (×1.3, 강화하면 ×1.5, ×1.7). 여러 개가 겹치면 가장 강한 하나만 적용됩니다. 스스로는 공격하지 않습니다.",
+	},
+	"zeno": {
+		"name": "제논", "glyph": ["½v", "⅖v", "⅓v"], "color": Color("90caf9"), "cost": 70, "upgrade": [70, 110],
+		"range": [105, 120, 135], "rate": [1.0, 1.0, 1.0], "power": [0.5, 0.4, 0.33], "research": "zeno",
+		"desc": "아킬레스와 거북이: 범위 안의 적은 속도가 절반으로 떨어집니다 (강화하면 ⅖, ⅓). 식은 건드리지 않습니다. 여러 개가 겹치면 가장 강한 하나만 적용됩니다.",
 	},
 	"log2": {
 		"name": "이진 로그", "glyph": ["log₂", "log₂", "log₂"], "color": Color("ba68c8"), "cost": 100, "upgrade": [90, 140],
@@ -367,7 +377,11 @@ var TOWERS: Dictionary = {
 
 # ---------------- research tree ----------------
 var RESEARCH: Array = [
-	{"id": "sqrt", "chapter": 1, "name": "제곱근", "cost": 10, "req": [],
+	{"id": "zeno", "chapter": 1, "name": "제논의 역설", "cost": 8, "req": [],
+		"desc": "제논 타워 해금. 범위 안의 적이 반만큼만 나아갑니다. 아킬레스는 거북이를 영영 따라잡지 못한다고 했던가요?"},
+	{"id": "accel", "chapter": 1, "name": "가속도", "cost": 12, "req": ["zeno"],
+		"desc": "가속도 타워 해금. 주변 타워의 공격 속도를 올립니다. 그 칸에 연산 타워를 하나 더 놓을지, 있는 타워를 빠르게 할지."},
+	{"id": "sqrt", "essential": true, "chapter": 1, "name": "제곱근", "cost": 10, "req": [],
 		"desc": "√ 타워 해금. n² → n. 완전제곱수에만 정확합니다."},
 	{"id": "psqrt", "chapter": 2, "name": "완전제곱식", "cost": 12, "req": ["divx", "sqrt"], "stage": "2-2",
 		"desc": "√가 다항식에도 작동합니다: √(x² + 6x + 9) = x + 3. 완전제곱식일 때만 정확합니다."},
@@ -375,13 +389,13 @@ var RESEARCH: Array = [
 		"desc": "수입 공식의 c₂ 해금: dρ/dt = c₁ · c₂"},
 	{"id": "drill", "chapter": 1, "name": "반복 빼기", "cost": 14, "req": [],
 		"desc": "빼기 타워 공격 속도 +30%."},
-	{"id": "log2", "chapter": 1, "name": "이진 로그", "cost": 18, "req": ["sqrt"],
+	{"id": "log2", "essential": true, "chapter": 1, "name": "이진 로그", "cost": 18, "req": ["sqrt"],
 		"desc": "log₂ 타워 해금. 2ⁿ → n, 그리고 log₂ 1 = 0."},
 	{"id": "div3", "chapter": 1, "name": "약수의 감각", "cost": 22, "req": ["mult"],
 		"desc": "나누기 타워 3레벨이 ÷3이 됩니다. 3의 배수를 단번에 3분의 1로."},
-	{"id": "divx", "chapter": 2, "name": "x로 나누기", "cost": 8, "req": [], "flag": "met_x",
+	{"id": "divx", "essential": true, "chapter": 2, "name": "x로 나누기", "cost": 8, "req": [], "flag": "met_x",
 		"desc": "÷x 타워 해금. x를 x로 나누면 1, 1은 빼기로 0. 상수항을 먼저 지워야 나누어떨어집니다."},
-	{"id": "diff", "chapter": 2, "name": "미분", "cost": 45, "req": ["divx"], "stage": "2-4",
+	{"id": "diff", "essential": true, "chapter": 2, "name": "미분", "cost": 45, "req": ["divx"], "stage": "2-4",
 		"desc": "d/dx 타워 해금. (c)′ = 0 — 상수를 빼기 없이 한 방에. (xⁿ)′ = nxⁿ⁻¹. 값이 아니라 변화를 다루는 도구."},
 	{"id": "int", "chapter": 2, "name": "적분", "cost": 30, "req": ["diff"],
 		"desc": "∫ 타워 해금. 적을 키우는 대신 ∫₀¹ f dx만큼 ρ를 수확합니다. 미적분학의 기본 정리: 미분 한 방이면 원래대로."},
@@ -391,8 +405,34 @@ var RESEARCH: Array = [
 		"desc": "미분 타워 3레벨이 d³/dx³가 됩니다."},
 	{"id": "int2", "chapter": 2, "name": "정적분", "cost": 45, "req": ["int"], "stage": "2-5",
 		"desc": "적분 수확 ×1.5. 넓이를 더 정확하게 셉니다."},
-	{"id": "ln", "chapter": 3, "name": "자연로그", "cost": 15, "req": [], "flag": "met_exp",
+	{"id": "ln", "essential": true, "chapter": 3, "name": "자연로그", "cost": 15, "req": [], "flag": "met_exp",
 		"desc": "로그 타워가 함수에도 작동합니다: log(c·eᵃˣ) = ax + ln c. 지수함수 하나짜리에만, 그리고 계수 c가 클수록 c배 오래 걸립니다. 상수항이 붙어 있거나(eˣ + 3) 다른 항과 더해져 있으면(x + eˣ) 먼저 떼어 내야 합니다."},
+	{"id": "sub_range", "chapter": 1, "name": "넓은 빼기", "cost": 15, "req": [], "mod": {"kind": "range", "tower": "sub", "mult": 1.2},
+		"desc": "빼기 타워 사거리 +20%."},
+	{"id": "start_rho", "chapter": 1, "name": "종잣돈", "cost": 18, "req": [],
+		"desc": "모든 스테이지의 시작 ρ +30."},
+	{"id": "divx_fast", "chapter": 2, "name": "인수분해 감각", "cost": 25, "req": [], "mod": {"kind": "rate", "tower": "divx", "mult": 1.3},
+		"desc": "÷x 타워 공격 속도 +30%."},
+	{"id": "diff_range", "chapter": 2, "name": "접선의 시야", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "diff", "mult": 1.15},
+		"desc": "미분 타워 사거리 +15%."},
+	{"id": "log_fast", "chapter": 3, "name": "로그 법칙", "cost": 30, "req": [],
+		"desc": "log(c·eᵃˣ)의 계수 지연이 절반으로: c배 대신 (1 + c)/2배."},
+	{"id": "merge_range", "chapter": 3, "name": "넓은 결합", "cost": 30, "req": [], "mod": {"kind": "range", "tower": "merge", "mult": 1.2},
+		"desc": "Σ 타워 사거리 +20%."},
+	{"id": "think_cheap", "chapter": 4, "name": "컴파일러", "cost": 30, "req": [],
+		"desc": "알고리즘의 계산 비용이 절반으로 (1,000단계 = 0.125초)."},
+	{"id": "diff_fast", "chapter": 4, "name": "빠른 미분", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "diff", "mult": 1.25},
+		"desc": "미분 타워 공격 속도 +25%."},
+	{"id": "merge_fast", "chapter": 4, "name": "빠른 결합", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "merge", "mult": 1.3},
+		"desc": "Σ 타워 공격 속도 +30%."},
+	{"id": "dtl_fast", "chapter": 5, "name": "빠른 시간", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "dtl", "mult": 1.3},
+		"desc": "시간 소멸 타워 공격 속도 +30%."},
+	{"id": "wave_fast", "chapter": 5, "name": "빠른 파동", "cost": 35, "req": [], "mod": {"kind": "rate", "tower": "wave", "mult": 1.3},
+		"desc": "□ 타워 공격 속도 +30%."},
+	{"id": "damp_range", "chapter": 6, "name": "넓은 감쇠", "cost": 35, "req": [], "mod": {"kind": "range", "tower": "damp", "mult": 1.2},
+		"desc": "감쇠장 사거리 +20%."},
+	{"id": "core_up", "chapter": 6, "name": "견고한 코어", "cost": 40, "req": [],
+		"desc": "모든 스테이지의 무결성 +20%."},
 	{"id": "dm1", "chapter": 8, "name": "지수 소멸 D−1", "cost": 15, "req": [], "flag": "met_signal",
 		"desc": "D − 1 타워 해금. (D − 1)eˣ = 0. 고윳값을 빼면 고유함수가 사라집니다."},
 	{"id": "ann", "chapter": 8, "name": "소멸자 이론", "cost": 18, "req": ["dm1"], "stage": "8-1",
@@ -405,19 +445,19 @@ var RESEARCH: Array = [
 		"desc": "조화 소멸 3레벨이 (D² + ω²)²가 됩니다. x sin x를 한 방에."},
 	{"id": "omega2", "chapter": 8, "name": "진동수", "cost": 33, "req": ["harm"], "stage": "8-3",
 		"desc": "조화 소멸 타워의 ω를 1 ↔ 2로 바꿀 수 있습니다 [W]. D² + 4는 sin 2x의 소멸자."},
-	{"id": "merge", "chapter": 3, "name": "선형성 Σ", "cost": 25, "req": ["ln"], "stage": "3-3",
+	{"id": "merge", "essential": true, "chapter": 3, "name": "선형성 Σ", "cost": 25, "req": ["ln"], "stage": "3-3",
 		"desc": "Σ 타워 해금. 범위 안의 함수들을 하나로 더합니다. 모든 타워는 선형이므로 합친 뒤 한 번에 처리할 수 있습니다."},
 	{"id": "merge2", "chapter": 8, "name": "기저 정리", "cost": 45, "req": ["merge"], "stage": "8-2",
 		"desc": "Σ가 계수를 고릅니다. 범위 안의 함수들이 선형 종속이면 (예: 3eˣ와 5eˣ, 또는 sin x, cos x, 2sin x + cos x 셋) 합이 0이 되는 결합을 찾아 모두 소거합니다."},
-	{"id": "damp", "chapter": 6, "name": "켤레 공식", "cost": 25, "req": [], "flag": "met_exp2",
+	{"id": "damp", "essential": true, "chapter": 6, "name": "켤레 공식", "cost": 25, "req": [], "flag": "met_exp2",
 		"desc": "감쇠장 타워 해금. eˣ · D · e⁻ˣ = D − 1: e⁻ˣ를 곱하면 고윳값이 1씩 내려갑니다."},
 	{"id": "damp2", "chapter": 6, "name": "이중 감쇠", "cost": 45, "req": ["damp"], "stage": "6-2",
 		"desc": "감쇠장 3레벨이 e⁻²ˣ·가 됩니다. e³ˣ → eˣ를 한 번에."},
-	{"id": "dtl", "chapter": 5, "name": "편미분", "cost": 25, "req": [], "flag": "met_time",
+	{"id": "dtl", "essential": true, "chapter": 5, "name": "편미분", "cost": 25, "req": [], "flag": "met_time",
 		"desc": "시간 소멸 ∂ₜ − 1 타워 해금. 곱 g(x)·eᵗ를 시간 인수 하나로 지웁니다."},
 	{"id": "dtl2", "chapter": 5, "name": "성장률", "cost": 38, "req": ["dtl"], "stage": "5-1",
 		"desc": "시간 소멸의 λ를 1 ↔ 2로 바꿀 수 있습니다 [W]."},
-	{"id": "wave", "chapter": 5, "name": "달랑베르 해", "cost": 60, "req": ["dtl"], "stage": "5-3",
+	{"id": "wave", "essential": true, "chapter": 5, "name": "달랑베르 해", "cost": 60, "req": ["dtl"], "stage": "5-3",
 		"desc": "파동 연산자 □ = ∂ₜ² − ∂ₓ² 해금. 모든 진행파 g(x ∓ t)를 한 방에."},
 	{"id": "lpf", "chapter": 8, "name": "푸리에 변환", "cost": 30, "req": [], "flag": "met_signal",
 		"desc": "저역 통과 필터 해금. D ⟷ iω: 미분은 주파수 위의 곱셈입니다. 그렇다면 높은 진동수에 0을 곱할 수도 있습니다."},
@@ -552,7 +592,7 @@ var TEMPLATES: Dictionary = {
 	"k65536": {"speed": 40, "boss": true, "name": "2¹⁶", "kind": "p2"},
 	"k10_6": {"speed": 28, "boss": true, "name": "10⁶", "kind": "sq"},
 	"k2_32": {"speed": 28, "boss": true, "name": "2³²", "kind": "p2"},
-	"x_counter": {"speed": 30, "boss": true, "name": "x", "kind": "poly"},
+	"x_counter": {"speed": 170, "boss": true, "name": "x", "kind": "poly"},
 	"x": {"speed": 60, "name": "x", "kind": "poly"}, "xc": {"speed": 60, "name": "x + c", "kind": "poly"},
 	"lin": {"speed": 58, "name": "ax + b", "kind": "poly"}, "quad": {"speed": 52, "name": "이차식", "kind": "poly"},
 	"cubic": {"speed": 46, "name": "삼차식", "kind": "poly"}, "quart": {"speed": 42, "name": "사차식", "kind": "poly"},
@@ -654,6 +694,47 @@ var PRIMES: Array = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
 var BIGS: Array = [1000, 1024, 1296, 2048, 3600, 4096, 9801, 10000]
 
 
+## Total Insight cost of a chapter's research (essential + optional, axioms excluded): "the most you could need".
+func chapter_budget(ch: int) -> int:
+	var t := 0
+	for n in RESEARCH:
+		if int(n["chapter"]) == ch and not n.get("axiom", false):
+			t += int(n["cost"])
+	return t
+
+
+func chapter_stage_count(ch: int) -> int:
+	var c := 0
+	for sid in STAGE_ORDER:
+		if chapter_of(sid) == ch:
+			c += 1
+	return maxi(1, c)
+
+
+## First clear of a stage: normal pays ¾ of the chapter budget over its stages, hard pays 3/2.
+func stage_insight(sid: String, hard: bool) -> int:
+	var ch := chapter_of(sid)
+	return int(ceil((1.5 if hard else 0.75) * chapter_budget(ch) / float(chapter_stage_count(ch))))
+
+
+func essentials_of(ch: int) -> Array:
+	var out: Array = []
+	for n in RESEARCH:
+		if int(n["chapter"]) == ch and n.get("essential", false):
+			out.append(n["id"])
+	return out
+
+
+## Product of every owned research modifier of this kind for this tower ("range" or "rate").
+func research_mult(kind: String, tower: String) -> float:
+	var m := 1.0
+	for n in RESEARCH:
+		var md: Dictionary = n.get("mod", {})
+		if not md.is_empty() and md["kind"] == kind and md["tower"] == tower and Progress.has(n["id"]):
+			m *= float(md["mult"])
+	return m
+
+
 func stage(sid: String) -> Dictionary:
 	return STAGES[sid]
 
@@ -695,9 +776,12 @@ func stage_waves(sid: String) -> Array:
 			var tpl: String = avail[rng.randi_range(0, avail.size() - 1)]
 			if not picks.has(tpl):
 				picks.append(tpl)
-		var total := int(float(st["base"]) + float(st["growth"]) * (w - 1) * 1.6)
+		# a tower-defence curve: a gentle start, then the count keeps accelerating to the boss wave
+		var total := int(float(st["base"]) * 0.5 + float(st["growth"]) * 1.6 * (w - 1) * (0.8 + 0.09 * (w - 1)))
+		if Game.hard:
+			total = int(total * 1.4)
 		var iv: Array = st["interval"]
-		var interval := lerpf(float(iv[0]), float(iv[1]), (w - 1) / float(WAVES_PER_STAGE - 1))
+		var interval := lerpf(float(iv[0]), float(iv[1]), (w - 1) / float(WAVES_PER_STAGE - 1)) * (0.9 if Game.hard else 1.0)
 		var groups: Array = []
 		for tpl in picks:
 			var cnt := maxi(2, int(total / float(picks.size())))
@@ -708,7 +792,7 @@ func stage_waves(sid: String) -> Array:
 			groups.append([st["boss"][0][0], 1, 2.0])   # a preview of the boss mid-stage
 		if w == WAVES_PER_STAGE:
 			for b in st["boss"]:
-				groups.append([b[0], int(b[1]), 6.0])
+				groups.append([b[0], int(b[1]) + (1 if Game.hard else 0), 6.0])
 			if st.has("counter"):
 				var ci: Dictionary = COUNTERS[st["counter"]]
 				groups.append([st["counter"], int(ci.get("count", 1)), float(ci.get("interval", 3.0))])

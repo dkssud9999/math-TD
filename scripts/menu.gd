@@ -75,7 +75,8 @@ func _build() -> void:
 	for ch in chapters:
 		if not Progress.chapter_visible(int(ch)):
 			continue
-		left.add_child(_label(Data.CHAPTERS[ch]["name"], 22, Color("ffd166")))
+		if latest > 1:   # while only chapter 1 exists, it must not look like "chapter 1 of many"
+			left.add_child(_label(Data.CHAPTERS[ch]["name"], 22, Color("ffd166")))
 		var grid := GridContainer.new()
 		grid.columns = 3
 		grid.add_theme_constant_override("h_separation", 10)
@@ -86,8 +87,9 @@ func _build() -> void:
 				continue
 			var stars: int = Progress.stars.get(sid, 0)
 			var unlocked := Progress.stage_unlocked(sid)
+			var hs: int = int(Progress.hard_stars.get(sid, 0))
 			var txt := "%s  %s
-%s" % [sid, Data.STAGES[sid]["name"], "★".repeat(stars) + "☆".repeat(3 - stars)]
+%s%s" % [sid, Data.STAGES[sid]["name"], "★".repeat(stars) + "☆".repeat(3 - stars), ("   하드 " + "★".repeat(hs)) if hs > 0 else ""]
 			if not unlocked:
 				txt = "%s
 잠김" % sid
@@ -147,6 +149,8 @@ func _build() -> void:
 						reqs.append(_research_name(r))
 				if node.has("stage") and int(Progress.stars.get(node["stage"], 0)) == 0:
 					reqs.append("%s 클리어" % node["stage"])
+				if not Progress.missing_essentials(node).is_empty():
+					reqs.append("이 장의 필수 연구 전부")
 				head = "%s    — 통찰 %d    (필요: %s)" % [node["name"], int(node["cost"]), ", ".join(reqs)]
 		var b := _button(head if body == "" else "%s
 %s" % [head, body], _buy.bind(node), 13)
@@ -192,9 +196,35 @@ func _research_name(id: String) -> String:
 	return id
 
 
+## A stage button asks: normal or hard? (Insight is paid once per mode.)
 func _play(sid: String) -> void:
 	Sfx.play("ui")
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.6)
+	shade.size = Vector2(1280, 720)
+	add_child(shade)
+	var box := VBoxContainer.new()
+	box.position = Vector2(440, 220)
+	box.custom_minimum_size = Vector2(400, 0)
+	box.add_theme_constant_override("separation", 10)
+	shade.add_child(box)
+	box.add_child(_label("%s  %s" % [sid, Data.STAGES[sid]["name"]], 24, Color("ffd166")))
+	var n_paid: bool = Progress.normal_clear.has(sid)
+	var h_paid: bool = Progress.hard_stars.has(sid)
+	var nb := _button("일반   —   통찰 %s" % ("받음 ✓" if n_paid else "+%d" % Data.stage_insight(sid, false)), _start.bind(sid, false), 18)
+	nb.custom_minimum_size = Vector2(400, 52)
+	box.add_child(nb)
+	var hb := _button("하드   —   통찰 %s\n물량 1.4배 · 더 빠름 · 보스 하나 더" % ("받음 ✓" if h_paid else "+%d" % Data.stage_insight(sid, true)), _start.bind(sid, true), 18)
+	hb.custom_minimum_size = Vector2(400, 66)
+	hb.add_theme_color_override("font_color", Color("ef9a9a"))
+	box.add_child(hb)
+	box.add_child(_button("취소", func(): shade.queue_free(), 15))
+
+
+func _start(sid: String, hard: bool) -> void:
+	Sfx.play("ui")
 	Progress.current_stage = sid
+	Game.hard = hard
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
