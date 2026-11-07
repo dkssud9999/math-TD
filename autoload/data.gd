@@ -778,8 +778,8 @@ func stage_waves(sid: String) -> Array:
 				picks.append(tpl)
 		# a tower-defence curve: a gentle start, then the count keeps accelerating to the boss wave
 		var total := int(float(st["base"]) * 0.5 + float(st["growth"]) * 1.6 * (w - 1) * (0.8 + 0.09 * (w - 1)))
-		if Game.hard:
-			total = int(total * 1.4)
+		if Game.hard:   # measured per chapter: hard should need most of the optional upgrades
+			total = int(total * float({1: 1.0, 2: 1.4, 3: 2.0, 4: 2.0, 5: 1.35}.get(int(st["chapter"]), 1.4)))
 		var iv: Array = st["interval"]
 		var interval := lerpf(float(iv[0]), float(iv[1]), (w - 1) / float(WAVES_PER_STAGE - 1)) * (0.9 if Game.hard else 1.0)
 		var groups: Array = []
